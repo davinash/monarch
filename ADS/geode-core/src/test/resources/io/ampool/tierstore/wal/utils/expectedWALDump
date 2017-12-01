@@ -1,0 +1,193 @@
+Data will be dumped
+
+Block Key: Blockey:-1_0_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_0_-1_-1
+Num rows in block: 5
+Record 0:[0, 0, 0]
+Record 1:[0, 0, 0]
+Record 2:[0, 0, 0]
+Record 3:[0, 0, 0]
+Record 4:[0, 0, 0]
+
+Block Key: Blockey:-1_1_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_1_-1_-1
+Num rows in block: 5
+Record 0:[1, 1, 1]
+Record 1:[1, 1, 1]
+Record 2:[1, 1, 1]
+Record 3:[1, 1, 1]
+Record 4:[1, 1, 1]
+
+Block Key: Blockey:-1_2_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_2_-1_-1
+Num rows in block: 5
+Record 0:[2, 2, 2]
+Record 1:[2, 2, 2]
+Record 2:[2, 2, 2]
+Record 3:[2, 2, 2]
+Record 4:[2, 2, 2]
+
+Block Key: Blockey:-1_3_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_3_-1_-1
+Num rows in block: 5
+Record 0:[3, 3, 3]
+Record 1:[3, 3, 3]
+Record 2:[3, 3, 3]
+Record 3:[3, 3, 3]
+Record 4:[3, 3, 3]
+
+Block Key: Blockey:-1_4_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_4_-1_-1
+Num rows in block: 5
+Record 0:[4, 4, 4]
+Record 1:[4, 4, 4]
+Record 2:[4, 4, 4]
+Record 3:[4, 4, 4]
+Record 4:[4, 4, 4]
+
+Block Key: Blockey:-1_5_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_5_-1_-1
+Num rows in block: 5
+Record 0:[5, 5, 5]
+Record 1:[5, 5, 5]
+Record 2:[5, 5, 5]
+Record 3:[5, 5, 5]
+Record 4:[5, 5, 5]
+
+Block Key: Blockey:-1_6_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_6_-1_-1
+Num rows in block: 5
+Record 0:[6, 6, 6]
+Record 1:[6, 6, 6]
+Record 2:[6, 6, 6]
+Record 3:[6, 6, 6]
+Record 4:[6, 6, 6]
+
+Block Key: Blockey:-1_7_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_7_-1_-1
+Num rows in block: 5
+Record 0:[7, 7, 7]
+Record 1:[7, 7, 7]
+Record 2:[7, 7, 7]
+Record 3:[7, 7, 7]
+Record 4:[7, 7, 7]
+
+Block Key: Blockey:-1_8_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_8_-1_-1
+Num rows in block: 5
+Record 0:[8, 8, 8]
+Record 1:[8, 8, 8]
+Record 2:[8, 8, 8]
+Record 3:[8, 8, 8]
+Record 4:[8, 8, 8]
+
+Block Key: Blockey:-1_9_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_9_-1_-1
+Num rows in block: 5
+Record 0:[9, 9, 9]
+Record 1:[9, 9, 9]
+Record 2:[9, 9, 9]
+Record 3:[9, 9, 9]
+Record 4:[9, 9, 9]
+File: /tmp/WALDIR/testTable_1_0.done,Number of blocks:10,First block key: Blockey:-1_0_-1_-1,Last block key: Blockey:-1_9_-1_-1
+
+Block Key: Blockey:-1_10_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_10_-1_-1
+Num rows in block: 5
+Record 0:[10, 10, 10]
+Record 1:[10, 10, 10]
+Record 2:[10, 10, 10]
+Record 3:[10, 10, 10]
+Record 4:[10, 10, 10]
+
+Block Key: Blockey:-1_11_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_11_-1_-1
+Num rows in block: 5
+Record 0:[11, 11, 11]
+Record 1:[11, 11, 11]
+Record 2:[11, 11, 11]
+Record 3:[11, 11, 11]
+Record 4:[11, 11, 11]
+
+Block Key: Blockey:-1_12_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_12_-1_-1
+Num rows in block: 5
+Record 0:[12, 12, 12]
+Record 1:[12, 12, 12]
+Record 2:[12, 12, 12]
+Record 3:[12, 12, 12]
+Record 4:[12, 12, 12]
+
+Block Key: Blockey:-1_13_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_13_-1_-1
+Num rows in block: 5
+Record 0:[13, 13, 13]
+Record 1:[13, 13, 13]
+Record 2:[13, 13, 13]
+Record 3:[13, 13, 13]
+Record 4:[13, 13, 13]
+
+Block Key: Blockey:-1_14_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_14_-1_-1
+Num rows in block: 5
+Record 0:[14, 14, 14]
+Record 1:[14, 14, 14]
+Record 2:[14, 14, 14]
+Record 3:[14, 14, 14]
+Record 4:[14, 14, 14]
+
+Block Key: Blockey:-1_15_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_15_-1_-1
+Num rows in block: 5
+Record 0:[15, 15, 15]
+Record 1:[15, 15, 15]
+Record 2:[15, 15, 15]
+Record 3:[15, 15, 15]
+Record 4:[15, 15, 15]
+
+Block Key: Blockey:-1_16_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_16_-1_-1
+Num rows in block: 5
+Record 0:[16, 16, 16]
+Record 1:[16, 16, 16]
+Record 2:[16, 16, 16]
+Record 3:[16, 16, 16]
+Record 4:[16, 16, 16]
+
+Block Key: Blockey:-1_17_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_17_-1_-1
+Num rows in block: 5
+Record 0:[17, 17, 17]
+Record 1:[17, 17, 17]
+Record 2:[17, 17, 17]
+Record 3:[17, 17, 17]
+Record 4:[17, 17, 17]
+
+Block Key: Blockey:-1_18_-1_-1
+Header->size 28
+Header->blockKey Blockey:-1_18_-1_-1
+Num rows in block: 5
+Record 0:[18, 18, 18]
+Record 1:[18, 18, 18]
+Record 2:[18, 18, 18]
+Record 3:[18, 18, 18]
+Record 4:[18, 18, 18]
+File: /tmp/WALDIR/testTable_1_1.inprogress,Number of blocks:9,First block key: Blockey:-1_10_-1_-1,Last block key: Blockey:-1_18_-1_-1

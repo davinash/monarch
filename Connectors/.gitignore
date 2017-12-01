@@ -1,0 +1,40 @@
+# Compiled source #
+# ------------------
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+monarch-assembly/src/bin
+
+# Test #
+# ---------------------
+dunit/
+diskDir/
+
+# Logs and databases #
+# ---------------------
+*.log
+
+# Package Files #
+# ---------------------
+*.jar
+*.war
+*.ear
+
+# eclipse stuff #
+# ---------------------
+.classpath
+.project
+.settings/
+
+#intlj stuff
+# ---------------------
+*.iml
+.idea/
+
+## ambari stuff
+target/
+.gradle/
+*.apa

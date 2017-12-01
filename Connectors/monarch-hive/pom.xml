@@ -1,0 +1,363 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>monarch</artifactId>
+    <groupId>io.ampool.monarch</groupId>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+
+  <groupId>io.ampool.monarch.hive</groupId>
+  <artifactId>monarch-hive</artifactId>
+  <packaging>jar</packaging>
+  <name>Monarch Hive Integration</name>
+  <url>http://maven.apache.org</url>
+
+  <properties>
+    <hive.version>0.14.0</hive.version>
+    <ampool.server.hive.version>2.1.0</ampool.server.hive.version>
+    <ampool.server.libs>${project.build.directory}/server-libs</ampool.server.libs>
+    <hadoop.version>2.7.1</hadoop.version>
+    <java.version>1.7</java.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <surefire.version>2.19</surefire.version>
+    <testng.version>6.9.9</testng.version>
+    <cobertura.version>2.7</cobertura.version>
+    <client.dependency.basedir>../../monarch-assembly-descriptor/target</client.dependency.basedir>
+  </properties>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.11</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.klarna</groupId>
+      <artifactId>hiverunner</artifactId>
+      <version>2.5.1</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>junit</artifactId>
+          <groupId>junit</groupId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.hsqldb</groupId>
+          <artifactId>hsqldb</artifactId>
+        </exclusion>
+        <exclusion>
+          <artifactId>hsqldb</artifactId>
+          <groupId>hsqldb</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.hsqldb</groupId>
+      <artifactId>hsqldb</artifactId>
+      <version>2.3.2</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>1.9.5</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.hive</groupId>
+      <artifactId>hive-exec</artifactId>
+      <version>${hive.version}</version>
+      <type>jar</type>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>calcite-core</artifactId>
+          <groupId>org.apache.calcite</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>calcite-avatica</artifactId>
+          <groupId>org.apache.calcite</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+      <version>${hadoop.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-mapreduce-client-core</artifactId>
+      <version>${hadoop.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.ampool.monarch</groupId>
+      <artifactId>monarch-distributed-test</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>io.ampool</groupId>
+      <artifactId>monarch</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.geode</groupId>
+      <artifactId>geode-joptsimple</artifactId>
+      <version>${geode.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>${log4jApi.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>${log4jcore.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-core</artifactId>
+      <version>${shiro.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jgroups</groupId>
+      <artifactId>jgroups</artifactId>
+      <version>3.6.6.Final</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>it.unimi.dsi</groupId>
+      <artifactId>fastutil</artifactId>
+      <version>${fastutils.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.transaction</groupId>
+      <artifactId>javax.transaction-api</artifactId>
+      <version>${javax.transaction}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>${testng.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>io.ampool.monarch</groupId>
+      <artifactId>monarch-common</artifactId>
+      <version>${project.version}</version>
+      <scope>compile</scope>
+
+    </dependency>
+    <!-- Adding explicit tier store dependencies -->
+      <dependency>
+          <groupId>io.ampool</groupId>
+          <artifactId>monarch-tierstores</artifactId>
+          <version>${project.version}</version>
+          <scope>test</scope>
+      </dependency>
+
+      <!--&lt;!&ndash; https://mvnrepository.com/artifact/org.springframework.shell/spring-shell &ndash;&gt;-->
+      <!--<dependency>-->
+          <!--<groupId>org.springframework.shell</groupId>-->
+          <!--<artifactId>spring-shell</artifactId>-->
+          <!--<version>1.0.0.RELEASE</version>-->
+      <!--</dependency>-->
+
+
+      <!--<dependency>-->
+      <!--<groupId>io.ampool</groupId>-->
+      <!--<artifactId>ampool-tierstores</artifactId>-->
+      <!--<version>${ampool.version}</version>-->
+      <!--<scope>test</scope>-->
+    <!--</dependency>-->
+<!--    <dependency>
+      <groupId>io.ampool.monarch</groupId>
+      <artifactId>monarch-table</artifactId>
+      <version>${monarch.version}</version>
+      <scope>compile</scope>
+    </dependency>-->
+
+  </dependencies>
+
+  <!-- build jar file with dependencies -->
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.2</version>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
+
+      <!-- jar file with only functions required to be deployed on ampool/geode -->
+      <plugin>
+	<artifactId>maven-jar-plugin</artifactId>
+	<executions>
+	  <execution>
+	    <id>only-functions</id>
+	    <goals><goal>jar</goal></goals>
+	    <phase>package</phase>
+	    <configuration>
+	      <classifier>functions</classifier>
+	      <includes>
+		<include>**/functions/**</include>
+	      </includes>
+	    </configuration>
+	  </execution>
+	</executions>
+      </plugin>
+<!--
+      <plugin>
+	<artifactId>maven-assembly-plugin</artifactId>
+	<configuration>
+	  <descriptorRefs>
+	    <descriptorRef>jar-with-dependencies</descriptorRef>
+	  </descriptorRefs>
+	</configuration>
+	<executions>
+	  <execution>
+	    <id>make-assembly</id>
+	    <phase>package</phase>
+	    <goals>
+              <goal>single</goal>
+	    </goals>
+	  </execution>
+	</executions>
+      </plugin>
+-->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <id>copy-dependencies</id>
+            <phase>package</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+
+                <dependencyfilesets prefix="mydeps."/>
+                <mkdir dir="target/monarch-hive-dependencies"/>
+                <copy todir="target/monarch-hive-dependencies">
+                  <fileset refid="mydeps.antlr:antlr:jar"/>
+                  <fileset refid="mydeps.org.apache.logging.log4j:log4j-api:jar"/>
+                  <fileset refid="mydeps.org.apache.logging.log4j:log4j-core:jar"/>
+                  <fileset refid="mydeps.it.unimi.dsi:fastutil:jar"/>
+                  <fileset refid="mydeps.javax.transaction:javax.transaction-api:jar"/>
+                  <fileset refid="mydeps.io.ampool:monarch:jar"/>
+                  <fileset dir="../monarch-hive/target" includes="*.jar" />
+                </copy>
+              </target>
+            </configuration>
+          </execution>
+
+        </executions>
+      </plugin>
+      <!-- execute both junit and testng tests at same time -->
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${surefire.version}</version>
+        <configuration>
+          <systemPropertyVariables>
+            <server.use.jar>
+              ${ampool.server.libs}/hive-exec-${ampool.server.hive.version}.jar
+            </server.use.jar>
+          </systemPropertyVariables>
+          <threadCount>5</threadCount>
+          <suiteXmlFiles>
+            <suiteXmlFile>testng.xml</suiteXmlFile>
+          </suiteXmlFiles>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.maven.surefire</groupId>
+            <artifactId>surefire-junit47</artifactId>
+            <version>${surefire.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.maven.surefire</groupId>
+            <artifactId>surefire-testng</artifactId>
+            <version>${surefire.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+      <!-- Creating binary distribution .tar.gz -->
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.5.4</version>
+        <dependencies>
+          <dependency>
+            <groupId>io.ampool.monarch</groupId>
+            <artifactId>monarch-assembly-descriptor</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>bin-assembly</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+      </plugin>
+      <!-- copy the jar files required for servers (DUnit) -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.10</version>
+        <executions>
+          <execution>
+            <id>copy</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <artifactItems>
+            <artifactItem>
+              <groupId>org.apache.hive</groupId>
+              <artifactId>hive-exec</artifactId>
+              <version>${ampool.server.hive.version}</version>
+              <type>jar</type>
+              <overWrite>true</overWrite>
+              <outputDirectory>${ampool.server.libs}</outputDirectory>
+            </artifactItem>
+          </artifactItems>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

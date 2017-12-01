@@ -1,0 +1,59 @@
+#=========================================================================
+# Copyright (c) 2016 Ampool, Inc. All Rights Reserved.
+# This product is protected by U.S. and international copyright
+# and intellectual property laws.
+#=========================================================================
+
+version: '2'
+services:
+  locator:
+    image: ampool/locator:latest
+    hostname: locator
+    container_name: locator
+    mem_limit: 512m
+    environment:
+     - AMPOOL_SERVICE_HOST=192.168.99.100
+     - AMPOOL_PORTS_LOW=10001
+     - AMPOOL_PORTS_HIGH=10003
+    expose:
+     - "10334"
+     - "1099"
+     - "7575"
+     - "7070"
+    ports:
+     - "1099:1099"
+     - "10334:10334"
+     - "7575:7575"
+     - "7070:7070"
+    volumes:
+     - ./scripts/:/scripts/
+    command: /scripts/ampool_service.sh locator
+
+  server:
+    image: ampool/server:latest
+    depends_on:
+     - locator
+    mem_limit: 1G
+    environment:
+    #  - AMPOOL_SERVICE_HOST=192.168.99.100
+    #  - AMPOOL_SERVER_NAME=S1
+     - AMPOOL_LOCATOR_HOST=locator
+     - AMPOOL_INITIAL_HEAP=512M
+     - AMPOOL_MAX_HEAP=512M
+     - AMPOOL_PORTS_LOW=10001
+     - AMPOOL_PORTS_HIGH=10003
+     - AMPOOL_START_REST=true
+     - SERVER_HEAP_PERCENTAGE=90.0
+     - SERVER_EVICTION_PERCENTAGE=81.0
+    links:
+     - locator:locator
+    expose:
+     - "9090"
+     - "40404"
+     - "1099"
+    ports:
+     - "40404"
+     - "9090"
+    volumes:
+     - ./scripts/:/scripts/
+    command: /scripts/ampool_service.sh server

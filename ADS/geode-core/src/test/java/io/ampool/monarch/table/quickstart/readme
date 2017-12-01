@@ -1,0 +1,21 @@
+#Steps to run MTableCoprocessorExample
+
+1. setup environment to start locator and servers from the gfsh
+
+   nilkanth@HP-AMPOOL-1 /../ampool/gemfire-assembly/build/install/apache-geode $ export GEMFIRE_HOME=/work/code/GARelease/PSI3_Jan22/ampool/gemfire-assembly/build/install/apache-geode
+   nilkanth@HP-AMPOOL-1 /../ampool/gemfire-assembly/build/install/apache-geode $
+   nilkanth@HP-AMPOOL-1 /../ampool/gemfire-assembly/build/install/apache-geode $ export GEMFIRE=$GEMFIRE_HOME
+   nilkanth@HP-AMPOOL-1 /../ampool/gemfire-assembly/build/install/apache-geode $ echo $JAVA_HOME
+   /nhpatel/tools/jdk/jdk1.8.0_66
+   nilkanth@HP-AMPOOL-1 /../ampool/gemfire-assembly/build/install/apache-geode $ export PATH=$PATH:$JAVA_HOME/bin:$GEMFIRE/bin
+
+   //start gfsh shell.
+   nilkanth@HP-AMPOOL-1 /../ampool/gemfire-assembly/build/install/apache-geode/bin $ ./gfsh
+
+1. start locator using gfsh
+   gfsh>start locator --name=loc1 --bind-address=localhost --port=10335
+
+2. start server with required dependencies
+   gfsh>start server --name=ser1 --locators=localhost[10335] --classpath=/home/nilkanth/.gradle/caches/modules-2/files-2.1/com.google.code.google-collections/google-collect/snapshot-20080530/a22f9b3a80ba9696ed120735f8b6c3c99d942bcc/google-collect-snapshot-20080530.jar:/work/code/GARelease/PSI3_Jan22/ampool/gemfire-core/build/libs/gemfire-core-1.0.0-incubating.M1-test.jar
+
+3. Run the quickstart example MTableCoprocessorExample.

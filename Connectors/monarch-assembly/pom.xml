@@ -1,0 +1,148 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>monarch</artifactId>
+    <groupId>io.ampool.monarch</groupId>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+  <groupId>io.ampool.monarch</groupId>
+  <artifactId>monarch-assembly</artifactId>
+  <name>Monarch Assembly</name>
+  <url>http://ampool.io</url>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>2.2-beta-1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <version>1.8</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <!-- START SNIPPET: assembly -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>prepare-deploy-package</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <tasks>
+                <!--<copy todir="target/bin">
+                  <fileset dir="../monarch-north/monarch-north-cdap/target">
+                  </fileset>
+                </copy>-->
+                <copy todir="target/bin">
+                  <fileset dir="../monarch-common/target">
+                  </fileset>
+                </copy>
+                <copy todir="target/bin">
+                  <fileset dir="../monarch-hive/target">
+                  </fileset>
+                </copy>
+                <copy todir="target/bin/hive">
+                  <fileset dir="../monarch-hive/target/monarch-hive-dependencies">
+                  </fileset>
+                </copy>
+
+                <copy todir="target/bin/monarch-spark_2.1">
+                  <fileset dir="../monarch-spark_2.1/target/">
+                    <include name="*.jar"/>
+                  </fileset>
+                </copy>
+                <copy todir="target/bin/ampool-spark_1.6">
+                  <fileset dir="../monarch-spark_1.6/target/">
+                    <include name="*.jar"/>
+                  </fileset>
+                </copy>
+
+                <!-- assemble the required child modules -->
+                <exec dir="../monarch-assembly-descriptor" executable="mvn" failonerror="true">
+                  <arg line="clean install"/>
+                </exec>
+                <!-- Spark connector -->
+                <exec dir="../monarch-spark_2.1" executable="mvn" failonerror="true">
+                  <arg line="assembly:assembly -DskipTests"/>
+                </exec>
+                <exec dir="../monarch-spark_1.6" executable="mvn" failonerror="true">
+                  <arg line="assembly:assembly -DskipTests"/>
+                </exec>
+                <copy file="../monarch-spark_2.1/target/monarch-${project.version}-spark_2.1-bin.tar.gz"
+                      tofile="target/uploads/monarch-${project.version}-spark_2.1.tar.gz"/>
+                <copy file="../monarch-spark_1.6/target/monarch-${project.version}-spark_1.6-bin.tar.gz"
+                      tofile="target/uploads/monarch-${project.version}-spark_1.6.tar.gz"/>
+
+                <!-- Hive connector -->
+                <exec dir="../monarch-hive" executable="mvn" failonerror="true">
+                  <arg line="assembly:assembly -DskipTests"/>
+                </exec>
+                <copy file="../monarch-hive/target/monarch-hive-${project.version}-bin.tar.gz"
+                      tofile="target/uploads/monarch-hive-${project.version}.tar.gz"/>
+                <!-- kafka connector -->
+                <exec dir="../monarch-connect-kafka" executable="mvn" failonerror="true">
+                  <arg line="assembly:assembly -DskipTests"/>
+                </exec>
+                <copy file="../monarch-connect-kafka/target/monarch-connect-kafka-${project.version}-bin.tar.gz"
+                      tofile="target/uploads/monarch-connect-kafka-${project.version}.tar.gz"/>
+                <!-- Apex connector -->
+                <!--<exec dir="../monarch-north/ampool-apex" executable="mvn" failonerror="true">
+                  <arg line="assembly:assembly -DskipTests"/>
+                </exec>
+                <copy file="../monarch-north/ampool-apex/target/ampool-apex-${project.version}-bin.tar.gz"
+                      tofile="target/uploads/ampool-apex-${project.version}.tar.gz"/>-->
+                <exec dir="../monarch-presto" executable="mvn" failonerror="true">
+                  <arg line="assembly:assembly -DskipTests"/>
+                </exec>
+                <copy file="../monarch-presto/target/monarch-presto-${project.version}-bin.tar.gz"
+                      tofile="target/uploads/monarch-presto-${project.version}.tar.gz"/>
+              </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptor>src/assembly/bin.xml</descriptor>
+          <finalName>monarch-${project.version}</finalName>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- END SNIPPET: assembly -->
+    </plugins>
+  </build>
+
+
+</project>

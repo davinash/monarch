@@ -1,0 +1,52 @@
+======================================================================
+Steps to test kafka-connector in a distributed mode.
+======================================================================
+1. Start Ampool cluster (one locator and three servers)
+   Node-1:
+   mash>start locator --name=l1 --port=10334
+   mash>start server --name=s1
+
+   Node-2:
+   mash>connect --locator=<LOCATOR_HOST>[10334]
+   mash>start server --name=s2
+
+   Node-3:
+   mash>connect --locator=<LOCATOR_HOST>[10334]
+   mash>start server --name=s3
+
+2. create tables
+   create table --type=UNORDERED --name=topic1 --schema-json="{"url":"STRING","id":"INT"}"
+   create table --type=UNORDERED --name=topic2 --schema-json="{"url":"STRING","id":"INT"}"
+   create table --type=UNORDERED --name=topic3 --schema-json="{"url":"STRING","id":"INT"}"
+   describe table --name=/topic1
+
+4. cleanup if required
+   cd /tmp; rm -rf zookeeper/ kafka-logs/ MTableClientAsKafka*.log; cd -;
+
+Repeat the steps - 6, 7, 9, 10 for Node-1, Node-2, Node-3.
+5.  start zookeeper
+    ./bin/zookeeper-server-start etc/kafka/zookeeper.properties
+
+6.   Start KAfka Server
+    ./bin/kafka-server-start etc/kafka/server.properties
+
+7.  Start schema registry
+    ./bin/schema-registry-start etc/schema-registry/schema-registry.properties
+
+8.  create the topics (create these topics before starting the worker)
+    ./bin/kafka-topics --create --zookeeper <ZOOKEEPER_HOST>:2181 --replication-factor 1  --partitions 43 --topic topic1
+    ./bin/kafka-topics --create --zookeeper <ZOOKEEPER_HOST>:2181 --replication-factor 1  --partitions 79 --topic topic2
+    ./bin/kafka-topics --create --zookeeper <ZOOKEEPER_HOST>:2181 --replication-factor 1  --partitions 113 --topic topic3
+
+9.  launch the worker with sink-connector
+    ./bin/connect-standalone etc/schema-registry/connect-avro-standalone.properties etc/ampool-connect-kafka/ampool-sink.properties
+
+10. Run the producers from different nodes producing records for different topics (topic1 with #partitions=43, topic2, topic3).
+    ./runKafkaProducer.sh topic1 5000 43
+    ./runKafkaProducer.sh topic2 5000 79
+    ./runKafkaProducer.sh topic3 500 113
+
+11.  Verify the records in corresponding ampool table.
+     describe table --name=/topic1
+     describe table --name=/topic2
+     describe table --name=/topic3

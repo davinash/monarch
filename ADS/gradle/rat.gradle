@@ -1,0 +1,239 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+apply plugin: "org.nosphere.apache.rat"
+
+rat {
+  xmlOutput = false
+  htmlOutput = false
+  plainOutput = true
+
+  excludes = [
+    // git
+    '.git/**',
+    '**/.gitignore',
+    '**/.gitkeep',
+
+    // gradle
+    '**/.gradle/**',
+    'gradlew',
+    'gradlew.bat',
+    'gradle/wrapper/gradle-wrapper.properties',
+    'caches/**',
+    'daemon/**',
+    'native/**',
+    'wrapper/**',
+    '**/build/**',
+    '.buildinfo',
+
+    // SBT
+    'geode-spark-connector/**/target/**',
+    'geode-spark-connector/sbt',
+
+    // Geode examples
+    'geode-examples/.idea/**',
+    'geode-examples/gradlew*/**',
+    'geode-examples/gradle/wrapper/**',
+
+    // IDE
+    'etc/eclipse-java-google-style.xml',
+    'etc/intellij-java-google-style.xml',
+    'etc/eclipseOrganizeImports.importorder',
+    '**/.project',
+    '**/.classpath',
+    '**/.settings/**',
+    '**/build-eclipse/**',
+    '**/*.iml',
+    '**/*.ipr',
+    '**/*.iws',
+    '.idea/**',
+    '**/tags',
+
+    // text files
+    '**/*.fig',
+    '**/*.txt',
+    '**/*.md',
+    '**/*.json',
+    '**/*.tx0',
+    '**/*.txo',
+    '**/*.log',
+    '**/*.patch',
+    '**/*.diff',
+    '**/*.rej',
+    '**/*.orig',
+    '**/*.MF',
+
+    // binary files
+    '**/*.cer',
+    '**/*.dia',
+    '**/*.gfs',
+    '**/*.gif',
+    '**/*.ico',
+    '**/*.jpg',
+    '**/*.keystore',
+    '**/*.pdf',
+    '**/*.png',
+    '**/*.ser',
+    '**/*.svg',
+    '**/*.truststore',
+    '**/*.xls',
+    '**/publickeyfile',
+    '**/*.dat',
+
+    // Geode docs
+    'geode-book/Gemfile.lock',
+    'geode-book/output/**',
+    'geode-book/final_app/**',
+
+    // other text files
+    'geode-spark-connector/project/plugins.sbt',
+    'geode-spark-connector/project/build.properties',
+    '**/log4j*.xml',
+
+    // these are test files that don't expect the first element to be a comment
+    'geode-core/src/test/resources/org/apache/geode/management/internal/configuration/domain/CacheElementJUnitTest.xml',
+    'geode-core/src/test/resources/org/apache/geode/management/internal/configuration/utils/*.xml',
+
+    // geode-site: Adding exceptions to MIT/BSD licensed files
+    'geode-site/website/content/js/head.js',
+    'geode-site/website/content/js/html5shiv.js',
+    'geode-site/website/content/js/jquery-1.10.1.min.js',
+    'geode-site/website/content/js/jquery.icheck.js',
+    'geode-site/website/content/js/respond.min.js',
+    'geode-site/website/content/css/bootflat-extensions.css',
+    'geode-site/website/content/css/bootflat-square.css',
+    'geode-site/website/content/css/bootflat.css',
+    'geode-site/website/content/css/font-awesome.min.css',
+    'geode-site/website/lib/pandoc.template',
+    'geode-site/website/content/font/**',
+    'geode-site/website/content/fonts/**',
+    'geode-site/website/content/stylesheets/**',
+    'geode-site/content/**',
+    // compiled logs and locks
+    'geode-site/website/tmp/**',
+    'geode-site/website/layouts/**',
+
+
+    // Service META-INF
+    '**/META-INF/services/org.xml.sax.ext.EntityResolver2',
+    '**/META-INF/services/org.apache.geode.internal.cache.CacheService',
+    '**/META-INF/services/org.apache.geode.internal.cache.xmlcache.XmlParser',
+    '**/META-INF/services/org.apache.geode.distributed.ServerLauncherCacheProvider',
+    '**/META-INF/services/org.springframework.shell.core.CommandMarker',
+
+    // --- Other Licenses ---
+
+    // Public Domain http://meyerweb.com/eric/tools/css/reset/
+    'geode-pulse/src/main/webapp/scripts/lib/tooltip.js',
+
+    // JSON License - permissive, used for Good, not Evil
+    'geode-json/src/main/java/org/json/CDL.java',
+    'geode-json/src/main/java/org/json/Cookie.java',
+    'geode-json/src/main/java/org/json/CookieList.java',
+    'geode-json/src/main/java/org/json/CDL.java',
+    'geode-json/src/main/java/org/json/Cookie.java',
+    'geode-json/src/main/java/org/json/CookieList.java',
+    'geode-json/src/main/java/org/json/HTTP.java',
+    'geode-json/src/main/java/org/json/HTTPTokener.java',
+    'geode-json/src/main/java/org/json/JSONArray.java',
+    'geode-json/src/main/java/org/json/JSONException.java',
+    'geode-json/src/main/java/org/json/JSONML.java',
+    'geode-json/src/main/java/org/json/JSONObject.java',
+    'geode-json/src/main/java/org/json/JSONString.java',
+    'geode-json/src/main/java/org/json/JSONStringer.java',
+    'geode-json/src/main/java/org/json/JSONTokener.java',
+    'geode-json/src/main/java/org/json/JSONWriter.java',
+    'geode-json/src/main/java/org/json/XML.java',
+    'geode-json/src/main/java/org/json/XMLTokener.java',
+
+
+    // BSD License
+    'geode-core/src/main/java/org/apache/geode/management/internal/cli/shell/jline/ANSIBuffer.java',
+    'geode-pulse/src/main/webapp/scripts/lib/jquery.sparkline.js',
+
+    // Apache License
+    'geode-pulse/src/main/webapp/scripts/multiselect/prettify.js',
+
+    // MX4J License
+    'geode-core/src/main/java/org/apache/geode/admin/jmx/internal/MX4JModelMBean.java',
+
+    // Ampool Excludes.
+    '**/io/ampool/**',
+    '**/*.sh',
+    '**/build.gradle',
+    '**/pom.xml',
+    '**/ampool.gradle',
+    '**/resources/io.ampool.conf/cache.xml',
+    '**/resources/io.ampool.conf/ampool*',
+    '**/examples/**',
+    '**/docker/ampool/**',
+    '**/k8s/**',
+    'geode-core/src/main/java/org/apache/geode/management/internal/cli/commands/AuthorizationAdminCommands.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/InvalidateAuthzCacheFunction.java',
+    'geode-core/gfsh_files/**',
+    'geode-assembly/src/main/dist/bin/mash',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/CreateMTableControllerFunction.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/CreateTierStoreControllerFunction.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/CreateTierStoreFunction.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/DescribeTierStoreFunction.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/DestroyTierStoreControllerFunction.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/DestroyTierStoreFunction.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/FTableBucketRegion.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/FTableRegion.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/GetMTablesFunction.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/GetTierStoresFunction.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/MBucketScanResult.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/MCountFunction.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/MCreateFunctionArguments.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/MGetMetadataFunction.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/MTableBucketRegion.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/MTableCliDataOpsArg.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/MTableCreationFunction.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/MTableGetStartEndKeysFunction.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/MTableRangePartitionResolver.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/MTableRegion.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/MonarchCacheImpl.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/TableBucketRegion.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/TableDistributedRegion.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/TableIsEmptyFunction.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/TableIsEmptyResultCollector.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/TableLocalRegion.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/TableRegion.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/TierStoreCreationFunction.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/TierStoreDeletionFunction.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/TruncateTableFunction.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/UpdateTableFunction.java',
+    'geode-core/src/main/java/org/apache/geode/internal/cache/tier/sockets/command/BucketCntStartStopRangeInfo.java',
+    'geode-core/src/main/java/org/apache/hadoop/hive/ql/io/orc/FTableOrcStruct.java',
+    'geode-core/src/main/java/org/apache/hadoop/hive/ql/io/orc/FTableOrcUnion.java',
+    'geode-core/src/test/java/com/gemstone/gemfire/cache/RegionDataOrderTest.java',
+    'geode-core/src/test/java/util/ConcurrentRowTuplePutGetJUnitTest.java',
+    'geode-core/src/test/java/util/RowTupleVersionedOpsJUnitTest.java',
+    'geode-core/src/test/java/util/SimplePutGetTest.java',
+    'geode-junit/src/main/java/org/apache/geode/test/junit/categories/AmpoolSecurityTest.java',
+    'geode-junit/src/main/java/org/apache/geode/test/junit/categories/AmpoolTests.java',
+    'geode-junit/src/main/java/org/apache/geode/test/junit/categories/FTableTest.java',
+    'geode-junit/src/main/java/org/apache/geode/test/junit/categories/MonarchTest.java',
+    'geode-junit/src/main/java/org/apache/geode/test/junit/categories/StressTest.java',
+    'monarch-tierstores/src/main/java/org/apache/hadoop/hive/ql/io/orc/FTableOrcStruct.java',
+    'monarch-tierstores/src/main/java/org/apache/hadoop/hive/ql/io/orc/FTableOrcUnion.java',
+
+  ]
+}
+
+subprojects {
+  check.dependsOn rat
+}

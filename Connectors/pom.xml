@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/*
+ * Copyright (c) 2017 Ampool, Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License. See accompanying LICENSE file.
+ */
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.ampool.monarch</groupId>
+    <artifactId>monarch</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Monarch</name>
+    <description>Next generation data infrastructure products that enable high-performance analytics while reducing both
+        cost and architectural concerns.
+    </description>
+    <url>https://ampool.io</url>
+
+    <organization>
+        <name>Ampool, Inc.</name>
+        <url>http://ampool.io</url>
+    </organization>
+
+    <repositories>
+        <repository>
+            <id>Monarch repo</id>
+            <url>https://s3-us-west-2.amazonaws.com/ampool/mvn-repo</url>
+        </repository>
+    </repositories>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <junit.version>4.12</junit.version>
+        <google.guava.version>19.0-rc2</google.guava.version>
+        <geode.version>1.0.0-incubating.M2</geode.version>
+        <apache.common.version>3.2.1</apache.common.version>
+        <apache.common.logging.verson>1.1.1</apache.common.logging.verson>
+        <apache.hadoop.core.version>1.2.1</apache.hadoop.core.version>
+        <slf4j.version>1.7.5</slf4j.version>
+        <gson.version>2.2.4</gson.version>
+        <thrift.version>0.9.2</thrift.version>
+        <log4jApi.version>2.6.1</log4jApi.version>
+        <log4jcore.version>2.6.1</log4jcore.version>
+        <fastutils.version>7.0.9</fastutils.version>
+        <javax.transaction>1.2</javax.transaction>
+        <shiro.version>1.2.4</shiro.version>
+        <hbase-client>0.98.14-hadoop2</hbase-client>
+        <commons-io.version>2.4</commons-io.version>
+        <cobertura.version>2.7</cobertura.version>
+        <hive-exec.version>2.1.0</hive-exec.version>
+        <product-name>monarch</product-name>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>${log4jcore.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-api</artifactId>
+                <version>${log4jApi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+                <!--<scope>test</scope>-->
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${google.guava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-collections</groupId>
+                <artifactId>commons-collections</artifactId>
+                <version>${apache.common.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>${apache.common.logging.verson}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-core</artifactId>
+                <version>${apache.hadoop.core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>${gson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.thrift</groupId>
+                <artifactId>libthrift</artifactId>
+                <version>${thrift.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>it.unimi.dsi</groupId>
+                <artifactId>fastutil</artifactId>
+                <version>${fastutils.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.transaction</groupId>
+                <artifactId>javax.transaction-api</artifactId>
+                <version>${javax.transaction}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hbase</groupId>
+                <artifactId>hbase-client</artifactId>
+                <version>${hbase-client}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.geode</groupId>
+                <artifactId>geode-joptsimple</artifactId>
+                <version>${geode.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.version}</version>
+            </dependency>
+        </dependencies>
+
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.1</version>
+                    <configuration>
+                        <source>1.7</source>
+                        <target>1.7</target>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <version>0.11</version>
+                    <executions>
+                        <execution>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                            <configuration>
+                                <excludes>
+                                    <exclude>build-number.txt</exclude>
+                                    <exclude>LICENSE*.txt</exclude>
+                                    <exclude>*.rst</exclude>
+                                    <exclude>*.md</exclude>
+                                    <exclude>**/*.md</exclude>
+                                    <exclude>logs/**</exclude>
+                                    <exclude>conf/**</exclude>
+                                    <exclude>data/**</exclude>
+                                    <exclude>plugins/**</exclude>
+                                    <exclude>**/Apache-LICENSE-2.0</exclude>
+                                    <exclude>**/VERSION</exclude>
+                                    <exlcude>**/*.patch</exlcude>
+                                    <exclude>**/logrotate.d/**</exclude>
+                                    <exclude>**/limits.d/**</exclude>
+                                    <exclude>**/*.json</exclude>
+                                    <exclude>archetypes/**/resources/**/*.txt</exclude>
+                                    <exclude>**/MANIFEST.MF</exclude>
+                                </excludes>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>2.12.1</version>
+                    <executions>
+                        <execution>
+                            <id>verify</id>
+                            <phase>process-test-classes</phase>
+                            <configuration>
+                                <configLocation>checkstyle.xml</configLocation>
+                                <suppressionsLocation>suppressions.xml</suppressionsLocation>
+                                <encoding>UTF-8</encoding>
+                                <consoleOutput>true</consoleOutput>
+                                <failsOnError>true</failsOnError>
+                                <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                            </configuration>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>2.4</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <modules>
+        <module>monarch-spark_1.6</module>
+        <module>monarch-spark_2.1</module>
+        <module>monarch-connect-kafka</module>
+        <module>monarch-distributed-test</module>
+        <module>monarch-common</module>
+        <module>monarch-hive</module>
+        <module>monarch-presto</module>
+        <module>monarch-assembly-descriptor</module>
+        <module>monarch-assembly</module>
+    </modules>
+
+    <profiles>
+        <profile>
+            <id>checkCopyright</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.rat</groupId>
+                        <artifactId>apache-rat-plugin</artifactId>
+                        <version>0.11</version>
+                        <executions>
+                            <execution>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <configuration>
+                                    <licenses>
+                                        <license
+                                                implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+                                            <licenseFamilyCategory>AMPRL</licenseFamilyCategory>
+                                            <licenseFamilyName>Ampool Source code License</licenseFamilyName>
+                                            <notes></notes>
+                                            <patterns>
+                                                <pattern>Copyright (c) 2017 Ampool, Inc.</pattern>
+                                            </patterns>
+                                        </license>
+                                        <license
+                                                implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+                                            <licenseFamilyCategory>ALEXT</licenseFamilyCategory>
+                                            <licenseFamilyName>Apache License v2.0</licenseFamilyName>
+                                            <notes></notes>
+                                            <patterns>
+                                                <pattern>Licensed under the Apache License, Version 2.0</pattern>
+                                                <pattern>Licensed to the Apache Software Foundation (ASF)</pattern>
+                                            </patterns>
+                                        </license>
+                                        <license
+                                                implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+                                            <licenseFamilyCategory>CASKL</licenseFamilyCategory>
+                                            <licenseFamilyName>Cask Source code License</licenseFamilyName>
+                                            <notes></notes>
+                                            <patterns>
+                                                <pattern>Copyright © 2014 Cask Data, Inc.</pattern>
+                                            </patterns>
+                                        </license>
+                                        <license
+                                                implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+                                            <licenseFamilyCategory>GOOGL</licenseFamilyCategory>
+                                            <licenseFamilyName>Google Source code License</licenseFamilyName>
+                                            <notes></notes>
+                                            <patterns>
+                                                <pattern>Copyright (c) 2015 Google Inc.</pattern>
+                                            </patterns>
+                                        </license>
+                                        <license
+                                                implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+                                            <licenseFamilyCategory>YCSBL</licenseFamilyCategory>
+                                            <licenseFamilyName>YCSB Source code License - Apache</licenseFamilyName>
+                                            <notes></notes>
+                                            <patterns>
+                                                <pattern>Copyright (c) 2012 - 2015 YCSB contributors.</pattern>
+                                                <pattern>Copyright (c) 2012 YCSB contributors.</pattern>
+                                                <pattern>Copyright (c) 2015 YCSB contributors</pattern>
+                                            </patterns>
+                                        </license>
+                                        <license
+                                                implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+                                            <licenseFamilyCategory>YHOL</licenseFamilyCategory>
+                                            <licenseFamilyName>Yahoo Source code License - Apache</licenseFamilyName>
+                                            <notes></notes>
+                                            <patterns>
+                                                <pattern>Copyright (c) 2010 Yahoo! Inc.</pattern>
+                                                <pattern>Copyright (c) 2011 Yahoo! Inc. All rights reserved.</pattern>
+                                                <pattern>Copyright (c) 2015 Yahoo! Inc.</pattern>
+                                            </patterns>
+                                        </license>
+                                    </licenses>
+                                    <licenseFamilies>
+                                        <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+                                            <familyName>Ampool Source code License</familyName>
+                                        </licenseFamily>
+                                        <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+                                            <familyName>Apache License v2.0</familyName>
+                                        </licenseFamily>
+                                        <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+                                            <familyName>Cask Source code License</familyName>
+                                        </licenseFamily>
+                                        <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+                                            <familyName>YCSB Source code License - Apache</familyName>
+                                        </licenseFamily>
+                                        <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+                                            <familyName>Yahoo Source code License - Apache</familyName>
+                                        </licenseFamily>
+                                        <licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+                                            <familyName>Google Source code License</familyName>
+                                        </licenseFamily>
+                                    </licenseFamilies>
+                                    <excludes>
+                                        <exclude>**/intellijIdeaCodeStyle.xml</exclude>
+                                        <exclude>**/eclipseFormatterProfile.xml</exclude>
+                                        <exclude>**/target/**</exclude>
+                                        <exclude>**/pom.xml</exclude>
+                                        <exclude>**/resources/**</exclude>
+                                        <exclude>**/dunit/**</exclude>
+                                        <exclude>**/*.iml</exclude>
+                                        <exclude>*.md</exclude>
+                                        <exclude>**/*.md</exclude>
+                                        <exclude>**/copyright.txt</exclude>
+                                        <exclude>**/README.txt</exclude>
+                                        <exclude>**/*.sh</exclude>
+                                        <exclude>*.sh</exclude>
+                                        <exclude>**/*.lst</exclude>
+                                        <exclude>**/surefire-reports/**</exclude>
+                                        <exclude>**/rat.txt</exclude>
+                                        <exclude>**/*.properties</exclude>
+                                        <exclude>**/*.properties.template</exclude>
+                                        <exclude>**/*.sha1</exclude>
+                                        <exclude>**/*.json</exclude>
+                                        <exclude>**/*.checkstyle</exclude>
+                                    </excludes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!-- generage the code-coverage report using cobertura;
+             can be activated by profile: code-coverage
+        -->
+        <profile>
+            <id>code-coverage</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>cobertura-maven-plugin</artifactId>
+                        <version>${cobertura.version}</version>
+                        <configuration>
+                            <aggregate>true</aggregate>
+                            <formats>
+                                <format>html</format>
+                                <format>xml</format>
+                            </formats>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>cobertura-coverage</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>cobertura</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+    </profiles>
+</project>

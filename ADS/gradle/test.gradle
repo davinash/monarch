@@ -1,0 +1,497 @@
+import org.apache.geode.gradle.TestPropertiesWriter
+import groovy.time.TimeCategory
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+task combineReports(type: TestReport) {
+  description 'Combines the test reports.'
+  destinationDir = file "${rootProject.buildDir}/reports/combined"
+
+  doLast {
+    println "All test reports at ${rootProject.buildDir}/reports/combined"
+  }
+}
+
+gradle.taskGraph.whenReady({ graph ->
+  tasks.getByName('combineReports').reportOn rootProject.subprojects.collect{ it.tasks.withType(Test) }.flatten()
+})
+
+
+subprojects {
+  dependencies {
+    testCompile ('com.github.stefanbirkner:system-rules:' + project.'system-rules.version') {
+      exclude module: 'junit-dep'
+    }
+    testCompile 'com.google.code.tempus-fugit:tempus-fugit:' + project.'tempus-fugit.version'
+    testCompile 'com.jayway.awaitility:awaitility:' + project.'awaitility.version'
+    testCompile 'edu.umd.cs.mtc:multithreadedtc:' + project.'multithreadedtc.version'
+    testCompile 'eu.codearte.catch-exception:catch-exception:' + project.'catch-exception.version'
+    testCompile 'eu.codearte.catch-exception:catch-throwable:' + project.'catch-throwable.version'
+    testCompile 'junit:junit:' + project.'junit.version'
+    testCompile 'org.assertj:assertj-core:' + project.'assertj-core.version'
+    testCompile 'org.mockito:mockito-core:' + project.'mockito-core.version'
+    testCompile 'org.hamcrest:hamcrest-all:' + project.'hamcrest-all.version'
+    testCompile 'org.jmock:jmock-junit4:' + project.'jmock.version'
+    testCompile 'org.jmock:jmock-legacy:' + project.'jmock.version'
+    testCompile 'pl.pragmatists:JUnitParams:' + project.'JUnitParams.version'
+
+    testRuntime 'cglib:cglib:' + project.'cglib.version'
+    testRuntime 'org.ow2.asm:asm:' + project.'asm.version'
+
+    testCompile 'org.testng:testng:6.9.9'
+    testCompile 'com.beust:jcommander:1.48'
+  }
+  
+  //This target does not run any tests. Rather, it validates that there are no
+  //tests that are missing a category annotation
+  task checkMissedTests(type: Test) {
+    include '**/*Test.class'
+    useJUnit {
+      excludeCategories 'org.apache.geode.test.junit.categories.UnitTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.IntegrationTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.DistributedTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.PerformanceTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.HydraTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.ContainerTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.UITest'
+      excludeCategories 'org.apache.geode.test.junit.categories.MonarchTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FTableTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StressTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.S3StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.AmpoolSecurityTest'
+
+    }
+
+    //Skip launching any DUnit VMs during this run. This will prevent
+    //junit from launching VMs while parsing categories
+    systemProperty 'gemfire.DUnitLauncher.LAUNCHED', 'true'
+
+    beforeTest { descriptor ->
+      throw new GradleException("The test " + descriptor.getClassName() + "." + descriptor.getName() + " does not include a junit category.");
+    }
+  }
+
+
+  test {
+    useJUnit {
+      includeCategories 'org.apache.geode.test.junit.categories.UnitTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FlakyTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.MonarchTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FTableTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StressTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.S3StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.AmpoolSecurityTest'
+    }
+    
+    doFirst {
+      TestPropertiesWriter.writeTestProperties(buildDir, name)
+    }
+  }
+
+  task integrationTest(type:Test) {
+    useJUnit {
+      includeCategories 'org.apache.geode.test.junit.categories.IntegrationTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FlakyTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.MonarchTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FTableTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StressTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.S3StoreTest'
+    }
+
+    forkEvery 1
+    doFirst {
+      TestPropertiesWriter.writeTestProperties(buildDir, name)
+    }
+  }
+  
+  task distributedTest(type:Test) {
+    useJUnit {
+      includeCategories 'org.apache.geode.test.junit.categories.DistributedTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FlakyTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.MonarchTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FTableTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StressTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.S3StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.AmpoolSecurityTest'
+    }
+    forkEvery 30
+  }
+  
+  task flakyTest(type:Test) {
+    useJUnit {
+      includeCategories 'org.apache.geode.test.junit.categories.FlakyTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.MonarchTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FTableTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StressTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.S3StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.AmpoolSecurityTest'
+    }
+    
+    forkEvery 1
+    doFirst {
+      TestPropertiesWriter.writeTestProperties(buildDir, name)
+    }
+
+    reports.junitXml.destination = file "$buildDir/test-reports-flaky"
+    
+  }
+  task securityTest(type:Test) {
+    useJUnit {
+      includeCategories 'org.apache.geode.test.junit.categories.SecurityTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.MonarchTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FTableTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StressTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.S3StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.AmpoolSecurityTest'
+    }
+
+    forkEvery 1
+    doFirst {
+      TestPropertiesWriter.writeTestProperties(buildDir, name)
+    }
+
+    reports.junitXml.destination = file "$buildDir/test-reports-security"
+
+  }
+
+  task ampoolSecurityTests(type:Test) {
+    exclude '**/geode/**'
+    testLogging {
+      //showStandardStreams = true
+      events "passed", "skipped", "failed", "started"
+    }
+    useJUnit {
+      includeCategories 'org.apache.geode.test.junit.categories.AmpoolSecurityTest'
+    }
+
+    forkEvery 1
+    doFirst {
+      TestPropertiesWriter.writeTestProperties(buildDir, name)
+    }
+
+    reports.junitXml.destination = file "$buildDir/test-reports-amp0ol-security"
+
+  }
+
+
+  task clientServerTest(type:Test) {
+    useJUnit {
+      includeCategories 'org.apache.geode.test.junit.categories.ClientServerTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FlakyTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.MonarchTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FTableTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StressTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.S3StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.AmpoolSecurityTest'
+    }
+    doFirst {
+      TestPropertiesWriter.writeTestProperties(buildDir, name)
+    }
+    reports.junitXml.destination = file "$buildDir/test-reports-security"
+  }
+  task dlockTest(type:Test) {
+    useJUnit {
+      includeCategories 'org.apache.geode.test.junit.categories.DLockTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FlakyTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.MonarchTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FTableTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StressTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.S3StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.AmpoolSecurityTest'
+    }
+    doFirst {
+      TestPropertiesWriter.writeTestProperties(buildDir, name)
+    }
+    reports.junitXml.destination = file "$buildDir/test-reports-dlock"
+  }
+  task membershipTest(type:Test) {
+    useJUnit {
+      includeCategories 'org.apache.geode.test.junit.categories.MembershipTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FlakyTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.MonarchTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FTableTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StressTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.S3StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.AmpoolSecurityTest'
+    }
+    doFirst {
+      TestPropertiesWriter.writeTestProperties(buildDir, name)
+    }
+    reports.junitXml.destination = file "$buildDir/test-reports-membership"
+  }
+  task restAPITest(type:Test) {
+    useJUnit {
+      includeCategories 'org.apache.geode.test.junit.categories.RestAPITest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FlakyTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.MonarchTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FTableTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StressTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.S3StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.AmpoolSecurityTest'
+    }
+    doFirst {
+      TestPropertiesWriter.writeTestProperties(buildDir, name)
+    }
+    forkEvery 1
+    reports.junitXml.destination = file "$buildDir/test-reports-restAPI"
+  }
+  task serializationTest(type:Test) {
+    useJUnit {
+      includeCategories 'org.apache.geode.test.junit.categories.serializationTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FlakyTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.MonarchTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FTableTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StressTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.S3StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.AmpoolSecurityTest'
+    }
+    doFirst {
+      TestPropertiesWriter.writeTestProperties(buildDir, name)
+    }
+    reports.junitXml.destination = file "$buildDir/test-reports-serialization"
+  }
+
+  // By proving a file with an arbitrary list of test classes, we can select only those
+  // tests to run. Activated using -Dcustom.tests=<file> customTest
+  def customTestList = []
+  def customTestFile = System.getProperty('custom.tests')
+  if (customTestFile != null) {
+    new File(customTestFile).eachLine { customTestList << it }
+  }
+
+  task customTest(type:Test) {
+    include { x ->
+      (x.isDirectory() || customTestList.any { y -> x.getName().contains(y) } ) ? true : false
+    }
+
+    forkEvery 30
+  }
+
+  // apply common test configuration
+  gradle.taskGraph.whenReady( { graph ->
+    tasks.withType(Test).each { test ->
+      check.dependsOn test
+      test.configure {
+        onlyIf { ! Boolean.getBoolean('skip.tests') }
+
+        //force tests to be run every time by
+        //saying the results are never up to date
+        outputs.upToDateWhen { false }
+    
+        def resultsDir = TestPropertiesWriter.testResultsDir(buildDir, test.name)
+        workingDir resultsDir.absolutePath
+        
+        reports.html.destination = file "$buildDir/reports/$name"
+        testLogging {
+          exceptionFormat = 'full'
+        }
+        
+        maxHeapSize '2048m'
+//        jvmArgs = ['-XX:+HeapDumpOnOutOfMemoryError', '-ea',"-XX:+PrintGC", "-XX:+PrintGCDetails","-XX:+PrintGCTimeStamps"]
+        jvmArgs = ['-XX:+HeapDumpOnOutOfMemoryError', '-ea']
+
+        systemProperty 'gemfire.DEFAULT_MAX_OPLOG_SIZE', '10'
+        systemProperty 'gemfire.disallowMcastDefaults', 'true'
+        systemProperty 'jline.terminal', 'jline.UnsupportedTerminal'
+        def logLevel = System.getProperty('logLevel')
+        if (logLevel != null) {
+          systemProperty 'logLevel', logLevel
+        }
+        def log4jLocation = System.getProperty('log4j.configurationFile')
+        if (log4jLocation != null) {
+          systemProperty 'log4j.configurationFile', log4jLocation
+        }
+
+        def eol = System.getProperty('line.separator')
+        def progress = new File(resultsDir, "$test.name-progress.txt")
+        beforeTest { desc ->
+          def now = new Date().format('yyyy-MM-dd HH:mm:ss.SSS Z')
+          progress << "$now Starting test $desc.className $desc.name$eol"
+        }
+        afterTest { desc, result ->
+          def now = new Date().format('yyyy-MM-dd HH:mm:ss.SSS Z')
+          progress << "$now Completed test $desc.className $desc.name with result: ${result.resultType}$eol"
+        }
+        
+        doFirst {
+          resultsDir.deleteDir()
+          resultsDir.mkdirs()
+        }
+      }
+    }
+  })
+
+
+  task monarchTest(type:Test) {
+    exclude '**/geode/**'
+    testLogging {
+      events "passed", "skipped", "failed", "started"
+      afterTest { TestDescriptor desc, TestResult res ->
+        def td = TimeCategory.minus(new Date(res.endTime), new Date(res.startTime))
+        println "  $res.resultType ($td) $desc.name ($desc.className)"
+      }
+    }
+    useJUnit {
+      excludeCategories 'org.apache.geode.test.junit.categories.UnitTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.IntegrationTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.DistributedTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FTableTest'
+      includeCategories 'org.apache.geode.test.junit.categories.MonarchTest'
+
+    }
+    // set heap size for the test JVM(s)
+    maxHeapSize = "2048m"
+    // set JVM arguments for the test JVM(s)
+    jvmArgs '-XX:MaxPermSize=256m'
+    // Some test are failing so making it 1 instead of 30
+    forkEvery 1
+    doFirst {
+      TestPropertiesWriter.writeTestProperties(buildDir, name)
+    }
+  }
+
+  task ftableTest(type:Test) {
+    exclude '**/geode/**'
+    testLogging {
+      //showStandardStreams = true
+      events "passed", "skipped", "failed", "started"
+    }
+    useJUnit {
+      excludeCategories 'org.apache.geode.test.junit.categories.UnitTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.IntegrationTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.DistributedTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.MonarchTest'
+      includeCategories 'org.apache.geode.test.junit.categories.FTableTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.S3StoreTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.AmpoolSecurityTest'
+    }
+
+    // set heap size for the test JVM(s)
+    maxHeapSize = "2048m"
+
+    // set JVM arguments for the test JVM(s)
+    jvmArgs '-XX:MaxPermSize=256m'
+
+    // Some test are failing so making it 1 instead of 30
+    forkEvery 1
+
+    doFirst {
+      TestPropertiesWriter.writeTestProperties(buildDir, name)
+    }
+  }
+
+  task ampoolTests(type:Test) {
+    exclude '**/geode/**'
+    testLogging {
+      //showStandardStreams = true
+      events "passed", "skipped", "failed", "started"
+    }
+    useJUnit {
+      //exclude geode tests
+      excludeCategories 'org.apache.geode.test.junit.categories.UnitTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.IntegrationTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.DistributedTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FlakyTest'
+
+      //include ampool tests
+      includeCategories 'org.apache.geode.test.junit.categories.MonarchTest'
+      includeCategories 'org.apache.geode.test.junit.categories.FTableTest'
+      includeCategories'org.apache.geode.test.junit.categories.StoreTest'
+      includeCategories'org.apache.geode.test.junit.categories.AmpoolSecurityTest'
+      //includeCategories'org.apache.geode.test.junit.categories.S3StoreTest'
+      excludeCategories'org.apache.geode.test.junit.categories.StressTest'
+    }
+
+    // set heap size for the test JVM(s)
+    maxHeapSize = "2048m"
+
+    // set JVM arguments for the test JVM(s)
+    jvmArgs '-XX:MaxPermSize=256m'
+
+    // Some test are failing so making it 1 instead of 30
+    forkEvery 1
+
+    doFirst {
+      TestPropertiesWriter.writeTestProperties(buildDir, name)
+    }
+  }
+
+  task storeTest(type:Test) {
+    exclude '**/geode/**'
+    testLogging {
+      events "passed", "skipped", "failed", "started"
+    }
+    useJUnit {
+      excludeCategories 'org.apache.geode.test.junit.categories.UnitTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.IntegrationTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.DistributedTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.MonarchTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.FTableTest'
+      excludeCategories 'org.apache.geode.test.junit.categories.AmpoolSecurityTest'
+      includeCategories 'org.apache.geode.test.junit.categories.StoreTest'
+      //includeCategories 'org.apache.geode.test.junit.categories.S3StoreTest'
+    }
+
+    // set heap size for the test JVM(s)
+    maxHeapSize = "2048m"
+    // set JVM arguments for the test JVM(s)
+    jvmArgs '-XX:MaxPermSize=256m'
+    // Some test are failing so making it 1 instead of 30
+    forkEvery 1
+    doFirst {
+      TestPropertiesWriter.writeTestProperties(buildDir, name)
+    }
+  }
+
+  task testng(type:Test) {
+    useTestNG()
+
+    afterTest { desc, result ->
+      println "Executing test ${desc.name} [${desc.className}] with result: ${result.resultType}"
+    }
+  }
+
+  // Make precheckin task run all validation tests for checking in code.
+  task ampoolPrecheckin (dependsOn: [ build, ampoolTests ]) {
+    description 'Run this task before checking in code to validate changes. This task combines the following tasks: build, ampoolTests'
+  }
+
+  // Make precheckin task run all validation tests for checking in code.
+  task precheckin (dependsOn: [ build, ampoolTests, integrationTest, distributedTest, flakyTest ]) {
+    description 'Run this task before checking in code to validate changes. This task combines the following tasks: build, integrationTest, distributedTest, and flakyTest'
+  }
+
+  check.dependsOn checkMissedTests
+
+  combineReports.mustRunAfter check, test, integrationTest, distributedTest, flakyTest, checkMissedTests
+  [build, check, test, integrationTest, distributedTest, flakyTest, checkMissedTests].each {it.finalizedBy combineReports}
+
+  monarchTest.finalizedBy combineReports
+}

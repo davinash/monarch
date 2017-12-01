@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<!DOCTYPE connector PUBLIC '-//Sun Microsystems, Inc.//DTD Connector 1.0//EN' 'http://java.sun.com/j2ee/dtds/connector_1_0.dtd'>
+
+<connector>
+    <display-name>GFE JCA Adaptor</display-name>
+    <vendor-name></vendor-name>
+    <spec-version>1.5</spec-version>
+    <eis-type>GFE JCA</eis-type>
+    <version>1.5</version>
+    <resourceadapter>
+        <managedconnectionfactory-class>org.apache.geode.internal.ra.spi.JCAManagedConnectionFactory</managedconnectionfactory-class>
+                <config-property>
+                    <config-property-name>ProductName</config-property-name>
+                    <config-property-type>java.lang.String</config-property-type>
+                    <config-property-value>GemFire</config-property-value>
+                </config-property>
+                <config-property>
+                    <config-property-name>UserName</config-property-name>
+                    <config-property-type>java.lang.String</config-property-type>
+                    <config-property-value/>
+                </config-property>
+                <config-property>
+                    <config-property-name>Version</config-property-name>
+                    <config-property-type>java.lang.String</config-property-type>
+                    <config-property-value>8.0</config-property-value>
+                </config-property>
+        
+        <connectionfactory-interface>org.apache.geode.ra.GFConnectionFactory</connectionfactory-interface>
+        <connectionfactory-impl-class>org.apache.geode.internal.ra.GFConnectionFactoryImpl</connectionfactory-impl-class>
+        <connection-interface>org.apache.geode.ra.GFConnection</connection-interface>
+        <connection-impl-class>org.apache.geode.internal.ra.GFConnectionImpl</connection-impl-class>
+        <transaction-support>LocalTransaction</transaction-support>
+        <reauthentication-support>false</reauthentication-support> 
+    </resourceadapter>
+</connector>

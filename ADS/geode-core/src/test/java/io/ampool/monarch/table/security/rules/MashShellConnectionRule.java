@@ -1,0 +1,163 @@
+/*
+ * Copyright (c) 2017 Ampool, Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License. See accompanying LICENSE file.
+ */
+package io.ampool.monarch.table.security.rules;
+
+import org.apache.geode.management.cli.Result;
+import org.apache.geode.management.internal.cli.CliUtil;
+import org.apache.geode.management.internal.cli.HeadlessGfsh;
+import org.apache.geode.management.internal.cli.i18n.CliStrings;
+import org.apache.geode.management.internal.cli.result.CommandResult;
+import org.apache.geode.management.internal.cli.util.CommandStringBuilder;
+import org.apache.geode.test.dunit.rules.ConnectionConfiguration;
+import org.apache.geode.test.dunit.rules.Locator;
+import org.apache.geode.test.junit.rules.DescribedExternalResource;
+import org.junit.runner.Description;
+
+import java.io.IOException;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class MashShellConnectionRule extends DescribedExternalResource {
+  private int port = -1;
+  private PortType portType = PortType.jmxManger;
+  private HeadlessGfsh gfsh = null;
+  private boolean connected = false;
+
+  public MashShellConnectionRule() {}
+
+  public MashShellConnectionRule(int port, PortType portType) {
+    this.port = port;
+    this.portType = portType;
+  }
+
+  @Override
+  protected void before(Description description) throws Throwable {
+    this.gfsh = new HeadlessGfsh(getClass().getName(), 30, "gfsh_files");
+    // do not auto connect if no port initialized
+    if (port < 0) {
+      return;
+    }
+
+    // do not auto connect if it's not used with ConnectionConfiguration
+    ConnectionConfiguration config = description.getAnnotation(ConnectionConfiguration.class);
+    if (config == null) {
+      return;
+    }
+
+    connect(port, portType, CliStrings.CONNECT__USERNAME, config.user(),
+        CliStrings.CONNECT__PASSWORD, config.password());
+  }
+
+  public void connect(Locator locator, String... options) throws Exception {
+    connect(locator.getPort(), PortType.locator, options);
+  }
+
+  public void connectAndVerify(Locator locator, String... options) throws Exception {
+    connect(locator.getPort(), PortType.locator, options);
+    assertThat(this.connected).isTrue();
+  }
+
+  public void connect(int port, PortType type, String... options) throws Exception {
+    CliUtil.isGfshVM = true;
+    final CommandStringBuilder connectCommand = new CommandStringBuilder(CliStrings.CONNECT);
+    String endpoint;
+    if (type == PortType.locator) {
+      // port is the locator port
+      endpoint = "localhost[" + port + "]";
+      connectCommand.addOption(CliStrings.CONNECT__LOCATOR, endpoint);
+    } else if (type == PortType.http) {
+      endpoint = "http://localhost:" + port + "/gemfire/v1";
+      connectCommand.addOption(CliStrings.CONNECT__USE_HTTP, Boolean.TRUE.toString());
+      connectCommand.addOption(CliStrings.CONNECT__URL, endpoint);
+    } else {
+      endpoint = "localhost[" + port + "]";
+      connectCommand.addOption(CliStrings.CONNECT__JMX_MANAGER, endpoint);
+    }
+
+    // add the extra options
+    if (options != null) {
+      for (int i = 0; i < options.length; i += 2) {
+        connectCommand.addOption(options[i], options[i + 1]);
+      }
+    }
+
+    // when we connect too soon, we would get "Failed to retrieve RMIServer stub:
+    // javax.naming.CommunicationException [Root exception is java.rmi.NoSuchObjectException: no
+    // such object in table]" Exception.
+    // can not use Awaitility here because it starts another thead, but the Gfsh instance is in a
+    // threadLocal variable, See Gfsh.getExistingInstance()
+    CommandResult result = null;
+    for (int i = 0; i < 50; i++) {
+      result = executeCommand(connectCommand.toString());
+      if (!gfsh.outputString.contains("no such object in table")) {
+        break;
+      }
+      Thread.currentThread().sleep(2000);
+    }
+    connected = (result.getStatus() == Result.Status.OK);
+  }
+
+  @Override
+  protected void after(Description description) throws Throwable {
+    if (connected) {
+      disconnect();
+    }
+    close();
+  }
+
+  public void disconnect() throws Exception {
+    gfsh.clear();
+    executeCommand("disconnect");
+    connected = false;
+  }
+
+  public void close() throws Exception {
+    gfsh.executeCommand("exit");
+    gfsh.terminate();
+    gfsh = null;
+    CliUtil.isGfshVM = false;
+  }
+
+  public HeadlessGfsh getGfsh() {
+    return gfsh;
+  }
+
+  public CommandResult executeCommand(String command) throws Exception {
+    gfsh.executeCommand(command);
+    CommandResult result = (CommandResult) gfsh.getResult();
+    System.out.println("Command Result: \n" + gfsh.outputString);
+    return result;
+  }
+
+
+  public CommandResult executeAndVerifyCommand(String command) throws Exception {
+    CommandResult result = executeCommand(command);
+    assertThat(result.getStatus()).describedAs(result.getContent().toString())
+        .isEqualTo(Result.Status.OK);
+    return result;
+  }
+
+  public String execute(String command) throws Exception {
+    executeCommand(command);
+    return gfsh.outputString;
+  }
+
+  public boolean isConnected() {
+    return connected;
+  }
+
+  public enum PortType {
+    locator, jmxManger, http
+  }
+}

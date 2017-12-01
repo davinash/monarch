@@ -1,0 +1,11 @@
+allprojects{
+
+  def generatedResources = "$buildDir/generated-resources/main"
+
+}
+
+subprojects {
+  dependencies {
+    // add dependencies here
+  }
+}
