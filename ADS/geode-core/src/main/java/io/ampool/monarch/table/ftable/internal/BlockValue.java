@@ -47,7 +47,8 @@ import org.apache.geode.internal.Version;
 import org.apache.geode.internal.cache.EntryEventImpl;
 import org.apache.geode.internal.cache.lru.Sizeable;
 
-public class BlockValue implements DataSerializableFixedID, Delta, Sizeable {
+public class BlockValue implements DataSerializableFixedID, Delta, /*PersistenceDelta,*/ Sizeable {
+
   AtomicInteger currentIndex;
   private int valueSize;
   private RowHeader rowHeader;
@@ -55,6 +56,10 @@ public class BlockValue implements DataSerializableFixedID, Delta, Sizeable {
   private volatile boolean isEvicted = false;
   /* new block is not considered for delta.. it starts from second record onwards */
   private int lastToDelta = 1;
+
+  // delta counter used for persisting only delta information
+  private int lastPersistenceDelta = 0;
+
 
   /* Indicates type of the stored data: Ampool bytes or ORC bytes */
   private Object value = null;
@@ -78,7 +83,7 @@ public class BlockValue implements DataSerializableFixedID, Delta, Sizeable {
     value = records = new ArrayList<>(blockSize);
   }
 
-  public boolean checkAndAddRecord(final Object record) {
+  public synchronized boolean checkAndAddRecord(final Object record) {
     if (currentIndex.get() > records.size()) {
       return false;
     }
@@ -112,7 +117,7 @@ public class BlockValue implements DataSerializableFixedID, Delta, Sizeable {
       final MColumnDescriptor cd = columnsByName.get(entry.getKey());
       if (cd.getColumnType() instanceof BasicTypes) {
         this.stats.updateColumnStatistics((BasicTypes) cd.getColumnType(),
-            record.getValueMap().get(entry.getKey()), cd.getIndex());
+                record.getValueMap().get(entry.getKey()), cd.getIndex());
       }
     }
     return checkAndAddRecord(td.getEncoding().serializeValue(td, record));
@@ -126,7 +131,7 @@ public class BlockValue implements DataSerializableFixedID, Delta, Sizeable {
    * @param td the table descriptor
    * @return true if the row was added to the block; false otherwise
    */
-  public boolean checkAndAddRecord(Object row, FTableDescriptor td) {
+  public synchronized boolean checkAndAddRecord(Object row, FTableDescriptor td) {
     if (currentIndex.get() > records.size()) {
       return false;
     }
@@ -257,7 +262,7 @@ public class BlockValue implements DataSerializableFixedID, Delta, Sizeable {
   }
 
   @Override
-  public void toData(final DataOutput out) throws IOException {
+  public synchronized void toData(final DataOutput out) throws IOException {
     DataSerializer.writeInteger(currentIndex.get(), out);
     DataSerializer.writeInteger(valueSize, out);
     DataSerializer.writeByteArray(rowHeader.getHeaderBytes(), out);
@@ -271,7 +276,7 @@ public class BlockValue implements DataSerializableFixedID, Delta, Sizeable {
   }
 
   @Override
-  public void fromData(final DataInput in) throws IOException, ClassNotFoundException {
+  public synchronized void fromData(final DataInput in) throws IOException, ClassNotFoundException {
     currentIndex.set(DataSerializer.readInteger(in));
     valueSize = DataSerializer.readInteger(in);
     rowHeader = new RowHeader(DataSerializer.readByteArray(in));
@@ -334,7 +339,6 @@ public class BlockValue implements DataSerializableFixedID, Delta, Sizeable {
     ArrayList<byte[]> newList = new ArrayList<>(size());
     Iterator<Object> iterator = iterator();
     Encoding enc = Encoding.getEncoding(this.rowHeader.getEncoding());
-    long endTimestamp = lastKey.getEndTimeStamp();
     Row r;
     if (this.stats != null) {
       this.stats.reset();
@@ -351,12 +355,11 @@ public class BlockValue implements DataSerializableFixedID, Delta, Sizeable {
       /* skip/remove the matching records */
       if (!ScanUtils.executeSimpleFilter(r, filter, td)) {
         final byte[] bytes = record instanceof StoreRecord ? (byte[]) enc.serializeValue(td, record)
-            : (byte[]) record;
+                : (byte[]) record;
         newList.add(updateStatistics(bytes, (FTableDescriptor) td));
-        endTimestamp = (long) r.getValue(td.getNumOfColumns() - 1);
       }
     }
-    reset(lastKey, (FTableDescriptor) td, newList, endTimestamp);
+    reset(lastKey, (FTableDescriptor) td, newList);
   }
 
   /**
@@ -367,27 +370,15 @@ public class BlockValue implements DataSerializableFixedID, Delta, Sizeable {
    * @param lastKey the key respective to this block-value
    * @param td the table descriptor
    * @param newList the new list of serialized records
-   * @param endTimestamp end-timestamp of the block i.e. last row in block
    */
   private void reset(final BlockKey lastKey, final FTableDescriptor td,
-      final ArrayList<byte[]> newList, long endTimestamp) {
+                     final ArrayList<byte[]> newList) {
     this.currentIndex.set(newList.size());
     if (newList.size() == 0) {
       this.value = this.records = null;
       this.fmt = FTableDescriptor.BlockFormat.AMP_BYTES;
     } else {
       this.records = newList;
-      if (getCurrentIndex() > 0 && endTimestamp != lastKey.getEndTimeStamp()) {
-        /*
-         * NEEDS_VERIFICATION/TODO: Do not update the start timestamp it makes the
-         * ConcurrentSkiplist code make another entry for the block. hascode and equals for the new
-         * BlockKey are same as the old blockey but it seems that ConcurrentSkipListMap also uses
-         * compare and ends up creating a new node.
-         */
-
-        // lastKey.setStartTimeStamp(getTimeStamp(records[0]));
-        lastKey.setEndTimeStamp(endTimestamp);
-      }
       if (this.fmt != FTableDescriptor.BlockFormat.AMP_BYTES) {
         close(td);
       }
@@ -402,9 +393,10 @@ public class BlockValue implements DataSerializableFixedID, Delta, Sizeable {
    * @param filter the filters to be evaluated
    * @param colValues map of column-index to the value to be updated
    * @param td the table descriptor
+   * @return true if the block has been updated; false otherwise
    */
-  public void updateBlock(BlockKey lastKey, Filter filter, Map<Integer, Object> colValues,
-      TableDescriptor td) {
+  public boolean updateBlock(BlockKey lastKey, Filter filter, Map<Integer, Object> colValues,
+                             TableDescriptor td) {
     final ThinRow row = ThinRow.create(td, ThinRow.RowFormat.F_FULL_ROW);
     ArrayList<byte[]> newList = new ArrayList<>(size());
     final Encoding enc = Encoding.getEncoding(this.rowHeader.getEncoding());
@@ -413,6 +405,7 @@ public class BlockValue implements DataSerializableFixedID, Delta, Sizeable {
     if (this.stats != null) {
       this.stats.reset();
     }
+    boolean isUpdated = false;
     while (iterator.hasNext()) {
       final Object record = iterator.next();
       byte[] bytes;
@@ -427,7 +420,7 @@ public class BlockValue implements DataSerializableFixedID, Delta, Sizeable {
       if (ScanUtils.executeSimpleFilter(row, filter, td)) {
         if (record instanceof StoreRecord) {
           System.arraycopy(((StoreRecord) record).getValues(), 0, newRec.getValues(), 0,
-              td.getNumOfColumns());
+                  td.getNumOfColumns());
         } else {
           for (int i = 0; i < td.getNumOfColumns(); i++) {
             newRec.updateValue(i, row.getCells().get(i).getColumnValue());
@@ -437,6 +430,7 @@ public class BlockValue implements DataSerializableFixedID, Delta, Sizeable {
           newRec.updateValue(entry.getKey(), entry.getValue());
         }
         bytes = (byte[]) enc.serializeValue(td, newRec);
+        isUpdated = true;
       }
       newList.add(updateStatistics(bytes, (FTableDescriptor) td));
     }
@@ -444,41 +438,106 @@ public class BlockValue implements DataSerializableFixedID, Delta, Sizeable {
     if (this.fmt != FTableDescriptor.BlockFormat.AMP_BYTES) {
       close((FTableDescriptor) td);
     }
+    this.lastPersistenceDelta = 0;
+    return isUpdated;
   }
 
-  @Override
-  public boolean hasDelta() {
-    int index = currentIndex.get();
-    if (this.records == null || index == 1 || index > records.size()) {
+  public void resetDelta() {
+    this.lastToDelta = size();
+  }
+
+  private boolean hasDeltaInternal(final int deltaIndex) {
+    if (this.records == null || records.size() <= deltaIndex) {
       return false;
     }
     return true;
   }
 
-  @Override
-  public void toDelta(DataOutput out) throws IOException {
-    int deltaCount = size() - this.lastToDelta;
+  private synchronized void toDeltaInternal(DataOutput out, final int deltaIndex)
+          throws IOException {
+    int deltaCount = records.size() - deltaIndex;
     DataSerializer.writeInteger(deltaCount, out);
     for (int i = 0; i < deltaCount; i++) {
-      DataSerializer.writeByteArray(records.get(this.lastToDelta + i), out);
+      DataSerializer.writeByteArray(records.get(deltaIndex + i), out);
     }
-    this.lastToDelta = size();
+    DataSerializer.writeObject(this.stats, out);
   }
 
-  @Override
-  public void fromDelta(DataInput in) throws IOException, InvalidDeltaException {
+  private synchronized void fromDeltaInternal(DataInput in)
+          throws IOException, InvalidDeltaException {
     int deltaCount = DataSerializer.readInteger(in);
     for (int i = 0; i < deltaCount; i++) {
       final byte[] bytes = DataSerializer.readByteArray(in);
       this.records.add(bytes);
       valueSize += bytes == null ? 0 : bytes.length;
     }
+    try {
+      this.stats = DataSerializer.readObject(in);
+    } catch (ClassNotFoundException e) {
+      ////
+    }
     this.currentIndex.addAndGet(deltaCount);
   }
 
   @Override
+  public boolean hasDelta() {
+    return hasDeltaInternal(this.lastToDelta);
+  }
+
+  @Override
+  public void toDelta(DataOutput out) throws IOException {
+    toDeltaInternal(out, this.lastToDelta);
+    this.lastToDelta = size();
+  }
+
+  @Override
+  public void fromDelta(DataInput in) throws IOException, InvalidDeltaException {
+    fromDeltaInternal(in);
+  }
+
+//  @Override
+//  public synchronized boolean hasPersistenceDelta() {
+//    if (this.lastPersistenceDelta == 0) {
+//      return false;
+//    }
+//    if (this.records == null || records.size() < lastPersistenceDelta) {
+//      return false;
+//    }
+//    return true;
+//  }
+//
+//  public int getLastPersistenceDelta() {
+//    return lastPersistenceDelta;
+//  }
+//
+//  @Override
+//  public synchronized void toPersistenceDelta(DataOutput out) {
+//    try {
+//      toDeltaInternal(out, this.lastPersistenceDelta);
+//      this.lastPersistenceDelta = size();
+//    } catch (Exception ex) {
+//      throw new RuntimeException(ex);
+//    }
+//  }
+//
+//  @Override
+//  public synchronized void fromPersistenceDelta(DataInput in) {
+//    try {
+//      fromDeltaInternal(in);
+//    } catch (Exception ex) {
+//      throw new RuntimeException(ex);
+//    }
+//  }
+//
+//  @Override
+//  public synchronized void resetPersistenceDelta() {
+//    this.lastPersistenceDelta = size();
+//  }
+
+  @Override
   public String toString() {
-    return "BlockValue{" + "currentIndex=" + currentIndex + ", valueSize=" + valueSize + '}';
+    return "BlockValue{" + "currentIndex=" + currentIndex + ", valueSize=" + valueSize
+            + ", lastPersistenceDelta=" + lastPersistenceDelta + '}';
   }
 
   /**
@@ -488,6 +547,8 @@ public class BlockValue implements DataSerializableFixedID, Delta, Sizeable {
   public int getSizeInBytes() {
     return this.valueSize;
   }
+
+
 
   private class BlockValueIterator implements Iterator<Object> {
     int itrIndex;

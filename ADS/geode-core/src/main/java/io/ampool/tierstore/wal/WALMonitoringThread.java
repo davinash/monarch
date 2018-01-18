@@ -43,11 +43,11 @@ public class WALMonitoringThread extends Thread {
   private static final Logger logger = LogService.getLogger();
   private Set<String> pausedBuckets = null;
   private static final int MAX_FILES_IN_ITERATION =
-      Integer.getInteger("ampool.wal.process.limit", -1);
+          Integer.getInteger("ampool.wal.process.limit", -1);
 
 
   public WALMonitoringThread(StoreHandler storeHandler, WriteAheadLog writeAheadLog,
-      Properties properties) {
+                             Properties properties) {
     pausedBuckets = new ConcurrentHashSet<>();
     this.storeHandler = storeHandler;
     this.writeAheadLog = writeAheadLog;
@@ -75,7 +75,7 @@ public class WALMonitoringThread extends Thread {
         }
 
         filesProcessedInCurrentIteration =
-            expiredFilesProcessed || filesProcessedInCurrentIteration;
+                expiredFilesProcessed || filesProcessedInCurrentIteration;
 
         // If no files processed sleep for 5 (configurable) secs
         if (!filesProcessedInCurrentIteration) {
@@ -95,7 +95,7 @@ public class WALMonitoringThread extends Thread {
 
   /**
    * Pause the WAL monitoring thread
-   * 
+   *
    * @param tableName
    * @param partitionID
    */
@@ -105,7 +105,7 @@ public class WALMonitoringThread extends Thread {
 
   /**
    * Resume the WAL monitoring thread
-   * 
+   *
    * @param tableName
    * @param partitionID
    */
@@ -155,7 +155,7 @@ public class WALMonitoringThread extends Thread {
         } catch (IOException ie) {
           /* TODO: Handle me */
           throw new StoreInternalException(
-              "Error while writing to WAL. Exception: " + ie.getMessage());
+                  "Error while writing to WAL. Exception: " + ie.getMessage());
         }
       }
       // Expire WAL files
@@ -172,7 +172,7 @@ public class WALMonitoringThread extends Thread {
    * @return
    */
   private boolean expireWALFilesToStore(WriteAheadLog writeAheadLog, String[] walFilesToProcess) {
-    boolean filesProcessedInCurrentIteration = false;
+    boolean processed = false;
     if (walFilesToProcess != null && walFilesToProcess.length > 0) {
       int counter = 0;
       // For each file
@@ -212,36 +212,61 @@ public class WALMonitoringThread extends Thread {
           continue;
         }
         String tableName = writeAheadLog.getTableName(fileName);
-        TableDescriptor tableDescriptor = MTableUtils
-            .getTableDescriptor((MonarchCacheImpl) MCacheFactory.getAnyInstance(), tableName);
+        TableDescriptor td = MTableUtils
+                .getTableDescriptor((MonarchCacheImpl) MCacheFactory.getAnyInstance(), tableName);
         int partitionId = writeAheadLog.getPartitionId(fileName);
 
         if (pausedBuckets.contains(tableName + "_" + partitionId)) {
           continue;
         }
 
-        // For each set of 1000 (configurable) records call store1.append
-        // WALReader reader = null;
-        WALRecord[] walRecords = null;
-        boolean writeSuccess = true;
-
-        try (final WALReader reader = writeAheadLog.getReader(fileName)) {
-          do {
-            walRecords = reader.readNext(WAL_READ_BATCH);
-            WALUtils.writeToStore(tableName, partitionId, tableDescriptor, walRecords);
-          } while (walRecords != null && walRecords.length == WAL_READ_BATCH);
-        } catch (IOException e) {
-          logger.error("Error moving data to tierStore for WAL file= {}", fileName, e);
-          writeSuccess = false;
-          // throw new StoreInternalException("Error while reading from WAL. Exception: " +
-          // e.getMessage());
-        }
-
-        if (writeSuccess) {
-          writeAheadLog.deleteWALFile(fileName);
-          filesProcessedInCurrentIteration = true;
+        /* if this file is also being appended to, then sync on the writer */
+        final WALWriter writer = writeAheadLog.getCurrentWriter(tableName, partitionId);
+        if (writer != null && writer.getFile().getFileName().toString().equals(fileName)) {
+          synchronized (writer) {
+            processed |= writeToStore(writeAheadLog, fileName, tableName, partitionId, td);
+          }
+        } else {
+          processed |= writeToStore(writeAheadLog, fileName, tableName, partitionId, td);
         }
       }
+    }
+    return processed;
+  }
+
+  /**
+   * Write the WAL records to subsequent tier-store.
+   *
+   * @param writeAheadLog the WAL instance
+   * @param fileName the WAL file to read records
+   * @param tableName the table-name
+   * @param partitionId the partition/bucket id
+   * @param td the table descriptor
+   * @return true if the records were successfully moved to next tier; false otherwise
+   */
+  private boolean writeToStore(WriteAheadLog writeAheadLog, String fileName, String tableName,
+                               int partitionId, TableDescriptor td) {
+    boolean filesProcessedInCurrentIteration = false;
+    // For each set of 1000 (configurable) records call store1.append
+    // WALReader reader = null;
+    WALRecord[] walRecords = null;
+    boolean writeSuccess = true;
+
+    try (final WALReader reader = writeAheadLog.getReader(fileName)) {
+      do {
+        walRecords = reader.readNext(WAL_READ_BATCH);
+        WALUtils.writeToStore(tableName, partitionId, td, walRecords);
+      } while (walRecords != null && walRecords.length == WAL_READ_BATCH);
+    } catch (IOException e) {
+      logger.error("Error moving data to tierStore for WAL file= {}", fileName, e);
+      writeSuccess = false;
+      // throw new StoreInternalException("Error while reading from WAL. Exception: " +
+      // e.getMessage());
+    }
+
+    if (writeSuccess) {
+      writeAheadLog.deleteWALFile(fileName);
+      filesProcessedInCurrentIteration = true;
     }
     return filesProcessedInCurrentIteration;
   }

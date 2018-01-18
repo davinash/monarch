@@ -40,6 +40,7 @@ import io.ampool.monarch.table.ftable.FTableDescriptor;
 import io.ampool.monarch.table.ftable.TierStoreConfiguration;
 import io.ampool.monarch.table.ftable.exceptions.FTableExistsException;
 import io.ampool.monarch.table.ftable.exceptions.FTableNotExistsException;
+import io.ampool.monarch.table.ftable.internal.FTableImpl;
 import io.ampool.monarch.table.ftable.internal.ProxyFTableRegion;
 import io.ampool.monarch.types.BasicTypes;
 import io.ampool.store.ExternalStoreWriter;
@@ -95,10 +96,10 @@ public class AdminImpl implements Admin {
 
   @Override
   public MTable createMTable(final String tableName, final MTableDescriptor tableDescriptor)
-      throws MTableExistsException {
+          throws MTableExistsException {
     final Table table = createMemoryTable(tableName, tableDescriptor);
-    if (table instanceof MTable || table instanceof ProxyMTableRegion) {
-      return (ProxyMTableRegion) table;
+    if (table instanceof MTable || table instanceof MTableImpl) {
+      return (MTableImpl) table;
     }
     // TODO Confirm if this what expected
     return null;
@@ -110,11 +111,11 @@ public class AdminImpl implements Admin {
 
   @Override
   public FTable createFTable(final String tableName, final FTableDescriptor tableDescriptor)
-      throws FTableExistsException {
+          throws FTableExistsException {
     validateFTableDescriptor(tableDescriptor);
     final Table table = createMemoryTable(tableName, tableDescriptor);
-    if (table instanceof FTable || table instanceof ProxyFTableRegion) {
-      return (ProxyFTableRegion) table;
+    if (table instanceof FTable || table instanceof FTableImpl) {
+      return (FTableImpl) table;
     }
     // TODO Confirm if this what expected
     return null;
@@ -125,8 +126,8 @@ public class AdminImpl implements Admin {
     Map<String, MTableDescriptor> result = new HashMap<>();
     try {
       Region<String, TableDescriptor> metaRegion =
-          (Region<String, TableDescriptor>) monarchCacheImpl
-              .getRegion(MTableUtils.AMPL_META_REGION_NAME);
+              (Region<String, TableDescriptor>) monarchCacheImpl
+                      .getRegion(MTableUtils.AMPL_META_REGION_NAME);
 
       if (monarchCacheImpl.isClient()) {
         Set<String> tableNames = metaRegion.keySetOnServer();
@@ -164,8 +165,8 @@ public class AdminImpl implements Admin {
     Map<String, FTableDescriptor> result = new HashMap<>();
     try {
       Region<String, TableDescriptor> metaRegion =
-          (Region<String, TableDescriptor>) monarchCacheImpl
-              .getRegion(MTableUtils.AMPL_META_REGION_NAME);
+              (Region<String, TableDescriptor>) monarchCacheImpl
+                      .getRegion(MTableUtils.AMPL_META_REGION_NAME);
 
       if (monarchCacheImpl.isClient()) {
         Set<String> tableNames = metaRegion.keySetOnServer();
@@ -203,8 +204,8 @@ public class AdminImpl implements Admin {
     List<String> tableNames = new ArrayList<String>();
     try {
       Region<String, TableDescriptor> metaRegion =
-          (Region<String, TableDescriptor>) monarchCacheImpl
-              .getRegion(MTableUtils.AMPL_META_REGION_NAME);
+              (Region<String, TableDescriptor>) monarchCacheImpl
+                      .getRegion(MTableUtils.AMPL_META_REGION_NAME);
 
       Set<Entry<String, TableDescriptor>> entries;
       if (monarchCacheImpl.isClient()) {
@@ -315,11 +316,11 @@ public class AdminImpl implements Admin {
     Region<Object, Object> tableRegion;
     Table anyTable = this.monarchCacheImpl.getAnyTable(tableName);
     if (anyTable == null
-        || (tableRegion = ((InternalTable) anyTable).getInternalRegion()) == null) {
+            || (tableRegion = ((InternalTable) anyTable).getInternalRegion()) == null) {
       logger.warn("Table " + tableName + " does not exists");
       throw anyTable instanceof FTable
-          ? new FTableNotExistsException("Table " + tableName + " does not exists")
-          : new MTableNotExistsException("Table " + tableName + " does not exists");
+              ? new FTableNotExistsException("Table " + tableName + " does not exists")
+              : new MTableNotExistsException("Table " + tableName + " does not exists");
     }
 
     /*
@@ -397,14 +398,14 @@ public class AdminImpl implements Admin {
 
   // INTERNAL
   public Table createMemoryTable(final String tableName,
-      final TableDescriptor inputTableDescriptor) {
+                                 final TableDescriptor inputTableDescriptor) {
 
     if (inputTableDescriptor == null) {
       logger.error("Null table descriptor");
       throw new IllegalArgumentException("The MTableDescriptor cannot be null.");
     }
     if (inputTableDescriptor.getSchema() == null
-        && inputTableDescriptor.getColumnDescriptorsMap().size() == 0) {
+            && inputTableDescriptor.getColumnDescriptorsMap().size() == 0) {
       logger.error("No schema found: Table should be created with valid schema.");
       throw new IllegalArgumentException("No schema found");
     }
@@ -452,11 +453,11 @@ public class AdminImpl implements Admin {
       if (tableDescriptor instanceof FTableDescriptor) {
         /* add insertion-time as last column in the schema.. */
         sb.column(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-            FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE);
+                FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE);
         // also add old way
         // TODO improve this way
         tableDescriptor.addColumn(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-            FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE);
+                FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE);
       }
       tableDescriptor.setSchema(sb.build());
     } else {
@@ -466,7 +467,7 @@ public class AdminImpl implements Admin {
           sb.column(cd.getColumnNameAsString(), cd.getColumnType());
         }
         sb.column(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-            FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE);
+                FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE);
         tableDescriptor.setSchema(sb.build());
       }
     }
@@ -486,7 +487,7 @@ public class AdminImpl implements Admin {
     }
 
     Region<String, TableDescriptor> metaRegion = (Region<String, TableDescriptor>) monarchCacheImpl
-        .getRegion(MTableUtils.AMPL_META_REGION_NAME);
+            .getRegion(MTableUtils.AMPL_META_REGION_NAME);
     try {
 
       /*
@@ -527,10 +528,10 @@ public class AdminImpl implements Admin {
       }
       if (tableRegion != null) {
         if (!isFTable) {
-          ProxyMTableRegion table = null;
+          MTableImpl table = null;
           try {
-            table = new ProxyMTableRegion(tableRegion, (MTableDescriptor) tableDescriptor,
-                this.monarchCacheImpl);
+            table = new MTableImpl(tableRegion, (MTableDescriptor) tableDescriptor,
+                    this.monarchCacheImpl);
           } catch (GemFireException ge) {
             // Removing entry from metaregion in case of failure
             metaRegion.destroy(tableName);
@@ -541,10 +542,10 @@ public class AdminImpl implements Admin {
           return table;
         } else {
           // FTable related
-          ProxyFTableRegion table = null;
+          FTableImpl table = null;
           try {
-            table = new ProxyFTableRegion(tableRegion, (FTableDescriptor) tableDescriptor,
-                this.monarchCacheImpl);
+            table = new FTableImpl(tableRegion, (FTableDescriptor) tableDescriptor,
+                    this.monarchCacheImpl);
           } catch (GemFireException ge) {
             // Removing entry from metaregion in case of failure
             metaRegion.destroy(tableName);
@@ -577,21 +578,21 @@ public class AdminImpl implements Admin {
    * @param readerOpts Configuration properties for the reader.
    */
   public void createTierStore(String name, String clazz, Properties storeProps, String writerClass,
-      Properties writerOpts, String readerClass, Properties readerOpts) throws Exception {
+                              Properties writerOpts, String readerClass, Properties readerOpts) throws Exception {
     final Iterator<DistributedMember> memberSetItr =
-        MTableUtils.getAllDataMembers(monarchCacheImpl).iterator();
+            MTableUtils.getAllDataMembers(monarchCacheImpl).iterator();
     DistributedMember member = null;
     if (memberSetItr.hasNext()) {
       member = memberSetItr.next();
     }
     boolean tierStore = TierStoreUtils.createTierStore(name, clazz, storeProps, writerClass,
-        writerOpts, readerClass, readerOpts, member);
+            writerOpts, readerClass, readerOpts, member);
     if (tierStore) {
       String successMsg = "Tier store {0} created successfully. " + "Store class: {1}"
-          + "Store Properties: {2} " + "Reader class: {3} " + "Reader properties: {4} "
-          + "Writer class: {5} " + "Writer properties: {6} ";
+              + "Store Properties: {2} " + "Reader class: {3} " + "Reader properties: {4} "
+              + "Writer class: {5} " + "Writer properties: {6} ";
       logger.info(CliStrings.format(successMsg, name, clazz, storeProps.toString(), readerClass,
-          readerOpts.toString(), writerClass, writerOpts.toString()));
+              readerOpts.toString(), writerClass, writerOpts.toString()));
     }
   }
 
@@ -606,7 +607,7 @@ public class AdminImpl implements Admin {
     Execution members;
 
     final Iterator<DistributedMember> memberSetItr =
-        MTableUtils.getAllDataMembers(monarchCacheImpl).iterator();
+            MTableUtils.getAllDataMembers(monarchCacheImpl).iterator();
     DistributedMember member = null;
     if (memberSetItr.hasNext()) {
       member = memberSetItr.next();
@@ -618,7 +619,7 @@ public class AdminImpl implements Admin {
     Exception ex = null;
     try {
       destroyStoreResult =
-          (ArrayList) members.execute(destroyTierStoreControllerFunction.getId()).getResult();
+              (ArrayList) members.execute(destroyTierStoreControllerFunction.getId()).getResult();
     } catch (Exception e) {
       // If function execution is failed due to member failure
       // then handle it by rollbacking...
@@ -661,7 +662,7 @@ public class AdminImpl implements Admin {
 
   @Override
   public void truncateMTable(String tableName, Filter filter, boolean preserveOlderVersions)
-      throws Exception {
+          throws Exception {
     TableDescriptor tableDescriptor = MTableUtils.getTableDescriptor(monarchCacheImpl, tableName);
     if (tableDescriptor instanceof FTableDescriptor)
       throw new IllegalArgumentException("Table " + tableName + " is not a MTable");
@@ -669,18 +670,18 @@ public class AdminImpl implements Admin {
   }
 
   private void validateColumns(Map<byte[], Object> colValues, TableDescriptor td)
-      throws IllegalArgumentException {
+          throws IllegalArgumentException {
     Map<MColumnDescriptor, Integer> cdsMap = td.getColumnDescriptorsMap();
     for (Entry<byte[], Object> entry : colValues.entrySet()) {
       if (Bytes.compareTo(entry.getKey(),
-          Bytes.toBytes(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME)) == 0) {
+              Bytes.toBytes(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME)) == 0) {
         throw new IllegalArgumentException(
-            "Column " + FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME + " can not be updated");
+                "Column " + FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME + " can not be updated");
       }
       MColumnDescriptor mcd_in = new MColumnDescriptor(entry.getKey());
       if (!td.getColumnDescriptorsMap().containsKey(mcd_in)) {
         throw new IllegalArgumentException("Column " + Arrays.toString(entry.getKey())
-            + " not found in table " + td.getTableName());
+                + " not found in table " + td.getTableName());
       }
     }
   }
@@ -709,7 +710,7 @@ public class AdminImpl implements Admin {
         members = FunctionService.onServers(monarchCacheImpl.getDefaultPool()).withArgs(args);
       } else {
         members = FunctionService.onMembers(MTableUtils.getAllDataMembers(monarchCacheImpl))
-            .withArgs(args);
+                .withArgs(args);
       }
       List updateTableResult = (ArrayList) members.execute(new UpdateTableFunction()).getResult();
 
@@ -738,7 +739,7 @@ public class AdminImpl implements Admin {
         throw new UpdateTableException(ex.getMessage());
       } else if (ex == null && finalRes == false) {
         throw new UpdateTableException(
-            "Failed to update table: " + "Function execution exception, see log for details.");
+                "Failed to update table: " + "Function execution exception, see log for details.");
       }
     }
 
@@ -762,10 +763,10 @@ public class AdminImpl implements Admin {
         members = FunctionService.onServers(monarchCacheImpl.getDefaultPool()).withArgs(args);
       } else {
         members = FunctionService.onMembers(MTableUtils.getAllDataMembers(monarchCacheImpl))
-            .withArgs(args);
+                .withArgs(args);
       }
       List updateTableResult =
-          (ArrayList) members.execute(new ForceEvictFTableFunction()).getResult();
+              (ArrayList) members.execute(new ForceEvictFTableFunction()).getResult();
 
       for (int i = 0; i < updateTableResult.size(); i++) {
         Object receivedObj = updateTableResult.get(i);
@@ -779,7 +780,7 @@ public class AdminImpl implements Admin {
     } catch (Exception e) {
       logger.error("Exception while flushing table: " + tableName, e);
       MTableUtils.checkSecurityException(e);
-      ex = e;
+      throw e;
     }
 
   }
@@ -787,10 +788,10 @@ public class AdminImpl implements Admin {
 
 
   public void truncateTable(String tableName, Filter filter, boolean preserveOlderVersions)
-      throws Exception {
+          throws Exception {
     Exception ex = null;
     Region<String, TableDescriptor> metaRegion = (Region<String, TableDescriptor>) monarchCacheImpl
-        .getRegion(MTableUtils.AMPL_META_REGION_NAME);
+            .getRegion(MTableUtils.AMPL_META_REGION_NAME);
 
     /* TODO: Check if filters supplied are acceptable */
 
@@ -810,10 +811,10 @@ public class AdminImpl implements Admin {
         members = FunctionService.onServers(monarchCacheImpl.getDefaultPool()).withArgs(args);
       } else {
         members = FunctionService.onMembers(MTableUtils.getAllDataMembers(monarchCacheImpl))
-            .withArgs(args);
+                .withArgs(args);
       }
       List truncateTableResult =
-          (ArrayList) members.execute(new TruncateTableFunction()).getResult();
+              (ArrayList) members.execute(new TruncateTableFunction()).getResult();
 
       for (int i = 0; i < truncateTableResult.size(); i++) {
         Object receivedObj = truncateTableResult.get(i);
@@ -863,7 +864,7 @@ public class AdminImpl implements Admin {
   }
 
   private void archiveMTable(MTableDescriptor tableDescriptor, Filter filter,
-      ArchiveConfiguration configuration) {
+                             ArchiveConfiguration configuration) {
     MTable mTable = monarchCacheImpl.getMTable(tableDescriptor.getTableName());
 
     // retrieve the records and write the records
@@ -892,7 +893,7 @@ public class AdminImpl implements Admin {
   }
 
   private void archiveFTable(FTableDescriptor tableDescriptor, Filter filter,
-      ArchiveConfiguration configuration) {
+                             ArchiveConfiguration configuration) {
     FTable fTable = monarchCacheImpl.getFTable(tableDescriptor.getTableName());
 
     // retrieve the records and write the records
@@ -921,7 +922,7 @@ public class AdminImpl implements Admin {
   }
 
   private void writeRecords(Row[] rows, TableDescriptor tableDescriptor,
-      ArchiveConfiguration configuration) throws Exception {
+                            ArchiveConfiguration configuration) throws Exception {
     ExternalStoreWriter externalStoreWriter = configuration.getExternalStoreWriter();
     if (externalStoreWriter != null) {
       externalStoreWriter.write(tableDescriptor, rows, configuration);

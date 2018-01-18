@@ -39,6 +39,7 @@ import io.ampool.monarch.table.ftable.FTableDescriptor;
 import io.ampool.monarch.types.BasicTypes;
 import org.apache.geode.DataSerializer;
 import org.apache.geode.cache.PartitionAttributesFactory;
+import org.apache.geode.internal.cache.DiskStoreAttributes;
 
 public abstract class AbstractTableDescriptor implements TableDescriptor {
 
@@ -103,7 +104,9 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
   /**
    * Set the name of the existing diskstore for MTable disk persistence
    */
-  protected String diskStoreName = MTableUtils.DEFAULT_DISK_STORE_NAME;
+  protected String diskStoreName = MTableUtils.DEFAULT_MTABLE_DISK_STORE_NAME;
+
+  protected DiskStoreAttributes diskStoreAttributes = null;
 
   protected MDiskWritePolicy diskWritePolicy = MDiskWritePolicy.ASYNCHRONOUS;
   protected MEvictionPolicy evictionPolicy = MEvictionPolicy.OVERFLOW_TO_DISK;
@@ -176,7 +179,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
   /**
    * Temporary method to detect whether the columns were added in old way (addColumn) or new way
    * (Schema).
-   * 
+   *
    * @return true if the columns were added via addColumn; false if via Schema
    */
   private boolean isOldWay() {
@@ -186,7 +189,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
   /**
    * Returns the Map of columnDescriptor where the map key is the MColumnDescriptor and the value is
    * it's respective position in a row as defined by the schema.
-   * 
+   *
    * @return Column Descriptor Map.
    */
   public Map<MColumnDescriptor, Integer> getColumnDescriptorsMap() {
@@ -203,7 +206,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
 
   /**
    * Get a map of column descriptors keyed by the column name as a byte[] array.
-   * 
+   *
    * @return Map of byte[], MColumnDescriptor containing the columns defined in this table
    *         descriptor.
    */
@@ -213,7 +216,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
 
   /**
    * Add a column to the table schema.
-   * 
+   *
    * @param colName name of the column to be added.
    * @return Object of this class, used for chained calling.
    */
@@ -223,7 +226,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
 
   /**
    * Add a column to the table schema.
-   * 
+   *
    * @param colName name of the column to be added.
    * @return Object of this class, used for chained calling.
    */
@@ -234,26 +237,26 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
 
   /**
    * Add a column of a specific type to the table schema.
-   * 
+   *
    * @param colName name of the column to be added.
    * @param type The {@link BasicTypes} for this column; for example MBasicObjectType.STRING.
    * @return Object of this class, used for chained calling.
    */
   public TableDescriptor addColumn(final String colName, BasicTypes type)
-      throws TableColumnAlreadyExists {
+          throws TableColumnAlreadyExists {
     MColumnDescriptor columnDescriptor = new MColumnDescriptor(colName, new MTableColumnType(type));
     return this.addColumn(Bytes.toBytes(colName), columnDescriptor);
   }
 
   /**
    * Add a column of a specific type to the table schema.
-   * 
+   *
    * @param colName name of the column to be added.
    * @param type The {@link BasicTypes} for this column; for example MBasicObjectType.STRING.
    * @return Object of this class, used for chained calling.
    */
   public TableDescriptor addColumn(final byte[] colName, BasicTypes type)
-      throws TableColumnAlreadyExists {
+          throws TableColumnAlreadyExists {
     MColumnDescriptor columnDescriptor = new MColumnDescriptor(colName, new MTableColumnType(type));
     return this.addColumn(colName, columnDescriptor);
   }
@@ -265,7 +268,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
    * {@link MTableColumnType} is for advanced development and in general unless a complex or new
    * type is needed always use one of the types defined in {@link BasicTypes} with the
    * {@link TableDescriptor#addColumn(String, BasicTypes)}.</b>
-   * 
+   *
    * @param colName name of the column to be added.
    * @param columnType The {@link MTableColumnType} for this column; for example new
    *        MTableColumnType(MBasicObjectType.STRING). Complex types may be defined using a properly
@@ -273,7 +276,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
    * @return Object of this class, used for chained calling.
    */
   public TableDescriptor addColumn(final String colName, MTableColumnType columnType)
-      throws TableColumnAlreadyExists {
+          throws TableColumnAlreadyExists {
     MColumnDescriptor columnDescriptor = new MColumnDescriptor(colName, columnType);
     return this.addColumn(Bytes.toBytes(colName), columnDescriptor);
   }
@@ -286,7 +289,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
    * {@link MTableColumnType} is for advanced development and in general unless a complex or new
    * type is needed always use one of the types defined in {@link BasicTypes} with the
    * {@link TableDescriptor#addColumn(String, BasicTypes)}.</b>
-   * 
+   *
    * @param colName name of the column to be added.
    * @param columnType The {@link MTableColumnType} for this column; for example new
    *        MTableColumnType(MBasicObjectType.STRING). Complex types may be defined using a properly
@@ -294,7 +297,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
    * @return Object of this class, used for chained calling.
    */
   public TableDescriptor addColumn(final byte[] colName, MTableColumnType columnType)
-      throws TableColumnAlreadyExists {
+          throws TableColumnAlreadyExists {
     MColumnDescriptor columnDescriptor = new MColumnDescriptor(colName, columnType);
     return this.addColumn(colName, columnDescriptor);
   }
@@ -308,7 +311,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
    *             {@link TableDescriptor#addColumn(String, MTableColumnType)} instead.
    */
   public TableDescriptor addColumn(final String colName, String columnTypeId)
-      throws TableColumnAlreadyExists {
+          throws TableColumnAlreadyExists {
     MColumnDescriptor columnDescriptor = new MColumnDescriptor(colName, columnTypeId);
     return this.addColumn(Bytes.toBytes(colName), columnDescriptor);
   }
@@ -328,7 +331,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
       this.columnPosition++;
     } else {
       throw new TableColumnAlreadyExists(
-          "Column " + Arrays.toString(colName) + " Already Exists in Schema. ");
+              "Column " + Arrays.toString(colName) + " Already Exists in Schema. ");
     }
     return this;
   }
@@ -339,7 +342,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
 
   /**
    * Returns the number of redundant (extra) copies configured for this table.
-   * 
+   *
    * @return number of redundant copies set for this table.
    */
   public int getRedundantCopies() {
@@ -349,7 +352,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
   /**
    * Sets the number of redundant copies of the data for a Table. These copies are used to insure
    * data is available when one or more cache servers are unavailable.
-   * 
+   *
    * @param copies the number of redundant copies
    */
   @Override
@@ -365,7 +368,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
    * sets local max memory that can be used by this table on one server. It will reset any non
    * default value of local max memory set as percentage of max heap using
    * {@link #setLocalMaxMemoryPct(int)}.
-   * 
+   *
    * @param memory memory in mega bytes.
    * @return the table descriptor
    */
@@ -383,7 +386,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
   public TableDescriptor setLocalMaxMemoryPct(int memoryPct) {
     if (memoryPct <= 0 || memoryPct > 90) {
       throw new IllegalArgumentException(
-          "Value of total-max=memory should be greater than 0 and smaller than or equal to 90");
+              "Value of total-max=memory should be greater than 0 and smaller than or equal to 90");
     }
     localMaxMemory = DEFAULT_LOCAL_MAX_MEMORY;
     localMaxMemoryPct = memoryPct;
@@ -394,12 +397,12 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
    * Sets the number of configured hash splits/buckets for a table. Note: Total number of data
    * buckets for a table will be number of configured splits times the number of redundant data
    * copies.
-   * 
+   *
    * @param totalNumOfSplits the total number of splits
    * @throws TableInvalidConfiguration if the specified number of splits are < 0 or >= 512
    */
   public TableDescriptor setTotalNumOfSplits(int totalNumOfSplits)
-      throws TableInvalidConfiguration {
+          throws TableInvalidConfiguration {
 
     if (totalNumOfSplits <= 0) {
       throw new IllegalArgumentException("TotalNumOfSplits cannot be negative or zero");
@@ -416,7 +419,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
    * Gets the total number of configured hash (unordered table) or range (ordered table) region
    * splits for a table. Note that the total number of data buckets for a table will be number of
    * configured splits times the number of redundant data copies(primary + secondaries).
-   * 
+   *
    * @return total number of region splits for this table.
    */
   public int getTotalNumOfSplits() {
@@ -425,7 +428,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
 
   /**
    * Table name with which this table descriptor is associated with
-   * 
+   *
    * @return the table name
    */
   public String getTableName() {
@@ -443,7 +446,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
   /**
    * Return the a List of all the columns (as MColumnDescriptor) configured in this table
    * descirptor.
-   * 
+   *
    * @return Return the the List of all the columns (list of MColumnDescriptor).
    */
   public List<MColumnDescriptor> getAllColumnDescriptors() {
@@ -459,7 +462,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
   /**
    * Return a collection of all columns (as MColumnDescriptor) configured in this table descriptor.
    * The difference from getAllColumnDescriptors is that it does not create an extra copy.
-   * 
+   *
    * @return the collection of all columns
    */
   @Override
@@ -469,7 +472,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
 
   /**
    * Setting by default to false
-   * 
+   *
    * @param policy the disk-write policy to be set for this table
    * @return the table descriptor (this)
    */
@@ -483,7 +486,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
 
   /**
    * Sets disk store name, to be used if disk persistence is enabled.
-   * 
+   *
    * @param diskStoreName the name of the disk-store
    */
   public TableDescriptor setDiskStore(String diskStoreName) {
@@ -492,8 +495,20 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
   }
 
   /**
+   * Sets disk store attributes, to be used if disk persistence is enabled. Internal Only. Added for
+   * internal testing
+   *
+   * @param diskStoreAttributes the name of the disk-store
+   */
+  @InterfaceAudience.Private
+  public TableDescriptor setDiskStoreAttributes(DiskStoreAttributes diskStoreAttributes) {
+    this.diskStoreAttributes = diskStoreAttributes;
+    return this;
+  }
+
+  /**
    * Get the current disk write policy for Table persistence.
-   * 
+   *
    * @return the disk write policy
    */
   public MDiskWritePolicy getDiskWritePolicy() {
@@ -502,7 +517,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
 
   /**
    * Get the current data eviction policy for the Table.
-   * 
+   *
    * @return the data eviction policy
    */
   public MEvictionPolicy getEvictionPolicy() {
@@ -512,7 +527,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
   /**
    * Setting expiration attributes for expiring entries from Table based on time See
    * {@link MExpirationAttributes} for expiration attributes
-   * 
+   *
    * @return updated Table Descriptor
    */
   public TableDescriptor setExpirationAttributes(MExpirationAttributes expirationAttributes) {
@@ -522,7 +537,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
 
   /**
    * Get the current expiration attributes for the Table
-   * 
+   *
    * @return Expiration Attributes
    */
   public MExpirationAttributes getExpirationAttributes() {
@@ -531,7 +546,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
 
   /**
    * Gets the flag indicating whether or not disk persistence is enabled for this table.
-   * 
+   *
    * @return true if disk persistence enabled else false.
    */
   public boolean isDiskPersistenceEnabled() {
@@ -570,6 +585,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
     DataSerializer.writeInteger(this.localMaxMemory, out);
     DataSerializer.writeArrayList(this.fixedLengthColumnIndices, out);
     DataSerializer.writeArrayList(this.varibleLengthColumnIndices, out);
+    DataSerializer.writeObject(this.diskStoreAttributes, out);
   }
 
   @Override
@@ -604,11 +620,12 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
     }
     this.fixedLengthColumnIndices = DataSerializer.readArrayList(in);
     this.varibleLengthColumnIndices = DataSerializer.readArrayList(in);
+    this.diskStoreAttributes = DataSerializer.readObject(in);
   }
 
   /**
    * gets local max memory that can be used by this table on one server.
-   * 
+   *
    * @return local max memory for this table.
    */
   @Override
@@ -623,11 +640,22 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
 
   /**
    * Get the disk store name associated with this table.
-   * 
+   *
    * @return disk store name.
    */
   public String getDiskStore() {
     return diskStoreName;
+  }
+
+  /**
+   * Get the disk store attributes associated with the disk store attached to this table. Internal
+   * Only. Added for internal testing
+   *
+   * @return disk store name.
+   */
+  @InterfaceAudience.Private
+  public DiskStoreAttributes getDiskStoreAttributes() {
+    return diskStoreAttributes;
   }
 
 
@@ -636,7 +664,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
    *
    * recovery delay is the number of milliseconds to wait after a member failure before recovering
    * redundancy. A value of -1 will disable redundancy recovery. default Value: -1
-   * 
+   *
    * @return recovery delay
    */
   public long getRecoveryDelay() {
@@ -668,7 +696,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
    *
    * startup recovery delay is the number of milliseconds to wait after a member joins before
    * recovering redundancy. A value of -1 will disable redundancy recovery. default Value: 0
-   * 
+   *
    * @return startup recovery delay
    */
   public long getStartupRecoveryDelay() {
@@ -697,7 +725,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
 
   public List<Integer> getVaribleLengthColumns() {
     return isOldWay() ? varibleLengthColumnIndices
-        : this.tableSchema.getVaribleLengthColumnIndices();
+            : this.tableSchema.getVaribleLengthColumnIndices();
   }
 
   public int getBitMapLength() {
@@ -727,11 +755,11 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
       if (this instanceof FTableDescriptor) {
         /* add insertion-time as last column in the schema.. */
         sb.column(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-            FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE);
+                FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE);
         // also add old way
         // TODO improve this way
         this.addColumn(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-            FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE);
+                FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE);
       }
       this.setSchema(sb.build());
     } else {
@@ -741,7 +769,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
           sb.column(cd.getColumnNameAsString(), cd.getColumnType());
         }
         sb.column(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-            FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE);
+                FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE);
         this.setSchema(sb.build());
       }
     }
@@ -750,7 +778,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
   /**
    * Returns array in following sequence magic no, encoding, reserved bits. They are used to
    * identify storage formatter associated with this table descriptor.
-   * 
+   *
    * @return Bytes used to instantiated appropriate storage formatter
    */
   public byte[] getStorageFormatterIdentifiers() {
@@ -766,8 +794,8 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
   @Override
   public MColumnDescriptor getColumnByName(final String columnName) {
     return this.tableSchema == null
-        ? this.columnsByName.get(new ByteArrayKey(columnName.getBytes()))
-        : this.tableSchema.getColumnDescriptorByName(columnName);
+            ? this.columnsByName.get(new ByteArrayKey(columnName.getBytes()))
+            : this.tableSchema.getColumnDescriptorByName(columnName);
   }
 
   @Override

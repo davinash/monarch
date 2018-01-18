@@ -126,22 +126,24 @@ public class StoreHandler {
 
   /**
    * Register a store in cache
-   * 
+   *
    * @param name Name of the new store.
    * @param store Instance of the store class
    */
   public void registerStore(String name, TierStore store) {
+    logger.info("Registering TierStore: name= {}, store= {}", name, store);
     tierStoreMap.put(name, store);
   }
 
   /**
    * Deregister a store from cache
-   * 
+   *
    * @param name name of the store to be removed.
    */
   public void deRegisterStore(String name) {
     final TierStore removedTS = tierStoreMap.remove(name);
     if (removedTS != null) {
+      logger.info("Destroying TierStore: name= {}, store= {}", name, removedTS);
       removedTS.destroy();
     }
   }
@@ -155,15 +157,15 @@ public class StoreHandler {
 
 
   public int append(final String tableName, final int partitionId, final IMKey blockKey,
-      final BlockValue blockValue) throws IOException {
+                    final BlockValue blockValue) throws IOException {
     /* TODO: for ORC format blocks WAL can be skipped */
     return writeAheadLog.append(tableName, partitionId, blockKey, blockValue);
   }
 
   public IStoreResultScanner getStoreScanner(String tableName, int partitionId,
-      ReaderOptions readerOpts) {
+                                             ReaderOptions readerOpts) {
     return new TierStoreResultScanner(this, getStoreHierarchy(tableName), tableName, partitionId,
-        readerOpts);
+            readerOpts);
   }
 
   public WALResultScanner getWALScanner(String tableName, int partitionId) {
@@ -174,13 +176,13 @@ public class StoreHandler {
    * TODO : Modify this to write to N tiers currently it writes to single tier
    */
   public void writeToStore(String tableName, int partitionId, StoreRecord[] storeRecords)
-      throws IOException {
+          throws IOException {
     // 2.2 Check tier1 store for capacity and ensure space
     // TODO Before writing check and make space if current store has nothing
     Map<String, TierStoreConfiguration> storeHierarchy = getStoreHierarchy(tableName);
     // hoping storeHierachy has atleast one tier
     Iterator<Entry<String, TierStoreConfiguration>> entryIterator =
-        storeHierarchy.entrySet().iterator();
+            storeHierarchy.entrySet().iterator();
     while (entryIterator.hasNext()) {
       Entry<String, TierStoreConfiguration> entry = entryIterator.next();
       TierStore store = tierStoreMap.get(entry.getKey());
@@ -205,7 +207,7 @@ public class StoreHandler {
       /* throw an error if all rows were not written */
       if (numberOfRecordsWritten == 0 && storeRecords != null && storeRecords.length > 0) {
         throw new IOException("Failed to write records: table= " + tableName + ", bucketId= "
-            + partitionId + ", store= " + store.getName());
+                + partitionId + ", store= " + store.getName());
       }
       // }catch (IOException e) {
       // // should we throw or handle
@@ -231,7 +233,7 @@ public class StoreHandler {
 
   public LinkedHashMap<String, TierStoreConfiguration> getStoreHierarchy(final String tableName) {
     TableDescriptor tableDescriptor = MTableUtils
-        .getTableDescriptor((MonarchCacheImpl) MCacheFactory.getAnyInstance(), tableName);
+            .getTableDescriptor((MonarchCacheImpl) MCacheFactory.getAnyInstance(), tableName);
     if (tableDescriptor instanceof FTableDescriptor) {
       return ((FTableDescriptor) tableDescriptor).getTierStores();
     } else {
@@ -241,7 +243,7 @@ public class StoreHandler {
   }
 
   private void checkAndMakeSpace(StoreHierarchy storeHierarchy, int numRecords,
-      final TableDescriptor tableDescriptor) {
+                                 final TableDescriptor tableDescriptor) {
     // TODO implementation to be done at the time of multi tier eviction policy
   }
 
@@ -255,7 +257,7 @@ public class StoreHandler {
 
     // hoping storeHierachy has atleast one tier
     Iterator<Entry<String, TierStoreConfiguration>> entryIterator =
-        storeHierarchy.entrySet().iterator();
+            storeHierarchy.entrySet().iterator();
     while (entryIterator.hasNext()) {
       Entry<String, TierStoreConfiguration> tierEntry = entryIterator.next();
       TierStore tierStore = getTierStore(tierEntry.getKey());
@@ -272,7 +274,7 @@ public class StoreHandler {
     Map<String, TierStoreConfiguration> storeHierarchy = getStoreHierarchy(tableName);
     // hoping storeHierachy has atleast one tier
     Iterator<Entry<String, TierStoreConfiguration>> entryIterator =
-        storeHierarchy.entrySet().iterator();
+            storeHierarchy.entrySet().iterator();
     while (entryIterator.hasNext()) {
       Entry<String, TierStoreConfiguration> tierEntry = entryIterator.next();
       TierStore tierStore = getTierStore(tierEntry.getKey());
@@ -301,7 +303,7 @@ public class StoreHandler {
     Map<String, TierStoreConfiguration> storeHierarchy = getStoreHierarchy(region.getDisplayName());
     // hoping storeHierachy has atleast one tier
     Iterator<Entry<String, TierStoreConfiguration>> entryIterator =
-        storeHierarchy.entrySet().iterator();
+            storeHierarchy.entrySet().iterator();
     int tierId = 1;
     while (entryIterator.hasNext()) {
       Entry<String, TierStoreConfiguration> tierEntry = entryIterator.next();
@@ -319,7 +321,7 @@ public class StoreHandler {
 
   /**
    * Get a store instance for the given store name from store handler
-   * 
+   *
    * @return TierStore instance
    */
   public TierStore getTierStore(String storeName) {
@@ -328,7 +330,7 @@ public class StoreHandler {
 
   /**
    * Get a store instance for the given table name and hierarchy index from store handler
-   * 
+   *
    * @return TierStore instance
    */
   public TierStore getTierStore(String tableName, int tierId) {

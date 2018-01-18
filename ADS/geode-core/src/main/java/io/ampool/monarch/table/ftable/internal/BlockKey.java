@@ -31,9 +31,8 @@ import org.apache.geode.internal.Version;
  * FTable store in single RegionEntry
  */
 public class BlockKey implements IMKey, DataSerializableFixedID, Serializable {
-  static public final int length = (Bytes.SIZEOF_LONG * 3) + Bytes.SIZEOF_INT;
+  static public final int length = (Bytes.SIZEOF_LONG * 2) + Bytes.SIZEOF_INT;
   private long startTimeStamp = -1;
-  private long endTimeStamp = -1;
   private long blockSequenceID = -1;
   private int bucketID = -1;
 
@@ -68,9 +67,6 @@ public class BlockKey implements IMKey, DataSerializableFixedID, Serializable {
     startTimeStamp = Bytes.toLong(bytes, offset);
     offset += Bytes.SIZEOF_LONG;
 
-    endTimeStamp = Bytes.toLong(bytes, offset);
-    offset += Bytes.SIZEOF_LONG;
-
     blockSequenceID = Bytes.toLong(bytes, offset);
     offset += Bytes.SIZEOF_LONG;
 
@@ -79,16 +75,11 @@ public class BlockKey implements IMKey, DataSerializableFixedID, Serializable {
 
   @Override
   public byte[] getBytes() {
-    byte[] bytes = new byte[Bytes.SIZEOF_LONG * 3 + Bytes.SIZEOF_INT];
+    byte[] bytes = new byte[BlockKey.length];
     int offset = 0;
-    byte[] startTimeStampBytes = Bytes.toBytes(startTimeStamp);
-    byte[] endTimeStampBytes = Bytes.toBytes(endTimeStamp);
-    byte[] blockSequenceIDBytes = Bytes.toBytes(blockSequenceID);
-    byte[] bucketIDBytes = Bytes.toBytes(bucketID);
-    offset = Bytes.putBytes(bytes, offset, startTimeStampBytes, 0, startTimeStampBytes.length);
-    offset = Bytes.putBytes(bytes, offset, endTimeStampBytes, 0, endTimeStampBytes.length);
-    offset = Bytes.putBytes(bytes, offset, blockSequenceIDBytes, 0, blockSequenceIDBytes.length);
-    offset = Bytes.putBytes(bytes, offset, bucketIDBytes, 0, bucketIDBytes.length);
+    offset = Bytes.putLong(bytes, offset, startTimeStamp);
+    offset = Bytes.putLong(bytes, offset, blockSequenceID);
+    Bytes.putInt(bytes, offset, bucketID);
     return bytes;
   }
 
@@ -105,7 +96,6 @@ public class BlockKey implements IMKey, DataSerializableFixedID, Serializable {
   @Override
   public void toData(final DataOutput out) throws IOException {
     out.writeLong(startTimeStamp);
-    out.writeLong(endTimeStamp);
     out.writeLong(blockSequenceID);
     out.writeInt(bucketID);
   }
@@ -113,7 +103,6 @@ public class BlockKey implements IMKey, DataSerializableFixedID, Serializable {
   @Override
   public void fromData(final DataInput in) throws IOException, ClassNotFoundException {
     this.startTimeStamp = in.readLong();
-    this.endTimeStamp = in.readLong();
     this.blockSequenceID = in.readLong();
     this.bucketID = in.readInt();
   }
@@ -141,14 +130,13 @@ public class BlockKey implements IMKey, DataSerializableFixedID, Serializable {
   @Override
   public boolean equals(Object other) {
     return this == other || (other instanceof BlockKey
-        && this.blockSequenceID == ((BlockKey) other).getBlockSequenceID()
-        && this.bucketID == ((BlockKey) other).getBucketID());
+            && this.blockSequenceID == ((BlockKey) other).getBlockSequenceID()
+            && this.bucketID == ((BlockKey) other).getBucketID());
   }
 
   @Override
   public String toString() {
-    return "Blockey:" + bucketID + "_" + blockSequenceID + "_" + startTimeStamp + "_"
-        + endTimeStamp;
+    return "Blockey:" + bucketID + "_" + blockSequenceID + "_" + startTimeStamp;
   }
 
   public long getStartTimeStamp() {
@@ -157,14 +145,6 @@ public class BlockKey implements IMKey, DataSerializableFixedID, Serializable {
 
   public void setStartTimeStamp(final long startTimeStamp) {
     this.startTimeStamp = startTimeStamp;
-  }
-
-  public long getEndTimeStamp() {
-    return endTimeStamp;
-  }
-
-  public void setEndTimeStamp(final long endTimeStamp) {
-    this.endTimeStamp = endTimeStamp;
   }
 
   public long getBlockSequenceID() {

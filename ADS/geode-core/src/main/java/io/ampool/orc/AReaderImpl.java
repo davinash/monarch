@@ -61,32 +61,32 @@ public class AReaderImpl extends org.apache.hadoop.hive.ql.io.orc.ReaderImpl {
   }
 
   public static List<StripeInformation> convertProtoStripesToStripes(
-      List<OrcProto.StripeInformation> list) {
+          List<OrcProto.StripeInformation> list) {
     return ReaderImpl.convertProtoStripesToStripes(list);
   }
 
   private static OrcProto.Footer extractFooter(ByteBuffer bb, int footerAbsPos, int footerSize,
-      CompressionCodec codec, int bufferSize) throws IOException {
+                                               CompressionCodec codec, int bufferSize) throws IOException {
     bb.position(footerAbsPos);
     bb.limit(footerAbsPos + footerSize);
     return OrcProto.Footer.parseFrom(InStream.createCodedInputStream("footer",
-        Lists.<DiskRange>newArrayList(new BufferChunk(bb, 0)), footerSize, codec, bufferSize));
+            Lists.<DiskRange>newArrayList(new BufferChunk(bb, 0)), footerSize, codec, bufferSize));
   }
 
   private static OrcProto.Metadata extractMetadata(ByteBuffer bb, int metadataAbsPos,
-      int metadataSize, CompressionCodec codec, int bufferSize) throws IOException {
+                                                   int metadataSize, CompressionCodec codec, int bufferSize) throws IOException {
     bb.position(metadataAbsPos);
     bb.limit(metadataAbsPos + metadataSize);
     return OrcProto.Metadata.parseFrom(InStream.createCodedInputStream("metadata",
-        Lists.<DiskRange>newArrayList(new BufferChunk(bb, 0)), metadataSize, codec, bufferSize));
+            Lists.<DiskRange>newArrayList(new BufferChunk(bb, 0)), metadataSize, codec, bufferSize));
   }
 
   private static OrcProto.PostScript extractPostScript(ByteBuffer bb, Path path, int psLen,
-      int psAbsOffset) throws IOException {
+                                                       int psAbsOffset) throws IOException {
     // TODO: when PB is upgraded to 2.6, newInstance(ByteBuffer) method should be used here.
     assert bb.hasArray();
     CodedInputStream in =
-        CodedInputStream.newInstance(bb.array(), bb.arrayOffset() + psAbsOffset, psLen);
+            CodedInputStream.newInstance(bb.array(), bb.arrayOffset() + psAbsOffset, psLen);
     OrcProto.PostScript ps = OrcProto.PostScript.parseFrom(in);
     checkOrcVersion(LOG, path, ps.getVersionList());
 
@@ -157,7 +157,7 @@ public class AReaderImpl extends org.apache.hadoop.hive.ql.io.orc.ReaderImpl {
     }
 
     return new FileMetaInfo(ps.getCompression().toString(), (int) ps.getCompressionBlockSize(),
-        (int) ps.getMetadataLength(), buffer, ps.getVersionList(), writerVersion, fullFooterBuffer);
+            (int) ps.getMetadataLength(), buffer, ps.getVersionList(), writerVersion, fullFooterBuffer);
   }
 
   /**
@@ -176,7 +176,7 @@ public class AReaderImpl extends org.apache.hadoop.hive.ql.io.orc.ReaderImpl {
     final ObjectInspector inspector;
 
     MetaInfoObjExtractor(String codecStr, int bufferSize, int metadataSize, ByteBuffer footerBuffer)
-        throws IOException {
+            throws IOException {
 
       this.compressionKind = org.apache.orc.CompressionKind.valueOf(codecStr.toUpperCase());
       this.bufferSize = bufferSize;
@@ -188,7 +188,7 @@ public class AReaderImpl extends org.apache.hadoop.hive.ql.io.orc.ReaderImpl {
 
       this.metadata = extractMetadata(footerBuffer, position, metadataSize, codec, bufferSize);
       this.footer =
-          extractFooter(footerBuffer, position + metadataSize, footerBufferSize, codec, bufferSize);
+              extractFooter(footerBuffer, position + metadataSize, footerBufferSize, codec, bufferSize);
 
       footerBuffer.position(position);
       this.inspector = null;
@@ -197,7 +197,7 @@ public class AReaderImpl extends org.apache.hadoop.hive.ql.io.orc.ReaderImpl {
 
   public FileMetaInfo getFileMetaInfo() {
     return new FileMetaInfo(compressionKind.toString(), bufferSize, getMetadataSize(),
-        footerByteBuffer, getVersionList(), getWriterVersion(), footerMetaAndPsBuffer);
+            footerByteBuffer, getVersionList(), getWriterVersion(), footerMetaAndPsBuffer);
   }
 
   @Override
@@ -211,7 +211,8 @@ public class AReaderImpl extends org.apache.hadoop.hive.ql.io.orc.ReaderImpl {
   }
 
   @Override
-  public RecordReader rowsOptions(Options options) throws IOException {
+  public RecordReader rowsOptions(Options opts) throws IOException {
+    final Options options = opts.clone();
     // LOG.info("Reading ORC rows from " + path + " with " + options);
     boolean[] include = options.getInclude();
     // if included columns is null, then include all columns
@@ -221,8 +222,8 @@ public class AReaderImpl extends org.apache.hadoop.hive.ql.io.orc.ReaderImpl {
       options.include(include);
     }
     final DataReaderProperties drp = DataReaderProperties.builder().withFileSystem(this.fileSystem)
-        .withPath(PATH).withBufferSize(this.bufferSize).withTypeCount(this.types.size())
-        .withZeroCopy(true).withCompression(this.getCompressionKind()).build();
+            .withPath(PATH).withBufferSize(this.bufferSize).withTypeCount(this.types.size())
+            .withZeroCopy(true).withCompression(this.getCompressionKind()).build();
     options.dataReader(new ADataReader(drp, this.bytes));
     options.schema(this.getSchema());
     return new RecordReaderImplA(this, options);

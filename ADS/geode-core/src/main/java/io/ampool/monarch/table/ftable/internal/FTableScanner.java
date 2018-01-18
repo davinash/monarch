@@ -65,7 +65,6 @@ public class FTableScanner implements Iterator {
   protected static final Logger logger = LogService.getLogger();
 
   private Region region;
-  private FilterList blockFilters;
   private FTableDescriptor fTableDescriptor;
   private Scan scan;
   private ServerConnection serverConnection;
@@ -73,9 +72,7 @@ public class FTableScanner implements Iterator {
   private BlockKey lastkey;
   private BlockKey memFirstKey;
   private boolean clientToServer = false;
-  private int memory_scanned_records = 0;
-  private int wal_scanned_records = 0;
-  private int processedRecordCount = 0;
+  private int[] scannedCounts = new int[3];
 
   // Block key which will be held until next block is started
   private BlockKey currentBlockKey;
@@ -95,7 +92,7 @@ public class FTableScanner implements Iterator {
    * @param fTableDescriptor table descriptor
    */
   public FTableScanner(Region region, Scan scan, ServerConnection servConn,
-      FTableDescriptor fTableDescriptor) {
+                       FTableDescriptor fTableDescriptor) {
     this.region = region;
     this.scan = scan;
     this.serverConnection = servConn;
@@ -103,7 +100,6 @@ public class FTableScanner implements Iterator {
     this.fTableDescriptor = fTableDescriptor;
     this.blockEncoding = fTableDescriptor.getEncoding();
     memFirstKey = null;
-    blockFilters = handleSpecialColumnFilters(this.scan.getFilter());
     init();
   }
 
@@ -142,7 +138,6 @@ public class FTableScanner implements Iterator {
     this.blockEncoding = fTableDescriptor.getEncoding();
     this.scan = sc.getScan();
     this.memFirstKey = null;
-    blockFilters = handleSpecialColumnFilters(this.scan.getFilter());
     /* at the moment only for ORC but it could be generic.. */
     this.readerOptions = new OrcUtils.OrcOptions(scan.getFilter(), fTableDescriptor);
     initBlockIterator(iMap);
@@ -154,132 +149,9 @@ public class FTableScanner implements Iterator {
     final byte[] stopRow = scan.getStopRow();
     final boolean includeStartRow = scan.getIncludeStartRow();
     final SortedMap rangeMap = ScanUtils.getRangeMap(iMap.getInternalMap(),
-        startRow == null ? null : new MKeyBase(startRow),
-        stopRow == null ? null : new MKeyBase(stopRow), includeStartRow);
+            startRow == null ? null : new MKeyBase(startRow),
+            stopRow == null ? null : new MKeyBase(stopRow), includeStartRow);
     this.blockIterator = rangeMap.entrySet().iterator();
-  }
-
-  public FilterList handleSpecialColumnFilters(Filter filter) {
-    final FilterList blockFiltersList = new FilterList(Operator.MUST_PASS_ALL);
-    if (filter instanceof FilterList) {
-      final FilterList filterList = (FilterList) filter;
-      filterList.getFilters().forEach(mFilter -> {
-        if (mFilter instanceof FilterList) {
-          // as this contains list either of one should pass so changing operator to
-          // Operator.MUST_PASS_ONE
-          blockFiltersList.setOperator(Operator.MUST_PASS_ONE);
-          blockFiltersList.addFilter(transformFilterList((FilterList) mFilter));
-        } else {
-          final BlockKeyFilter blockKeyFilter = getBlockKeyFilter(mFilter);
-          if (blockKeyFilter != null) {
-            blockFiltersList.addFilter(blockKeyFilter);
-          }
-        }
-      });
-    } else {
-      final BlockKeyFilter blockKeyFilter = getBlockKeyFilter(filter);
-      if (blockKeyFilter != null) {
-        blockFiltersList.addFilter(blockKeyFilter);
-      }
-    }
-    return blockFiltersList;
-  }
-
-  public FilterList transformFilterList(FilterList filters) {
-    FilterList newFilterList = new FilterList(filters.getOperator());
-    filters.getFilters().forEach(mFilter -> {
-      if (mFilter instanceof FilterList) {
-        newFilterList.addFilter(transformFilterList((FilterList) mFilter));
-      } else {
-        final BlockKeyFilter blockKeyFilter = getBlockKeyFilter(mFilter);
-        if (blockKeyFilter != null) {
-          newFilterList.addFilter(blockKeyFilter);
-        }
-      }
-    });
-    return newFilterList;
-  }
-
-  BlockKeyFilter getBlockKeyFilter(Filter filter) {
-    BlockKeyFilter blockKeyFilter = null;
-    if (filter instanceof SingleColumnValueFilter && ((SingleColumnValueFilter) filter)
-        .getColumnNameString().equals(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME)) {
-      final SingleColumnValueFilter columnValueFilter = ((SingleColumnValueFilter) filter);
-      final Object val = columnValueFilter.getValue();
-      if ((val instanceof byte[])) {
-        blockKeyFilter = new BlockKeyFilter(columnValueFilter.getOperator(), (byte[]) val);
-      } else if ((val instanceof Long)) {
-        blockKeyFilter =
-            new BlockKeyFilter(columnValueFilter.getOperator(), Bytes.toBytes((Long) val));
-      }
-      // updateStartStopRow to get correct range map
-      updateStartStopRow(columnValueFilter.getOperator(), val);
-    }
-    return blockKeyFilter;
-  }
-
-  private void updateStartStopRow(final CompareOp operator, final Object val) {
-    long timeStamp = -1l;
-    if ((val instanceof byte[])) {
-      timeStamp = Bytes.toLong((byte[]) val);
-    } else if ((val instanceof Long)) {
-      timeStamp = (Long) val;
-    } else {
-      if (logger.isDebugEnabled()) {
-        logger.debug("Value for timestamp is neither byte[] nor long but it is " + val.getClass());
-      }
-      return;
-    }
-    switch (operator) {
-      case LESS:
-        // update stop key if current key is greater than old one
-        if (stopKey == null) {
-          stopKey = new BlockKey(timeStamp);
-        } else {
-          if (timeStamp > stopKey.getStartTimeStamp()) {
-            stopKey.setStartTimeStamp(timeStamp);
-          }
-        }
-        break;
-      case LESS_OR_EQUAL:
-        // as we want to include stopKey too so will add 1 to current value
-        if (stopKey == null) {
-          stopKey = new BlockKey(timeStamp + 1);
-        } else {
-          if (timeStamp >= stopKey.getStartTimeStamp()) {
-            stopKey.setStartTimeStamp(timeStamp + 1);
-          }
-        }
-        break;
-      case GREATER:
-        // update start key if current key is smaller than old one
-        if (startKey == null) {
-          startKey = new BlockKey(timeStamp);
-        } else {
-          if (timeStamp < startKey.getStartTimeStamp()) {
-            startKey.setStartTimeStamp(timeStamp);
-          }
-        }
-        break;
-      case GREATER_OR_EQUAL:
-        if (startKey == null) {
-          startKey = new BlockKey(timeStamp - 1);
-        } else {
-          if (timeStamp <= startKey.getStartTimeStamp()) {
-            startKey.setStartTimeStamp(timeStamp - 1);
-          }
-        }
-        break;
-      case EQUAL:
-        // if start and/or stopkey not set then set with this value
-        if (startKey == null) {
-          startKey = new BlockKey(timeStamp);
-        }
-        if (stopKey == null) {
-          stopKey = new BlockKey(timeStamp);
-        }
-        break;
-    }
   }
 
   private final Iterator<Integer> tierIterator = Arrays.asList(0, 1).iterator();
@@ -294,10 +166,10 @@ public class FTableScanner implements Iterator {
     try {
       PartitionedRegion tableRegionPR = (PartitionedRegion) region;
       BucketRegion bucket =
-          tableRegionPR.getDataStore().getLocalBucketById(this.scan.getBucketId());
+              tableRegionPR.getDataStore().getLocalBucketById(this.scan.getBucketId());
       if (bucket != null && bucket.getBucketAdvisor().isHosting()) {
         RowTupleConcurrentSkipListMap internalMap =
-            (RowTupleConcurrentSkipListMap) bucket.getRegionMap().getInternalMap();
+                (RowTupleConcurrentSkipListMap) bucket.getRegionMap().getInternalMap();
         if (internalMap == null) {
           return;
         }
@@ -308,8 +180,8 @@ public class FTableScanner implements Iterator {
         boolean includeStartRow = scan.getIncludeStartRow();
 
         SortedMap<IMKey, RegionEntry> rangeMap =
-            ScanUtils.getRangeMap(realMap, startRow == null ? null : new MKeyBase(startRow),
-                stopRow == null ? null : new MKeyBase(stopRow), includeStartRow);
+                ScanUtils.getRangeMap(realMap, startRow == null ? null : new MKeyBase(startRow),
+                        stopRow == null ? null : new MKeyBase(stopRow), includeStartRow);
         this.blockIterator = rangeMap.entrySet().iterator();
       } else {
         if (logger.isDebugEnabled()) {
@@ -335,33 +207,6 @@ public class FTableScanner implements Iterator {
     }
   }
 
-
-  /**
-   * Running RowFilter before fetching value if present
-   *
-   * @param blockKey Block key
-   * @return
-   */
-  private boolean filterRowKey(final BlockKey blockKey) {
-    boolean filterRowKey = false;
-    Filter filter = blockFilters;
-    if (filter instanceof BlockKeyFilter) {
-      filterRowKey = ((BlockKeyFilter) filter).filterBlockKey(blockKey);
-    } else if (filter instanceof FilterList) {
-      List<Filter> filters = ((FilterList) filter).getFilters();
-      for (Filter mFilter : filters) {
-        if (mFilter instanceof BlockKeyFilter) {
-          boolean dofilter = ((BlockKeyFilter) mFilter).filterBlockKey(blockKey);;
-          if (dofilter) {
-            filterRowKey = true;
-            break;
-          }
-        }
-      }
-    }
-    return filterRowKey;
-  }
-
   private boolean getBlockValueIterator() {
     while (blockIterator.hasNext()) {
       Object block = blockIterator.next();
@@ -383,7 +228,7 @@ public class FTableScanner implements Iterator {
    * @return the actual entry value
    */
   public static Object getValue(final ServerConnection conn, final Region region,
-      final Entry<IMKey, RegionEntry> entry) {
+                                final Entry<IMKey, RegionEntry> entry) {
     Object data;
     synchronized (entry.getValue()) {
       data = entry.getValue()._getValue();
@@ -411,11 +256,6 @@ public class FTableScanner implements Iterator {
       bk = (BlockKey) e.getKey();
       currentBlockKey = bk;
       currentBlockKeyBytes = bk.getBytes();
-      if (filterRowKey(currentBlockKey)) {
-        logger.trace("Key does not match provided filter: key= {}, blockFilters= {}",
-            currentBlockKey, blockFilters);
-        return false;
-      }
       bv = getValue(serverConnection, region, e);
       if (bv == null || Token.isInvalidOrRemoved(bv)) {
         return false;
@@ -428,18 +268,12 @@ public class FTableScanner implements Iterator {
         return false;
       }
       this.blockEncoding = Encoding.getEncoding(bVal.getRowHeader().getEncoding());
-      memory_scanned_records += bVal.getCurrentIndex();
+      scannedCounts[0] += bVal.getCurrentIndex();
     } else if (block instanceof WALRecord) {
       this.isMemoryIterator = false;
       WALRecord wr = (WALRecord) block;
       currentBlockKey = lastkey = wr.getBlockKey();
       currentBlockKeyBytes = lastkey.getBytes();
-      final boolean filter = filterRowKey(currentBlockKey);
-      if (filter) {
-        logger.trace("Key does not match provided filter: key= {}, blockFilters= {}",
-            currentBlockKey, blockFilters);
-        return false;
-      }
       if (memFirstKey != null) {
         if (lastkey.compareTo(memFirstKey) > 0) {
           // stop the scan
@@ -454,7 +288,7 @@ public class FTableScanner implements Iterator {
         return false;
       }
       this.blockEncoding = Encoding.getEncoding(bVal.getRowHeader().getEncoding());
-      wal_scanned_records += bVal.getCurrentIndex();
+      scannedCounts[1] += bVal.getCurrentIndex();
     } else {
       return false;
     }
@@ -475,7 +309,7 @@ public class FTableScanner implements Iterator {
     /* else it is tierIndex == 1 */
     this.blockEncoding = fTableDescriptor.getEncoding();
     valueIterator =
-        sh.getStoreScanner(region.getName(), scan.getBucketId(), readerOptions).iterator();
+            sh.getStoreScanner(region.getName(), scan.getBucketId(), readerOptions).iterator();
     return valueIterator.hasNext();
   }
 
@@ -488,7 +322,14 @@ public class FTableScanner implements Iterator {
         return true;
       }
     }
-    return tierIterator.hasNext() && getTierIterator();
+    final boolean b = tierIterator.hasNext() && getTierIterator();
+    /* log the scanned-counts, per tier, at the end of scanner */
+    if (!b) {
+      logger.debug("Scanned rows for table= {}, bucketId= {}: memory= {}, wal= {}, tier= {}",
+              region.getName(), scan.getBucketId(), scannedCounts[0], scannedCounts[1],
+              scannedCounts[2]);
+    }
+    return b;
   }
 
   private static final class DummyEntry implements Map.Entry<Object, Object> {
@@ -538,19 +379,18 @@ public class FTableScanner implements Iterator {
   private Object nextNew() {
     if (valueIterator.hasNext()) {
       Object next = valueIterator.next();
-      this.processedRecordCount++;
       byte[] bytes = null;
       if (next instanceof StoreRecord) {
+        scannedCounts[2]++;
         StoreRecord sr = (StoreRecord) next;
         lastkey = new BlockKey(sr.getTimeStamp());
 
-        boolean filter = filterRowKey(lastkey);
         /*
          * If during mem scan some records are moved from mem to the next tier then to avoid
          * duplicates stop the scan when we get a key which is greater than or equal to the first
          * key returned by mem scanner for that bucket.
          */
-        if (!this.isMemoryIterator && memFirstKey != null && filter) {
+        if (!this.isMemoryIterator && memFirstKey != null) {
           if (lastkey.compareTo(memFirstKey) > 0) {
             // stop the scan
             if (logger.isDebugEnabled()) {
@@ -559,13 +399,13 @@ public class FTableScanner implements Iterator {
             return null;
           }
         }
-        entry.reset(currentBlockKey, sr);
+        entry.reset(DummyKey.D_KEY, sr);
       } else if (next instanceof OrcUtils.DummyRow) {
         OrcUtils.DummyRow dr = (OrcUtils.DummyRow) next;
         final InternalRow row = sc.getInternalRow();
         row.reset(currentBlockKeyBytes, dr.getBytes(), this.blockEncoding, dr.getOffset(),
-            dr.getLength());
-        entry.reset(currentBlockKey, row);
+                dr.getLength());
+        entry.reset(DummyKey.D_KEY, row);
       } else if (next instanceof byte[]) {
         bytes = (byte[]) next;
         final InternalRow row = sc.getInternalRow();
@@ -589,7 +429,7 @@ public class FTableScanner implements Iterator {
   }
 
   public void handleBucketMoved(Region region, Scan scan, ServerConnection servConn)
-      throws IOException {
+          throws IOException {
     boolean bucketMoveHandled = false;
 
     MPartList values = new MPartList(1, true);
@@ -598,7 +438,7 @@ public class FTableScanner implements Iterator {
     // Search for the server hosting scan.getBucketId() and send it in exception
     PartitionedRegion tableRegionPR = (PartitionedRegion) region;
     Set<BucketAdvisor.ServerBucketProfile> clientBucketProfiles =
-        tableRegionPR.getRegionAdvisor().getClientBucketProfiles(scan.getBucketId());
+            tableRegionPR.getRegionAdvisor().getClientBucketProfiles(scan.getBucketId());
 
     if (clientBucketProfiles != null && clientBucketProfiles.size() > 0) {
 
@@ -611,17 +451,17 @@ public class FTableScanner implements Iterator {
       }
 
       if (targetServerBucketProfile != null
-          && targetServerBucketProfile.getBucketServerLocations().size() > 0) {
+              && targetServerBucketProfile.getBucketServerLocations().size() > 0) {
         Set<? extends ServerLocation> bucketServerLocations =
-            targetServerBucketProfile.getBucketServerLocations();
+                targetServerBucketProfile.getBucketServerLocations();
 
         // Getting only first server location from the serverlocation list
         if (bucketServerLocations != null && bucketServerLocations.size() > 0) {
           ServerLocation location = bucketServerLocations.iterator().next();
           if (location != null) {
             byte[][] serverStatusMarker =
-                {serverScanStatus.getStatusBytes(), Bytes.toBytes(location.getHostName()
-                    + Constants.General.SERVER_NAME_SEPARATOR + location.getPort())};
+                    {serverScanStatus.getStatusBytes(), Bytes.toBytes(location.getHostName()
+                            + Constants.General.SERVER_NAME_SEPARATOR + location.getPort())};
             values.addObjectPart(EMPTY_BYTES, serverStatusMarker, true, null);
             bucketMoveHandled = true;
           }
@@ -646,7 +486,7 @@ public class FTableScanner implements Iterator {
    * @throws IOException
    */
   private void sendSendResponseChunk(Region region, MPartList list, boolean lastChunk,
-      ServerConnection servConn) throws IOException {
+                                     ServerConnection servConn) throws IOException {
     long l = System.nanoTime();
     ChunkedStreamMessage chunkedResponseMsg = servConn.getChunkedStreamResponseMessage();
     chunkedResponseMsg.setNumberOfParts(1);
@@ -656,8 +496,8 @@ public class FTableScanner implements Iterator {
 
     if (logger.isDebugEnabled()) {
       logger.debug("{}: Sending {} mscan response chunk for region={}{}", servConn.getName(),
-          (lastChunk ? " last " : " "), region.getFullPath(), (logger.isTraceEnabled()
-              ? " values=" + list + " chunk=<" + chunkedResponseMsg + ">" : ""));
+              (lastChunk ? " last " : " "), region.getFullPath(), (logger.isTraceEnabled()
+                      ? " values=" + list + " chunk=<" + chunkedResponseMsg + ">" : ""));
     }
 
     l = System.nanoTime();

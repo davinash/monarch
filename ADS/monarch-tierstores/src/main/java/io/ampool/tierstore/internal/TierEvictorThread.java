@@ -140,16 +140,16 @@ public class TierEvictorThread extends Thread {
       final String tableName = tableFS.getPath().getName();
       final TableDescriptor td = MCacheFactory.getAnyInstance().getTableDescriptor(tableName);
       final Map<String, TierStoreConfiguration> tiers = td != null && td instanceof FTableDescriptor
-          ? ((FTableDescriptor) td).getTierStores() : null;
+              ? ((FTableDescriptor) td).getTierStores() : null;
       if (tiers == null || tiers.isEmpty()) {
         logger.debug(
-            "{}: Skipping table= {}; either it is not an FTable or does not have any tiers.",
-            getName());
+                "{}: Skipping table= {}; either it is not an FTable or does not have any tiers.",
+                getName());
         continue;
       }
       final Properties tierProps = tiers.get(tierName).getTierProperties();
       final Iterator<Map.Entry<String, TierStoreConfiguration>> tierIterator =
-          tiers.entrySet().iterator();
+              tiers.entrySet().iterator();
       while (tierIterator.hasNext()) {
         final Map.Entry<String, TierStoreConfiguration> next = tierIterator.next();
         if (next.getKey().equals(tierName)) {
@@ -158,11 +158,11 @@ public class TierEvictorThread extends Thread {
       }
       long[] attributes = getTableAttributes(tierProps);
       final TierStore nextTierStore = tierIterator.hasNext()
-          ? StoreHandler.getInstance().getTierStore(tierIterator.next().getKey()) : null;
+              ? StoreHandler.getInstance().getTierStore(tierIterator.next().getKey()) : null;
       /* iterate on all available buckets for the table */
       if (tableFS.isDirectory()) {
         final PartitionedRegion region =
-            PartitionedRegionHelper.getPartitionedRegion(tableName, cache);
+                PartitionedRegionHelper.getPartitionedRegion(tableName, cache);
         if (region == null) {
           logger.info("Region= {} does not exist.. skipping.", tableName);
           continue;
@@ -181,15 +181,15 @@ public class TierEvictorThread extends Thread {
             /* move the complete time-partition to next tier upon expiry */
             if ((l * attributes[1]) < (TimestampUtil.getCurrentTime() - attributes[0])) {
               final String[] unitPath =
-                  Paths.get(tableName, bucketId, timePartId).toString().split("/");
+                      Paths.get(tableName, bucketId, timePartId).toString().split("/");
               final int batchSize = (int) tierProps.getOrDefault("move-batch-size", 1_000);
               final BucketRegion br = region.getDataStore().getLocalBucketById(bid);
               moveUnitToNextTier(br,
-                  nextTierStore == null ? null : nextTierStore.getConverterDescriptor(tableName),
-                  nextTierStore, batchSize, timePartFS, unitPath);
+                      nextTierStore == null ? null : nextTierStore.getConverterDescriptor(tableName),
+                      nextTierStore, batchSize, timePartFS, unitPath);
             } else {
               logger.trace("{}: Not moving any data for table= {}, bucketId= {}; no expiration.",
-                  getName(), tableName, bucketId);
+                      getName(), tableName, bucketId);
             }
           }
         }
@@ -210,7 +210,7 @@ public class TierEvictorThread extends Thread {
    * @return false if the next tier store is shared and processing secondary bucket; true otherwise
    */
   public static boolean shouldWriteToNextTier(final TierStore nextTierStore,
-      final boolean isPrimary) {
+                                              final boolean isPrimary) {
     return nextTierStore != null && (!(nextTierStore instanceof SharedTierStore) || isPrimary);
   }
 
@@ -225,9 +225,9 @@ public class TierEvictorThread extends Thread {
    * @param unitPath the absolute path for the unit to be moved (table/bucket/time-part)
    * @throws IOException in case there were errors reading or writing
    */
-  private void moveUnitToNextTier(final BucketRegion br, final ConverterDescriptor cd,
-      final TierStore nextTierStore, final int batchSize, final FileStatus unitBaseLocation,
-      final String... unitPath) throws IOException {
+  private synchronized void moveUnitToNextTier(final BucketRegion br, final ConverterDescriptor cd,
+                                               final TierStore nextTierStore, final int batchSize, final FileStatus unitBaseLocation,
+                                               final String... unitPath) throws IOException {
     int movedCount = 0;
     boolean processingError = false;
     final boolean isPrimary = br.getBucketAdvisor().isPrimary();
@@ -257,20 +257,20 @@ public class TierEvictorThread extends Thread {
         processingError = false;
       } catch (IOException e) {
         logger.error("{}: Error while moving data to tier= {} for: {}", getName(),
-            nextTierStore.getName(), unitPath, e);
+                nextTierStore.getName(), unitPath, e);
         processingError = true;
       }
     } else {
       logger.debug("Skipped data movement to next tier; nextTier= {}, isShared= {}, isPrimary= {}",
-          nextTierStore == null ? "<null>" : nextTierStore.getName(),
-          (nextTierStore instanceof SharedTierStore), isPrimary);
+              nextTierStore == null ? "<null>" : nextTierStore.getName(),
+              (nextTierStore instanceof SharedTierStore), isPrimary);
     }
     if (processingError) {
       logger.info("{}: Skipping deletion as error occurred while processing.", getName());
     } else {
       this.thisTierStore.delete(unitPath);
       logger.debug("Moved {} records from `{}` to `{}`", movedCount, tierName,
-          nextTierStore == null ? "<null>" : nextTierStore.getName());
+              nextTierStore == null ? "<null>" : nextTierStore.getName());
     }
   }
 
@@ -283,10 +283,10 @@ public class TierEvictorThread extends Thread {
    */
   private long[] getTableAttributes(final Properties tierProps) {
     return TEST_EVICT && TEST_TIER_EVICT_INTERVAL.get(tierName) != null
-        ? new long[] {TEST_TIER_EVICT_INTERVAL.get(tierName) * TO_MS,
+            ? new long[] {TEST_TIER_EVICT_INTERVAL.get(tierName) * TO_MS,
             TierStoreConfiguration.DEFAULT_TIER_PARTITION_INTERVAL_MS}
         /* get the required information from table descriptor */
-        : new long[] {(long) tierProps.get(TierStoreConfiguration.TIER_TIME_TO_EXPIRE),
+            : new long[] {(long) tierProps.get(TierStoreConfiguration.TIER_TIME_TO_EXPIRE),
             (long) tierProps.get(TierStoreConfiguration.TIER_PARTITION_INTERVAL)};
   }
 

@@ -4,6 +4,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
 
+import io.ampool.internal.MPartList;
 import io.ampool.monarch.table.Bytes;
 import io.ampool.monarch.table.Cell;
 import io.ampool.monarch.table.MTableDescriptor;
@@ -16,7 +17,7 @@ public class EncodingA implements Encoding {
 
   @Override
   public int initFullRow(final Object k, final Object v, final ThinRowShared trs, final int offset,
-      final int length) {
+                         final int length) {
     final byte[] key = (byte[]) k;
     final byte[] buf = (byte[]) v;
     final List<Cell> cells = trs.getCells();
@@ -69,7 +70,7 @@ public class EncodingA implements Encoding {
     }
     /* row-key-column */
     if (Bytes.equals(MTableUtils.KEY_COLUMN_NAME_BYTES,
-        cells.get(cells.size() - 1).getColumnName())) {
+            cells.get(cells.size() - 1).getColumnName())) {
       ((CellRef) cells.get(cells.size() - 1)).init(key, 0, key == null ? -1 : key.length);
     }
 
@@ -78,12 +79,12 @@ public class EncodingA implements Encoding {
 
   @Override
   public void writeSelectedColumns(final DataOutput out, final InternalRow row,
-      final List<Integer> columns) throws IOException {
+                                   final List<Integer> columns) throws IOException {
     byte[] value = (byte[]) row.getRawValue();
     if (value == null) {
-      out.writeShort(-1);
+      MPartList.writeLength(-1, out);
     } else if (row.getRowShared().isFullRow()) {
-      out.writeShort(value.length);
+      MPartList.writeLength(value.length, out);
       out.write(value);
     } else {
       ThinRowShared rowShared = row.getRowShared();
@@ -101,7 +102,7 @@ public class EncodingA implements Encoding {
         }
       }
       length += (vlColumns * Bytes.SIZEOF_INT);
-      out.writeShort(length);
+      MPartList.writeLength(length, out);
       out.write(value, 0, Bytes.SIZEOF_INT + Bytes.SIZEOF_LONG);
       out.write(bm1.toByteArray());
 
@@ -148,7 +149,7 @@ public class EncodingA implements Encoding {
 
     /* row-key-column */
     if (Bytes.equals(MTableUtils.KEY_COLUMN_NAME_BYTES,
-        cells.get(cells.size() - 1).getColumnName())) {
+            cells.get(cells.size() - 1).getColumnName())) {
       ((CellRef) cells.get(cells.size() - 1)).init(key, 0, key == null ? -1 : key.length);
     }
 

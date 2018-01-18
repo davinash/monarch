@@ -17,6 +17,9 @@ import static io.ampool.internal.MPartList.DES_ROW;
 import static io.ampool.internal.MPartList.ROW;
 import static io.ampool.monarch.table.region.ScanCommand.readValueFromMap;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -28,6 +31,7 @@ import java.util.function.Function;
 
 import io.ampool.classification.InterfaceAudience;
 import io.ampool.classification.InterfaceStability;
+import io.ampool.internal.MPartList;
 import io.ampool.monarch.table.Bytes;
 import io.ampool.monarch.table.DeSerializedRow;
 import io.ampool.monarch.table.Row;
@@ -35,6 +39,7 @@ import io.ampool.monarch.table.Scan;
 import io.ampool.monarch.table.TableDescriptor;
 import io.ampool.monarch.table.ftable.FTable;
 import io.ampool.monarch.table.ftable.FTableDescriptor;
+import io.ampool.monarch.table.ftable.internal.FTableImpl;
 import io.ampool.monarch.table.ftable.internal.ProxyFTableRegion;
 import io.ampool.monarch.table.ftable.internal.FTableScanner;
 import io.ampool.monarch.table.region.AmpoolTableRegionAttributes;
@@ -115,9 +120,9 @@ public class ScannerServerImpl extends Scanner {
     /* Get the associated Region with this table */
     Region tableRegion = null;
     if (isFtable) {
-      tableRegion = ((ProxyFTableRegion) table).getTableRegion();
+      tableRegion = ((FTableImpl) table).getTableRegion();
     } else {
-      tableRegion = ((ProxyMTableRegion) table).getTableRegion();
+      tableRegion = ((MTableImpl) table).getTableRegion();
     }
     this.rowProducer = ScanUtils.getRowProducer(scan, td);
     if (tableRegion == null) {
@@ -140,7 +145,7 @@ public class ScannerServerImpl extends Scanner {
       bucketIdSet.add(bucketId);
     } else {
       bucketIdSet = new TreeSet<>((scan.getBucketIds().size() > 0) ? scan.getBucketIds()
-          : getApplicableLocalBucketIds(scan, td, prDataStore));
+              : getApplicableLocalBucketIds(scan, td, prDataStore));
     }
     if (this.scan.isReversed()) {
       this.bucketIdIterator = bucketIdSet.descendingIterator();
@@ -155,9 +160,9 @@ public class ScannerServerImpl extends Scanner {
   }
 
   private Set<Integer> getApplicableLocalBucketIds(Scan scan, TableDescriptor tableDescriptor,
-      PartitionedRegionDataStore prDataStore) {
+                                                   PartitionedRegionDataStore prDataStore) {
     Set<Integer> bucketIdSet =
-        MTableUtils.getBucketIdSet(scan.getStartRow(), scan.getStopRow(), tableDescriptor);
+            MTableUtils.getBucketIdSet(scan.getStartRow(), scan.getStopRow(), tableDescriptor);
     Set<Integer> allLocalPrimaryBucketIds = prDataStore.getAllLocalPrimaryBucketIds();
 
     bucketIdSet.retainAll(allLocalPrimaryBucketIds);
@@ -175,9 +180,9 @@ public class ScannerServerImpl extends Scanner {
     this.scan.setBucketId(bucketId);
     BucketRegion localBucketById = prDataStore.getLocalBucketById(bucketId);
     if (localBucketById != null && localBucketById.getBucketAdvisor().isPrimary()
-        && this.scanContext != null) {
+            && this.scanContext != null) {
       this.currentIterator =
-          this.scanContext.getBucketIterator(bucket.getRegionMap().getInternalMap());
+              this.scanContext.getBucketIterator(bucket.getRegionMap().getInternalMap());
     }
   }
 
@@ -186,7 +191,7 @@ public class ScannerServerImpl extends Scanner {
       ScanEntryHandler.Status status;
       Map.Entry entry;
       Function<Map.Entry, Object> VALUE_PROCESSOR = scanContext.td instanceof FTableDescriptor
-          ? Map.Entry::getValue : (e) -> readValueFromMap(e, scanContext);
+              ? Map.Entry::getValue : (e) -> readValueFromMap(e, scanContext);
       while (currentIterator.hasNext()) {
         entry = currentIterator.next();
         if (entry == null || !(entry.getKey() instanceof IMKey)) {
@@ -203,12 +208,12 @@ public class ScannerServerImpl extends Scanner {
           switch ((byte) values[0]) {
             case ROW:
               ((InternalRow) values[2]).writeSelectedColumns(hdos, this.scan.getColumns());
-              value = Arrays.copyOfRange(hdos.toByteArray(), 2, hdos.size());
+              value = readValue(hdos.toByteArray());
               break;
             case DES_ROW:
               td.getEncoding().writeDesRow(hdos, td, (DeSerializedRow) values[2],
-                  this.scan.getColumns());
-              value = Arrays.copyOfRange(hdos.toByteArray(), 2, hdos.size());
+                      this.scan.getColumns());
+              value = readValue(hdos.toByteArray());
               break;
             default:
               value = values[2];
@@ -220,6 +225,22 @@ public class ScannerServerImpl extends Scanner {
       logger.warn("Exception during scan; table= {}.", scanContext.region.getName(), e);
     }
     return null;
+  }
+
+  /**
+   * Read the serialized value (bytes) skipping the length.
+   *
+   * @param inputBytes the serialized part representation of a row
+   * @return the actual row bytes
+   * @throws IOException if failed to read from the input
+   */
+  private byte[] readValue(final byte[] inputBytes) throws IOException {
+    final DataInputStream in = new DataInputStream(new ByteArrayInputStream(inputBytes));
+    final int length = (int) MPartList.readLength(in);
+    final byte[] bytes = new byte[length];
+    in.readFully(bytes);
+    in.close();
+    return bytes;
   }
 
   @Override

@@ -74,8 +74,8 @@ public class TierHelper {
         if (entry.isInUseByTransaction() || entry.isDestroyedOrRemoved()) {
           if (logger.isTraceEnabled(LogMarker.LRU)) {
             logger.trace(LogMarker.LRU,
-                "Not moving to the next tier; either it is in-use or already removed. Key={}",
-                entry.getKey());
+                    "Not moving to the next tier; either it is in-use or already removed. Key={}",
+                    entry.getKey());
           }
           return 0;
         }
@@ -83,8 +83,8 @@ public class TierHelper {
         if (writeToNextTier(region, entry)) {
           if (logger.isTraceEnabled(LogMarker.LRU)) {
             logger.trace(LogMarker.LRU,
-                "Not moving to the next tier; failed to write entry to the next tier. Region={}, Key={}",
-                region, entry.getKey());
+                    "Not moving to the next tier; failed to write entry to the next tier. Region={}, Key={}",
+                    region, entry.getKey());
           }
           return 0;
         }
@@ -117,8 +117,8 @@ public class TierHelper {
       if (entry.isInUseByTransaction() || entry.isDestroyedOrRemoved()) {
         if (logger.isTraceEnabled(LogMarker.LRU)) {
           logger.trace(LogMarker.LRU,
-              "Not moving to the next tier; either it is in-use or already removed. Key={}",
-              entry.getKey());
+                  "Not moving to the next tier; either it is in-use or already removed. Key={}",
+                  entry.getKey());
         }
         return 0;
       }
@@ -130,11 +130,13 @@ public class TierHelper {
         blockValue = (BlockValue) value;
       } else if (value instanceof VMCachedDeserializable) {
         // FIXME: Secondary should also receive BlockValue instead of VMCachedDeserializable
-        blockValue = (BlockValue) ((VMCachedDeserializable) value).getDeserializedForReading();
+        blockValue =
+                (BlockValue) ((VMCachedDeserializable) value).getDeserializedValue(region, entry);
       } else {
         logger.warn("Unknown value found for key= {}; value= {}", entry.getKey(), value);
         return 0;
       }
+
       // if (entry.testEvicted() || blockValue.isEvicted()) {
       // return 0;
       // }
@@ -148,11 +150,12 @@ public class TierHelper {
          * write to the WAL it cannot be undone. NOTE: If the entry cannot be written to the WAL
          * even after retries then it will be lost.
          */
+        final int size = entry.getEntrySize();
         if (region.evictDestroy(entry)) {
           entry.setEvicted();
           if (!blockValue.isEvicted()) {
             FTableBucketRegion br = (FTableBucketRegion) region;
-            br.incEvictions(blockValue.getCurrentIndex());
+            br.incEvictions(blockValue.getCurrentIndex() - 1);
             br.incActualCount(-1 * blockValue.getCurrentIndex());
             /** now write key-value to the WAL with fixed number of retries **/
             int i = 0;
@@ -167,13 +170,13 @@ public class TierHelper {
             /** log error if the entry was not written successfully to the next tier **/
             if (status) {
               logger.error("Failed to write to the storage tier. Region= {}, Key= {}",
-                  region.getName(), entry.getKey());
+                      region.getName(), entry.getKey());
             }
           }
-          return entry.getEntrySize();
+          return size;
         } else {
           logger.info("Failed to evict entry; Region= {}, Key= {}", region.getName(),
-              entry.getKey());
+                  entry.getKey());
           return 0;
         }
       }
@@ -183,7 +186,7 @@ public class TierHelper {
 
 
   public static int forcedOverflowToNextStorageTier(LocalRegion region, BlockKey blockKey,
-      BlockValue blockValue) {
+                                                    BlockValue blockValue) {
 
     final Object key = blockKey;
     final Object value = blockValue;
@@ -211,7 +214,7 @@ public class TierHelper {
         /** log error if the entry was not written successfully to the next tier **/
         if (status) {
           logger.error("Failed to write to the storage tier. Region= {}, Key= {}", region.getName(),
-              blockKey);
+                  blockKey);
         }
       }
       /* Return 0 on success */
@@ -238,15 +241,15 @@ public class TierHelper {
     /** TODO: Creation/closing of the file should be done only once per region.. **/
     try (
 
-        FileOutputStream fos = new FileOutputStream(getTierFileNameKeys(region), true);
-        BufferedOutputStream bos = new BufferedOutputStream(fos, 32768);
-        DataOutputStream dos = new DataOutputStream(bos);
-        SeekableByteChannel bc =
-            Files.newByteChannel(new File(getTierFileNameValues(region)).toPath(),
-                StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.WRITE);) {
+            FileOutputStream fos = new FileOutputStream(getTierFileNameKeys(region), true);
+            BufferedOutputStream bos = new BufferedOutputStream(fos, 32768);
+            DataOutputStream dos = new DataOutputStream(bos);
+            SeekableByteChannel bc =
+                    Files.newByteChannel(new File(getTierFileNameValues(region)).toPath(),
+                            StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.WRITE);) {
       Object value = entry._getValue();
       byte[] valueBytes = value instanceof byte[] ? (byte[]) value
-          : value instanceof CachedDeserializable
+              : value instanceof CachedDeserializable
               ? ((CachedDeserializable) value).getSerializedValue() : null;
       if (valueBytes != null) {
         long pos = bc.position();
@@ -266,7 +269,7 @@ public class TierHelper {
 
 
   private static boolean writeToNextStorageTier(final BucketRegion region, final IMKey key,
-      final BlockValue blockValue) {
+                                                final BlockValue blockValue) {
     StoreHandler storeHandler = MCacheFactory.getAnyInstance().getStoreHandler();
     try {
       storeHandler.append(region.getDisplayName(), region.getId(), key, blockValue);
@@ -282,7 +285,7 @@ public class TierHelper {
 
   public static String getTierFileName(LocalRegion region) {
     final String suffix = region instanceof BucketRegion
-        ? ((BucketRegion) region).getBucketAdvisor().isPrimary() ? "_primary" : "_secondary" : "";
+            ? ((BucketRegion) region).getBucketAdvisor().isPrimary() ? "_primary" : "_secondary" : "";
     return region.getDiskDirs()[0].getAbsoluteFile() + "/" + region.getName() + suffix;
   }
 

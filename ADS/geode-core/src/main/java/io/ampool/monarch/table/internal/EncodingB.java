@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
+import io.ampool.internal.MPartList;
 import io.ampool.monarch.table.Bytes;
 import io.ampool.monarch.table.Cell;
 import io.ampool.monarch.table.MColumnDescriptor;
@@ -21,12 +22,12 @@ public class EncodingB implements Encoding {
 
   @Override
   public int initFullRow(final Object k, final Object v, final ThinRowShared trs, final int offset,
-      final int length) {
+                         final int length) {
     List<Cell> cells = trs.getCells();
     final byte[] buf = (byte[]) v;
     int len;
     int vlCount = 0, flOffset = offset, lenOffset = offset + length - Bytes.SIZEOF_INT,
-        lastOff = -1;
+            lastOff = -1;
     CellRef cell, vlLastCell = null;
     for (int i = 0; i < cells.size(); i++) {
       cell = (CellRef) cells.get(i);
@@ -53,12 +54,12 @@ public class EncodingB implements Encoding {
 
   @Override
   public void writeSelectedColumns(DataOutput out, InternalRow row, List<Integer> columns)
-      throws IOException {
+          throws IOException {
     byte[] value = (byte[]) row.getRawValue();
     if (value == null) {
-      out.writeShort(-1);
+      MPartList.writeLength(-1, out);
     } else if (row.getRowShared().isFullRow()) {
-      out.writeShort(row.getLength());
+      MPartList.writeLength(row.getLength(), out);
       out.write(value, row.getOffset(), row.getLength());
     } else {
       int length = offset;
@@ -73,7 +74,7 @@ public class EncodingB implements Encoding {
         }
       }
       length += (vlColumns * Bytes.SIZEOF_INT);
-      out.writeShort(length);
+      MPartList.writeLength(length, out);
       for (int i = 0; i < columns.size(); i++) {
         cell = cells.get(columns.get(i));
         if (!cell.getColumnType().isFixedLength()) {

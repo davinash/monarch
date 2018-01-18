@@ -17,6 +17,7 @@ import static org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils.getStandardJa
 import static org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils.getTypeInfoFromTypeString;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -54,6 +55,7 @@ import org.apache.geode.internal.logging.LogService;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.SerializationUtilities;
 import org.apache.hadoop.hive.ql.io.orc.OrcFile;
 import org.apache.hadoop.hive.ql.io.orc.RecordReader;
@@ -107,30 +109,36 @@ import org.iq80.snappy.Snappy;
  */
 public class OrcUtils {
   private static final Logger logger = LogService.getLogger();
+  private static final String VARCHAR_TYPE = getBase(TypeInfoFactory.varcharTypeInfo.getTypeName());
+  private static final String DECIMAL_TYPE = getBase(TypeInfoFactory.decimalTypeInfo.getTypeName());
+
+  private static String getBase(final String typeStr) {
+    final int index = typeStr.indexOf('(');
+    return index > 0 ? typeStr.substring(0, index) : typeStr;
+  }
 
   public static final Map<String, Function<Object, Object>> OrcReadFunctionMap =
-      new HashMap<String, Function<Object, Object>>(20) {
-        {
-          put(TypeInfoFactory.stringTypeInfo.getTypeName(), Object::toString);
-          put(TypeInfoFactory.varcharTypeInfo.getTypeName(), Object::toString);
-          put(TypeInfoFactory.stringTypeInfo.getTypeName(), Object::toString);
-          put(TypeInfoFactory.charTypeInfo.getTypeName(),
-              e -> ((HiveCharWritable) e).getHiveChar().getValue().charAt(0));
-          put(TypeInfoFactory.intTypeInfo.getTypeName(), e -> ((IntWritable) e).get());
-          put(TypeInfoFactory.longTypeInfo.getTypeName(), e -> ((LongWritable) e).get());
-          put(TypeInfoFactory.doubleTypeInfo.getTypeName(), e -> ((DoubleWritable) e).get());
-          put(TypeInfoFactory.binaryTypeInfo.getTypeName(), e -> ((BytesWritable) e).copyBytes());
-          put(TypeInfoFactory.booleanTypeInfo.getTypeName(), e -> ((BooleanWritable) e).get());
-          put(TypeInfoFactory.byteTypeInfo.getTypeName(), e -> ((ByteWritable) e).get());
-          put(TypeInfoFactory.dateTypeInfo.getTypeName(), e -> ((DateWritable) e).get());
-          put(TypeInfoFactory.floatTypeInfo.getTypeName(), e -> ((FloatWritable) e).get());
-          put(TypeInfoFactory.shortTypeInfo.getTypeName(), e -> ((ShortWritable) e).get());
-          put(TypeInfoFactory.timestampTypeInfo.getTypeName(),
-              e -> ((TimestampWritable) e).getTimestamp());
-          put(TypeInfoFactory.decimalTypeInfo.getTypeName(),
-              e -> ((HiveDecimalWritable) e).getHiveDecimal().bigDecimalValue());
-        }
-      };
+          new HashMap<String, Function<Object, Object>>(20) {
+            {
+              put(TypeInfoFactory.stringTypeInfo.getTypeName(), Object::toString);
+              put(VARCHAR_TYPE, Object::toString);
+              put(TypeInfoFactory.stringTypeInfo.getTypeName(), Object::toString);
+              put(TypeInfoFactory.charTypeInfo.getTypeName(),
+                      e -> ((HiveCharWritable) e).getHiveChar().getValue().charAt(0));
+              put(TypeInfoFactory.intTypeInfo.getTypeName(), e -> ((IntWritable) e).get());
+              put(TypeInfoFactory.longTypeInfo.getTypeName(), e -> ((LongWritable) e).get());
+              put(TypeInfoFactory.doubleTypeInfo.getTypeName(), e -> ((DoubleWritable) e).get());
+              put(TypeInfoFactory.binaryTypeInfo.getTypeName(), e -> ((BytesWritable) e).copyBytes());
+              put(TypeInfoFactory.booleanTypeInfo.getTypeName(), e -> ((BooleanWritable) e).get());
+              put(TypeInfoFactory.byteTypeInfo.getTypeName(), e -> ((ByteWritable) e).get());
+              put(TypeInfoFactory.dateTypeInfo.getTypeName(), e -> ((DateWritable) e).get());
+              put(TypeInfoFactory.floatTypeInfo.getTypeName(), e -> ((FloatWritable) e).get());
+              put(TypeInfoFactory.shortTypeInfo.getTypeName(), e -> ((ShortWritable) e).get());
+              put(TypeInfoFactory.timestampTypeInfo.getTypeName(),
+                      e -> ((TimestampWritable) e).getTimestamp());
+              put(DECIMAL_TYPE, e -> ((HiveDecimalWritable) e).getHiveDecimal().bigDecimalValue());
+            }
+          };
   public static final Map<String, TypeInfo> OrcTypeMap = new HashMap<String, TypeInfo>(20) {
     {
       put(BasicTypes.STRING.toString(), TypeInfoFactory.stringTypeInfo);
@@ -155,7 +163,7 @@ public class OrcUtils {
   public static final Map<String, String> OrcTypeStringMap = new HashMap<String, String>(20) {
     {
       put(BasicTypes.STRING.toString(), TypeInfoFactory.stringTypeInfo.getTypeName());
-      put(BasicTypes.VARCHAR.toString(), TypeInfoFactory.varcharTypeInfo.getTypeName());
+      put(BasicTypes.VARCHAR.toString(), VARCHAR_TYPE);
       put(BasicTypes.CHARS.toString(), TypeInfoFactory.stringTypeInfo.getTypeName());
       put(BasicTypes.CHAR.toString(), TypeInfoFactory.charTypeInfo.getTypeName());
       put(BasicTypes.O_INT.toString(), TypeInfoFactory.intTypeInfo.getTypeName());
@@ -170,7 +178,7 @@ public class OrcUtils {
       put(BasicTypes.FLOAT.toString(), TypeInfoFactory.floatTypeInfo.getTypeName());
       put(BasicTypes.SHORT.toString(), TypeInfoFactory.shortTypeInfo.getTypeName());
       put(BasicTypes.TIMESTAMP.toString(), TypeInfoFactory.timestampTypeInfo.getTypeName());
-      put(BasicTypes.BIG_DECIMAL.name(), TypeInfoFactory.decimalTypeInfo.getTypeName());
+      put(BasicTypes.BIG_DECIMAL.name(), DECIMAL_TYPE);
     }
   };
 
@@ -178,19 +186,19 @@ public class OrcUtils {
    * Predicate converter map: From Ampool to ORC predicates.
    **/
   public static final Map<TypePredicateOp, BiFunction<SingleColumnValueFilter, TableDescriptor, ExprNodeDesc>> UDF_CONVERT_MAP =
-      new HashMap<TypePredicateOp, BiFunction<SingleColumnValueFilter, TableDescriptor, ExprNodeDesc>>() {
-        {
-          put(CompareOp.EQUAL, (f, td) -> convertFilter(f, td, new GenericUDFOPEqual()));
-          put(CompareOp.NOT_EQUAL, (f, td) -> convertFilter(f, td, new GenericUDFOPNotEqual()));
-          put(CompareOp.LESS, (f, td) -> convertFilter(f, td, new GenericUDFOPLessThan()));
-          put(CompareOp.LESS_OR_EQUAL,
-              (f, td) -> convertFilter(f, td, new GenericUDFOPEqualOrLessThan()));
-          put(CompareOp.GREATER, (f, td) -> convertFilter(f, td, new GenericUDFOPGreaterThan()));
-          put(CompareOp.GREATER_OR_EQUAL,
-              (f, td) -> convertFilter(f, td, new GenericUDFOPEqualOrGreaterThan()));
-          // put(CompareOp.REGEX, (f, td) -> convertFilter(f, td, new UDFLike()));
-        }
-      };
+          new HashMap<TypePredicateOp, BiFunction<SingleColumnValueFilter, TableDescriptor, ExprNodeDesc>>() {
+            {
+              put(CompareOp.EQUAL, (f, td) -> convertFilter(f, td, new GenericUDFOPEqual()));
+              put(CompareOp.NOT_EQUAL, (f, td) -> convertFilter(f, td, new GenericUDFOPNotEqual()));
+              put(CompareOp.LESS, (f, td) -> convertFilter(f, td, new GenericUDFOPLessThan()));
+              put(CompareOp.LESS_OR_EQUAL,
+                      (f, td) -> convertFilter(f, td, new GenericUDFOPEqualOrLessThan()));
+              put(CompareOp.GREATER, (f, td) -> convertFilter(f, td, new GenericUDFOPGreaterThan()));
+              put(CompareOp.GREATER_OR_EQUAL,
+                      (f, td) -> convertFilter(f, td, new GenericUDFOPEqualOrGreaterThan()));
+              // put(CompareOp.REGEX, (f, td) -> convertFilter(f, td, new UDFLike()));
+            }
+          };
 
   public static String getOrcSchema(final Schema schema) {
     return DataTypeFactory.convertTypeString(schema.toString(), OrcTypeStringMap);
@@ -207,7 +215,7 @@ public class OrcUtils {
   public static AWriter createWriter(final OrcFile.WriterOptions opts) throws IOException {
     final Path dummyPath = AReaderImpl.PATH;
     FileSystem fs = opts.getFileSystem() == null ? dummyPath.getFileSystem(opts.getConfiguration())
-        : opts.getFileSystem();
+            : opts.getFileSystem();
 
     return new AWriter(fs, dummyPath, opts);
   }
@@ -222,7 +230,7 @@ public class OrcUtils {
    * @throws IOException if failed to create the ORC reader
    */
   public static AReaderImpl createReader(final byte[] bytes, final OrcFile.ReaderOptions options)
-      throws IOException {
+          throws IOException {
     final FileMetaInfo fileMetaInfo = AReaderImpl.extractMetaInfoFromFooter(bytes);
     AFileMetadata metadata = new AFileMetadata(fileMetaInfo);
     options.fileMetadata(metadata);
@@ -241,12 +249,12 @@ public class OrcUtils {
    */
   public static byte[] convertToOrcBytes(final BlockValue bv, final FTableDescriptor td) {
     final SettableStructObjectInspector rowOI =
-        (SettableStructObjectInspector) getStandardJavaObjectInspectorFromTypeInfo(
-            getTypeInfoFromTypeString(td.getOrcSchema()));
+            (SettableStructObjectInspector) getStandardJavaObjectInspectorFromTypeInfo(
+                    getTypeInfoFromTypeString(td.getOrcSchema()));
 
     final List<? extends StructField> fields = rowOI.getAllStructFieldRefs();
     final OrcFile.WriterOptions wOpts =
-        OrcFile.writerOptions(td.getBlockProperties(), new Configuration()).inspector(rowOI);
+            OrcFile.writerOptions(td.getBlockProperties(), new Configuration()).inspector(rowOI);
     final Encoding enc = Encoding.getEncoding(bv.getRowHeader().getEncoding());
     try {
       final AWriter writer = createWriter(wOpts);
@@ -257,7 +265,12 @@ public class OrcUtils {
         aRow.reset(null, bv.getRecord(i), enc, null);
         int j = 0;
         for (final Cell cell : aRow.getCells()) {
-          rowOI.setStructFieldData(oRow, fields.get(j++), cell.getColumnValue());
+          if (cell.getColumnType().equals(BasicTypes.BIG_DECIMAL)) {
+            rowOI.setStructFieldData(oRow, fields.get(j++),
+                    HiveDecimal.create((BigDecimal) cell.getColumnValue()));
+          } else {
+            rowOI.setStructFieldData(oRow, fields.get(j++), cell.getColumnValue());
+          }
         }
         writer.addRow(oRow);
       }
@@ -300,15 +313,15 @@ public class OrcUtils {
    * @return the ORC predicate
    */
   private static ExprNodeDesc convertFilter(final SingleColumnValueFilter f,
-      final TableDescriptor td, final GenericUDF udf) {
+                                            final TableDescriptor td, final GenericUDF udf) {
     final String cName = f.getColumnNameString();
     final String aType = td.getColumnByName(cName).getColumnType().toString();
     ExprNodeDesc exprNodeDesc =
-        new ExprNodeGenericFuncDesc(TypeInfoFactory.booleanTypeInfo, udf, new ArrayList<>(2));
+            new ExprNodeGenericFuncDesc(TypeInfoFactory.booleanTypeInfo, udf, new ArrayList<>(2));
     final TypeInfo ti = OrcTypeMap.get(aType);
     final ExprNodeDesc c1 = new ExprNodeColumnDesc(ti, cName, cName, false);
     final ExprNodeDesc c2 = new ExprNodeConstantDesc(ti,
-        ti == TypeInfoFactory.floatTypeInfo ? ((Number) f.getValue()).doubleValue() : f.getValue());
+            ti == TypeInfoFactory.floatTypeInfo ? ((Number) f.getValue()).doubleValue() : f.getValue());
     exprNodeDesc.getChildren().add(c1);
     exprNodeDesc.getChildren().add(c2);
     return exprNodeDesc;
@@ -322,13 +335,13 @@ public class OrcUtils {
    * @return the generic ORC predicates
    */
   public static ExprNodeDesc convertToExpression(final Filter filter, final TableDescriptor td)
-      throws IOException {
+          throws IOException {
     if (filter instanceof FilterList) {
       FilterList fl = (FilterList) filter;
       ExprNodeDesc expression = new ExprNodeGenericFuncDesc(TypeInfoFactory.booleanTypeInfo,
-          fl.getOperator() == FilterList.Operator.MUST_PASS_ALL ? new GenericUDFOPAnd()
-              : new GenericUDFOPOr(),
-          new ArrayList<>());
+              fl.getOperator() == FilterList.Operator.MUST_PASS_ALL ? new GenericUDFOPAnd()
+                      : new GenericUDFOPOr(),
+              new ArrayList<>());
       for (Filter f : fl.getFilters()) {
         expression.getChildren().add(convertToExpression(f, td));
       }
@@ -480,7 +493,7 @@ public class OrcUtils {
       final SearchArgument sArg = OrcUtils.getSArg(filter, td);
       if (sArg != null) {
         this.filterColumns = sArg.getLeaves().stream()
-            .mapToInt(e -> td.getColumnByName(e.getColumnName()).getIndex()).toArray();
+                .mapToInt(e -> td.getColumnByName(e.getColumnName()).getIndex()).toArray();
       }
       this.options.searchArgument(sArg, OrcUtils.getSArgColumns(td));
     }
@@ -497,6 +510,12 @@ public class OrcUtils {
      */
     public int[] getFilterColumns() {
       return this.filterColumns;
+    }
+
+    @Override
+    public String toString() {
+      return "OrcOptions{" + "options=" + options + ", filterColumns="
+              + Arrays.toString(filterColumns) + '}';
     }
   }
 
@@ -520,7 +539,7 @@ public class OrcUtils {
     SearchArgument.TruthValue[] truthValues = new SearchArgument.TruthValue[leaves.size()];
     for (int i = 0; i < leaves.size(); i++) {
       truthValues[i] = RecordReaderImpl
-          .evaluatePredicate(stats.getColumnStatistics(filterColumns[i]), leaves.get(i), null);
+              .evaluatePredicate(stats.getColumnStatistics(filterColumns[i]), leaves.get(i), null);
     }
     return sa.evaluate(truthValues).isNeeded();
   }
@@ -540,27 +559,33 @@ public class OrcUtils {
     Object outValue = null;
     switch (oi.getCategory()) {
       case PRIMITIVE:
-        outValue = OrcReadFunctionMap.get(oi.getTypeName()).apply(value);
+        final Function<Object, Object> type = OrcReadFunctionMap.computeIfAbsent(oi.getTypeName(),
+                k -> OrcReadFunctionMap.get(getBase(k)));
+        if (type == null) {
+          logger.error("No converter found for ORC type: {}; returning null..", oi.getTypeName());
+          return null;
+        }
+        outValue = type.apply(value);
         break;
       case LIST:
         final ListObjectInspector loi = (ListObjectInspector) oi;
         final ObjectInspector eoi = loi.getListElementObjectInspector();
         outValue =
-            loi.getList(value).stream().map(e -> convert(eoi, e)).collect(Collectors.toList());
+                loi.getList(value).stream().map(e -> convert(eoi, e)).collect(Collectors.toList());
         break;
       case MAP:
         final MapObjectInspector moi = (MapObjectInspector) oi;
         final ObjectInspector koi = moi.getMapKeyObjectInspector();
         final ObjectInspector voi = moi.getMapValueObjectInspector();
         outValue = moi.getMap(value).entrySet().stream()
-            .collect(Collectors.toMap(e -> convert(koi, e.getKey()),
-                e -> convert(voi, e.getValue()), throwingMerger(), LinkedHashMap::new));
+                .collect(Collectors.toMap(e -> convert(koi, e.getKey()),
+                        e -> convert(voi, e.getValue()), throwingMerger(), LinkedHashMap::new));
         break;
       case STRUCT:
         final StructObjectInspector soi = (StructObjectInspector) oi;
         outValue = soi.getAllStructFieldRefs().stream()
-            .map(e -> convert(e.getFieldObjectInspector(), soi.getStructFieldData(value, e)))
-            .toArray();
+                .map(e -> convert(e.getFieldObjectInspector(), soi.getStructFieldData(value, e)))
+                .toArray();
         break;
       case UNION:
         final UnionObjectInspector uoi = (UnionObjectInspector) oi;
@@ -622,7 +647,7 @@ public class OrcUtils {
         this.desRow = new StoreRecord(this.fields.size());
         for (final StructField field : fields) {
           this.desRow.setValue(i++,
-              convert(field.getFieldObjectInspector(), rowOI.getStructFieldData(row, field)));
+                  convert(field.getFieldObjectInspector(), rowOI.getStructFieldData(row, field)));
         }
         return this.desRow;
       } catch (Exception e) {
