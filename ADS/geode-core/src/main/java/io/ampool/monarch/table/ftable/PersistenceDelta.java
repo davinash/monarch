@@ -11,36 +11,34 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License. See accompanying LICENSE file.
  */
-package io.ampool.tierstore.wal;
 
-import io.ampool.monarch.table.ftable.internal.BlockKey;
+package io.ampool.monarch.table.ftable;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 
-public class WALRecordHeader {
-  private BlockKey blockKey;
-  public static final int SIZE = BlockKey.length;
+public interface PersistenceDelta {
 
+  /**
+   * Returns true if this object has pending changes which need to be written to persistence layer.
+   */
+  boolean hasPersistenceDelta();
 
-  public WALRecordHeader(BlockKey blockKey) {
-    this.blockKey = blockKey;
-  }
+  /**
+   * This method is invoked by the persistence to get the delta of the object which need to be
+   * written to persistence layer.
+   */
+  void toPersistenceDelta(DataOutput out);
 
 
   /**
-   * Gets the record's block key from header.
-   *
-   * @return Block key
+   * This method applies delta to the object
    */
-  public BlockKey getBlockKey() {
-    return blockKey;
-  }
+  void fromPersistenceDelta(DataInput in);
 
   /**
-   * Get the byte array corresponding to the record header
-   *
-   * @return byte[] representation of record header.
+   * This method resets the delta read and
    */
-  public byte[] getBytes() {
-    return blockKey.getBytes();
-  }
+  void resetPersistenceDelta();
+
 }

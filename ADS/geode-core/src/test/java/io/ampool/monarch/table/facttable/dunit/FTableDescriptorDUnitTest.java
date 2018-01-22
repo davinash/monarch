@@ -33,7 +33,9 @@ import io.ampool.monarch.table.client.MClientCache;
 import io.ampool.monarch.table.client.MClientCacheFactory;
 import io.ampool.monarch.table.ftable.FTable;
 import io.ampool.monarch.table.ftable.FTableDescriptor;
+import io.ampool.monarch.table.ftable.internal.FTableImpl;
 import io.ampool.monarch.table.ftable.internal.ProxyFTableRegion;
+import io.ampool.monarch.table.internal.AbstractTableDescriptor;
 import io.ampool.monarch.table.internal.MPartitionResolver;
 import io.ampool.monarch.table.internal.MTableUtils;
 import io.ampool.monarch.types.BasicTypes;
@@ -92,7 +94,7 @@ public class FTableDescriptorDUnitTest extends MTableDUnitHelper {
   private MDiskWritePolicy DEFAULT_DISK_WRITE_POLICY = MDiskWritePolicy.ASYNCHRONOUS;
   private MEvictionPolicy DEFAULT_EVICTION_POLICY = MEvictionPolicy.OVERFLOW_TO_TIER;
   private MExpirationAttributes DEFAULT_EXPIRATION_ATTRIBUTES =
-      new MExpirationAttributes(0, MExpirationAction.DESTROY);
+          new MExpirationAttributes(0, MExpirationAction.DESTROY);
 
   public FTableDescriptorDUnitTest() {}
 
@@ -189,13 +191,13 @@ public class FTableDescriptorDUnitTest extends MTableDUnitHelper {
       // Debug statements
       {
         System.out.println(
-            "FTableDescriptorDUnitTest.Client-2.GET  #Copies = " + ftd.getRedundantCopies());
+                "FTableDescriptorDUnitTest.Client-2.GET  #Copies = " + ftd.getRedundantCopies());
         // System.out.println("FTableDescriptorDUnitTest.Client-2.GET #Table Type = " +
         // ftd.getTableType());
         System.out.println(
-            "FTableDescriptorDUnitTest.Client-2.GET  #Splits = " + ftd.getTotalNumOfSplits());
+                "FTableDescriptorDUnitTest.Client-2.GET  #Splits = " + ftd.getTotalNumOfSplits());
         System.out.println("FTableDescriptorDUnitTest.Client-2.GET  #ColumnDesc_Map.size = "
-            + ftd.getColumnDescriptorsMap().size());
+                + ftd.getColumnDescriptorsMap().size());
       }
       verifyTableDescriptor(ftd);
       System.out.println("FTableDescriptorDUnitTest.doGetFromClient2 Success!");
@@ -209,11 +211,11 @@ public class FTableDescriptorDUnitTest extends MTableDUnitHelper {
     // Assert.assertEquals(DEFAULT_TYPE, ftd.getTableType());
     Assert.assertEquals(DEFAULT_SPLITS, ftd.getTotalNumOfSplits());
     Assert.assertEquals(DEFAULT_TOTAL_COLUMNS + TOTAL_INTERNAL_COLUMNS,
-        ftd.getColumnDescriptorsMap().size());
+            ftd.getColumnDescriptorsMap().size());
 
     // System.out.println("NNN FTableDescriptorDUnitTest.verifyTableDescriptor ==> " +
     // ftd.getRecoveryDiskStore());
-    Assert.assertEquals(MTableUtils.DEFAULT_DISK_STORE_NAME, ftd.getRecoveryDiskStore());
+    Assert.assertEquals(MTableUtils.DEFAULT_FTABLE_DISK_STORE_NAME, ftd.getRecoveryDiskStore());
 
     // System.out.println("NNN FTableDescriptorDUnitTest.verifyTableDescriptor ==> " +
     // ftd.getDiskWritePolicy().name());
@@ -226,9 +228,9 @@ public class FTableDescriptorDUnitTest extends MTableDUnitHelper {
     // System.out.println("NNN FTableDescriptorDUnitTest.verifyTableDescriptor ==> " +
     // ftd.getExpirationAttributes().toString());
     Assert.assertEquals(DEFAULT_EXPIRATION_ATTRIBUTES.getTimeout(),
-        ftd.getExpirationAttributes().getTimeout());
+            ftd.getExpirationAttributes().getTimeout());
     Assert.assertEquals(DEFAULT_EXPIRATION_ATTRIBUTES.getAction(),
-        ftd.getExpirationAttributes().getAction());
+            ftd.getExpirationAttributes().getAction());
 
     Assert.assertEquals(DEFAULT_IS_DISK_PERSISTENCE, ftd.isDiskPersistenceEnabled());
 
@@ -416,44 +418,50 @@ public class FTableDescriptorDUnitTest extends MTableDUnitHelper {
     doCreateFTable();
 
     System.out.println("----------------------- RESTARTING SERVERS ----------------------------");
-    restart();
-    System.out.println("----------------------- RESTARTING SERVERS DONE -----------------------");
 
-    // verify recovery from server
-    server1.invoke(new SerializableCallable() {
-      public Object call() throws Exception {
-        verifyMetaRegion(false);
-        return null;
-      }
-    });
+    // After fix for GEN-2139, adding conditional restart of servers
+    FTableDescriptor fTableDescriptor = getFTableDescriptor();
+    if (((AbstractTableDescriptor) fTableDescriptor).isDiskPersistenceEnabled()) {
 
-    server2.invoke(new SerializableCallable() {
-      public Object call() throws Exception {
-        verifyMetaRegion(false);
-        return null;
-      }
-    });
+      restart();
+      System.out.println("----------------------- RESTARTING SERVERS DONE -----------------------");
 
-    server3.invoke(new SerializableCallable() {
-      public Object call() throws Exception {
-        verifyMetaRegion(false);
-        return null;
-      }
-    });
+      // verify recovery from server
+      server1.invoke(new SerializableCallable() {
+        public Object call() throws Exception {
+          verifyMetaRegion(false);
+          return null;
+        }
+      });
 
-    // Verify recovery from client: meta-region (FTableDescriptor) and user-table after server
-    // restart
-    FTable table = MClientCacheFactory.getAnyInstance().getFTable(TABLE_NAME);
-    assertNotNull(table);
+      server2.invoke(new SerializableCallable() {
+        public Object call() throws Exception {
+          verifyMetaRegion(false);
+          return null;
+        }
+      });
 
-    verifyMetaRegion(true);
+      server3.invoke(new SerializableCallable() {
+        public Object call() throws Exception {
+          verifyMetaRegion(false);
+          return null;
+        }
+      });
+
+      // Verify recovery from client: meta-region (FTableDescriptor) and user-table after server
+      // restart
+      FTable table = MClientCacheFactory.getAnyInstance().getFTable(TABLE_NAME);
+      assertNotNull(table);
+
+      verifyMetaRegion(true);
+    }
 
   }
   /////////////// Reconnect related code changes
 
   private static FTable createFTable(final FTableDescriptor tableDescriptor) {
     System.out.println(
-        "FTableDescriptorDUnitTest.createFTable :: " + "Creating Ftable:---- " + tableDescriptor);
+            "FTableDescriptorDUnitTest.createFTable :: " + "Creating Ftable:---- " + tableDescriptor);
 
     MClientCache clientCache = MClientCacheFactory.getAnyInstance();
     // System.out.println("CreateMTableDUnitTest.createFTable :: " + "isCacheClosed: " +
@@ -492,13 +500,13 @@ public class FTableDescriptorDUnitTest extends MTableDUnitHelper {
       // }
     } while (fTable == null && retries < 500);
     assertNotNull(fTable);
-    final Region<Object, Object> mRegion = ((ProxyFTableRegion) fTable).getTableRegion();
+    final Region<Object, Object> mRegion = ((FTableImpl) fTable).getTableRegion();
     String path = mRegion.getFullPath();
     assertTrue(path.contains(TABLE_NAME));
 
     // Verify disk persistence
     assertEquals(tableDescriptor.isDiskPersistenceEnabled(),
-        mRegion.getAttributes().getDataPolicy().withPersistence());
+            mRegion.getAttributes().getDataPolicy().withPersistence());
   }
 
   private static FTableDescriptor getFTableDescriptor() {
@@ -521,24 +529,24 @@ public class FTableDescriptorDUnitTest extends MTableDUnitHelper {
     assertNotNull(table);
     server1.invoke(() -> {
       System.out.println(
-          "CreateMTableDUnitTest.testMTableCreationNormal :: " + "before Verifying on server1");
+              "CreateMTableDUnitTest.testMTableCreationNormal :: " + "before Verifying on server1");
       FTableDescriptorDUnitTest.verifyTableOnServer(getFTableDescriptor());
       System.out
-          .println("CreateMTableDUnitTest.testMTableCreationNormal :: " + "Verified on server1");
+              .println("CreateMTableDUnitTest.testMTableCreationNormal :: " + "Verified on server1");
     });
     server2.invoke(() -> {
       System.out.println(
-          "CreateMTableDUnitTest.testMTableCreationNormal :: " + "before Verifying on server2");
+              "CreateMTableDUnitTest.testMTableCreationNormal :: " + "before Verifying on server2");
       FTableDescriptorDUnitTest.verifyTableOnServer(getFTableDescriptor());
       System.out
-          .println("CreateMTableDUnitTest.testMTableCreationNormal :: " + "Verified on server2");
+              .println("CreateMTableDUnitTest.testMTableCreationNormal :: " + "Verified on server2");
     });
     server3.invoke(() -> {
       System.out.println(
-          "CreateMTableDUnitTest.testMTableCreationNormal :: " + "before Verifying on server3");
+              "CreateMTableDUnitTest.testMTableCreationNormal :: " + "before Verifying on server3");
       FTableDescriptorDUnitTest.verifyTableOnServer(getFTableDescriptor());
       System.out
-          .println("CreateMTableDUnitTest.testMTableCreationNormal :: " + "Verified on server3");
+              .println("CreateMTableDUnitTest.testMTableCreationNormal :: " + "Verified on server3");
     });
   }
 
@@ -548,7 +556,7 @@ public class FTableDescriptorDUnitTest extends MTableDUnitHelper {
       @Override
       public Object call() throws Exception {
         InternalDistributedSystem distributedSystem =
-            (InternalDistributedSystem) MCacheFactory.getAnyInstance().getDistributedSystem();
+                (InternalDistributedSystem) MCacheFactory.getAnyInstance().getDistributedSystem();
         assertNotNull(distributedSystem);
         MembershipManagerHelper.crashDistributedSystem(distributedSystem);
         return null;
@@ -560,7 +568,7 @@ public class FTableDescriptorDUnitTest extends MTableDUnitHelper {
    * private void getReconnectedCache() {
    * System.out.println("After ForcedDisconnect -> Reconnect the MCache"); vm0.invoke(new
    * SerializableCallable() {
-   * 
+   *
    * @Override public Object call() throws Exception { cacheBeforeReconnect =
    * cacheBeforeReconnect.getReconnectedCache(); return null; } }); }
    */
@@ -570,7 +578,7 @@ public class FTableDescriptorDUnitTest extends MTableDUnitHelper {
     @Override
     public Object getDistributionObject(EntryOperation keyColumn) {
       System.out.println(
-          "SampleFTablePartitionResolver.getDistributionObject PARTITION_RESOLVER CALLED!!!");
+              "SampleFTablePartitionResolver.getDistributionObject PARTITION_RESOLVER CALLED!!!");
       FTableDescriptor ftd = MCacheFactory.getAnyInstance().getFTableDescriptor("key-1");
       return PartitionedRegionHelper.getHashKey(keyColumn, ftd.getTotalNumOfSplits());
     }

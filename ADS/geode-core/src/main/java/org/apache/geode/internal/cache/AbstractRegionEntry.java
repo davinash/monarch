@@ -22,6 +22,7 @@ import io.ampool.monarch.table.TableDescriptor;
 import io.ampool.monarch.table.internal.MOpInfo;
 import io.ampool.monarch.table.internal.MOperation;
 import io.ampool.monarch.table.internal.MTableKey;
+import io.ampool.monarch.table.region.AmpoolTableRegionAttributes;
 import io.ampool.monarch.table.region.RowTupleBytesUtils;
 import org.apache.geode.CancelException;
 import org.apache.geode.InvalidDeltaException;
@@ -865,9 +866,7 @@ public abstract class AbstractRegionEntry implements RegionEntry, HashEntry<Obje
       region.recordEvent(event);
       // check for checkAndDelete if check fails then return false
       if (opInfo != null && opInfo.getOp() != MOperation.NONE) {
-        MTableDescriptor td =
-            MCacheFactory.getAnyInstance().getMTableDescriptor(region.getDisplayName());
-        RowTupleBytesUtils.destroy_0(td, event.getOldValue(), opInfo);
+        RowTupleBytesUtils.destroy_0(region, event);
       }
       // don't do index maintenance on a destroy if the value in the
       // RegionEntry (the old value) is invalid
@@ -2073,6 +2072,12 @@ public abstract class AbstractRegionEntry implements RegionEntry, HashEntry<Obje
   private void checkForDeltaConflict(LocalRegion region, long stampVersion, long tagVersion,
       VersionStamp stamp, VersionTag tag, VersionSource dmId, InternalDistributedMember sender,
       StringBuilder verbose) {
+
+    if (AmpoolTableRegionAttributes.isAmpoolFTable(region.getCustomAttributes())) {
+      logger.debug("DeltaConflictCheck skipped: region= {}, tagVersion= {}, stampVersion= {}",
+          region.toString(), tagVersion, stampVersion);
+      return;
+    }
 
     if (tagVersion != stampVersion + 1) {
       if (verbose != null) {

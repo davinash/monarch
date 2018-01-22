@@ -66,28 +66,28 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
 
   /**
    * Namespace URI for {@link CacheXml} documents.
-   * 
+   *
    * @since GemFire 8.1
    */
   public static final String GEODE_NAMESPACE = "http://geode.apache.org/schema/cache";
 
   /**
    * Namespace prefix for {@link CacheXml} documents.
-   * 
+   *
    * @since GemFire 8.1
    */
   public static final String PREFIX = "cache";
 
   /**
    * Latest schema location for {@link #GEODE_NAMESPACE}.
-   * 
+   *
    * @since GemFire 8.1
    */
   public static final String LATEST_SCHEMA_LOCATION = CacheXml.SCHEMA_1_0_LOCATION;
 
   /**
    * Location of the latest DTD file for Gemfire
-   * 
+   *
    * @deprecated As of 8.1 use {@link #LATEST_SCHEMA_LOCATION}
    */
   @Deprecated
@@ -95,32 +95,32 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
 
   /**
    * Version string for GemFire 8.1
-   * 
+   *
    * @since GemFire 8.1
    */
   public static final String VERSION_8_1 = "8.1";
 
   /**
    * Version string for Geode 1.0
-   * 
+   *
    * @since Geode 1.0
    */
   public static final String VERSION_1_0 = "1.0";
 
   /**
    * The location of the GemFire 8.1 schema file.
-   * 
+   *
    * @since GemFire 8.1
    */
   protected static final String SCHEMA_8_1_LOCATION =
-      "http://schema.pivotal.io/gemfire/cache/cache-8.1.xsd";
+          "http://schema.pivotal.io/gemfire/cache/cache-8.1.xsd";
   /**
    * The location of the Geode 1.0 schema file.
-   * 
+   *
    * @since Geode 1.0
    */
   protected static final String SCHEMA_1_0_LOCATION =
-      "http://geode.apache.org/schema/cache/cache-1.0.xsd";
+          "http://geode.apache.org/schema/cache/cache-1.0.xsd";
 
   // ---------------------------------
   /** Version string for GemFire 8.0 */
@@ -131,7 +131,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   protected static final String SYSTEM_ID_8_0 = "http://www.gemstone.com/dtd/cache8_0.dtd";
   /** The public ID for the 8.0 DTD */
   protected static final String PUBLIC_ID_8_0 =
-      "-//GemStone Systems, Inc.//GemFire Declarative Cache 8.0//EN";
+          "-//GemStone Systems, Inc.//GemFire Declarative Cache 8.0//EN";
 
   // ---------------------------------
   /** Version string for GemFire 7.0 */
@@ -142,7 +142,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   protected static final String SYSTEM_ID_7_0 = "http://www.gemstone.com/dtd/cache7_0.dtd";
   /** The public ID for the 7.0 DTD */
   protected static final String PUBLIC_ID_7_0 =
-      "-//GemStone Systems, Inc.//GemFire Declarative Cache 7.0//EN";
+          "-//GemStone Systems, Inc.//GemFire Declarative Cache 7.0//EN";
 
   // ---------------------------------
   /** Version string for GemFire 6.6 */
@@ -153,7 +153,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   protected static final String SYSTEM_ID_6_6 = "http://www.gemstone.com/dtd/cache6_6.dtd";
   /** The public ID for the 6.6 DTD */
   protected static final String PUBLIC_ID_6_6 =
-      "-//GemStone Systems, Inc.//GemFire Declarative Cache 6.6//EN";
+          "-//GemStone Systems, Inc.//GemFire Declarative Cache 6.6//EN";
 
   // ---------------------------------
   /** Version string for GemFire 6.5 */
@@ -164,7 +164,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   protected static final String SYSTEM_ID_6_5 = "http://www.gemstone.com/dtd/cache6_5.dtd";
   /** The public ID for the 6.5 DTD */
   protected static final String PUBLIC_ID_6_5 =
-      "-//GemStone Systems, Inc.//GemFire Declarative Cache 6.5//EN";
+          "-//GemStone Systems, Inc.//GemFire Declarative Cache 6.5//EN";
 
   // ---------------------------------
   /** Version string for GemFire 6.1 */
@@ -175,7 +175,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   protected static final String SYSTEM_ID_6_1 = "http://www.gemstone.com/dtd/cache6_1.dtd";
   /** The public ID for the 6.1 DTD */
   protected static final String PUBLIC_ID_6_1 =
-      "-//GemStone Systems, Inc.//GemFire Declarative Cache 6.1//EN";
+          "-//GemStone Systems, Inc.//GemFire Declarative Cache 6.1//EN";
 
   // ---------------------------------
   /** Version string for GemFire 6.0 */
@@ -186,7 +186,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   protected static final String SYSTEM_ID_6_0 = "http://www.gemstone.com/dtd/cache6_0.dtd";
   /** The public ID for the 6.0 DTD */
   protected static final String PUBLIC_ID_6_0 =
-      "-//GemStone Systems, Inc.//GemFire Declarative Cache 6.0//EN";
+          "-//GemStone Systems, Inc.//GemFire Declarative Cache 6.0//EN";
 
   // ---------------------------------
   /** Version string for GemFire 5.8 */
@@ -197,7 +197,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   protected static final String SYSTEM_ID_5_8 = "http://www.gemstone.com/dtd/cache5_8.dtd";
   /** The public ID for the 5.8 DTD */
   protected static final String PUBLIC_ID_5_8 =
-      "-//GemStone Systems, Inc.//GemFire Declarative Cache 5.8//EN";
+          "-//GemStone Systems, Inc.//GemFire Declarative Cache 5.8//EN";
 
   // ---------------------------------
   /** Version string for GemFire 5.7 */
@@ -208,7 +208,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   protected static final String SYSTEM_ID_5_7 = "http://www.gemstone.com/dtd/cache5_7.dtd";
   /** The public ID for the 5.7 DTD */
   protected static final String PUBLIC_ID_5_7 =
-      "-//GemStone Systems, Inc.//GemFire Declarative Cache 5.7//EN";
+          "-//GemStone Systems, Inc.//GemFire Declarative Cache 5.7//EN";
 
   // ---------------------------------
   /** Version string for GemFire 5.5 */
@@ -219,7 +219,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   protected static final String SYSTEM_ID_5_5 = "http://www.gemstone.com/dtd/cache5_5.dtd";
   /** The public ID for the 5.5 DTD */
   protected static final String PUBLIC_ID_5_5 =
-      "-//GemStone Systems, Inc.//GemFire Declarative Cache 5.5//EN";
+          "-//GemStone Systems, Inc.//GemFire Declarative Cache 5.5//EN";
 
   // ---------------------------------
   /** Version string for GemFire 5.1 */
@@ -230,7 +230,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   protected static final String SYSTEM_ID_5_1 = "http://www.gemstone.com/dtd/cache5_1.dtd";
   /** The public ID for the 5.1 DTD */
   protected static final String PUBLIC_ID_5_1 =
-      "-//GemStone Systems, Inc.//GemFire Declarative Cache 5.1//EN";
+          "-//GemStone Systems, Inc.//GemFire Declarative Cache 5.1//EN";
 
   // ---------------------------------
   /** Version string for GemFire 5.0 */
@@ -241,7 +241,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   protected static final String SYSTEM_ID_5_0 = "http://www.gemstone.com/dtd/cache5_0.dtd";
   /** The public ID for the 5.0 DTD */
   protected static final String PUBLIC_ID_5_0 =
-      "-//GemStone Systems, Inc.//GemFire Declarative Caching 5.0//EN";
+          "-//GemStone Systems, Inc.//GemFire Declarative Caching 5.0//EN";
 
   // ---------------------------------
   /** Version string for GemFire 4.1 */
@@ -252,7 +252,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   protected static final String SYSTEM_ID_4_1 = "http://www.gemstone.com/dtd/cache4_1.dtd";
   /** The public ID for the 4.1 DTD */
   protected static final String PUBLIC_ID_4_1 =
-      "-//GemStone Systems, Inc.//GemFire Declarative Caching 4.1//EN";
+          "-//GemStone Systems, Inc.//GemFire Declarative Caching 4.1//EN";
 
   /** Version string for GemFire 4.0 */
   public static final String VERSION_4_0 = "4_0";
@@ -262,7 +262,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   protected static final String SYSTEM_ID_4_0 = "http://www.gemstone.com/dtd/cache4_0.dtd";
   /** The public ID for the 4.0 DTD */
   protected static final String PUBLIC_ID_4_0 =
-      "-//GemStone Systems, Inc.//GemFire Declarative Caching 4.0//EN";
+          "-//GemStone Systems, Inc.//GemFire Declarative Caching 4.0//EN";
 
   // ---------------------------------
   /** Version string for GemFire 3.0 */
@@ -273,7 +273,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   protected static final String SYSTEM_ID_3_0 = "http://www.gemstone.com/dtd/cache3_0.dtd";
   /** The public ID for the 3.0 DTD */
   protected static final String PUBLIC_ID_3_0 =
-      "-//GemStone Systems, Inc.//GemFire Declarative Caching 3.0//EN";
+          "-//GemStone Systems, Inc.//GemFire Declarative Caching 3.0//EN";
 
   // ---------------------------------
   protected static final String DTD_TYPE_CDATA = "CDATA";
@@ -399,7 +399,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   protected static final String GATEWAY_EVENT_LISTENER = "gateway-event-listener";
   protected static final String GATEWAY_SENDER_IDS = "gateway-sender-ids";
   protected static final String GATEWAY_EVENT_SUBSTITUTION_FILTER =
-      "gateway-event-substitution-filter";
+          "gateway-event-substitution-filter";
   protected static final String HOSTNAME_FOR_SENDERS = "hostname-for-senders";
   /** The name of the <code>gateway</code> attribute */
   protected static final String GATEWAY = "gateway";
@@ -587,6 +587,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   public static final String ROLL_OPLOG = "roll-oplogs";
   /** Name of disk region property specifying whether to automatically compact disk files **/
   public static final String AUTO_COMPACT = "auto-compact";
+  public static final String ENABLE_DELTA_PERSISTENCE = "enable-delta-persistence";
   public static final String ALLOW_FORCE_COMPACTION = "allow-force-compaction";
   public static final String COMPACTION_THRESHOLD = "compaction-threshold";
   /** Name of disk region property specifying the max oplog size in megabytes **/
@@ -616,7 +617,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   public static final String SUBSCRIPTION_ENABLED = "subscription-enabled";
   public static final String PR_SINGLE_HOP_ENABLED = "pr-single-hop-enabled";
   public static final String SUBSCRIPTION_MESSAGE_TRACKING_TIMEOUT =
-      "subscription-message-tracking-timeout";
+          "subscription-message-tracking-timeout";
   public static final String SUBSCRIPTION_ACK_INTERVAL = "subscription-ack-interval";
   public static final String SUBSCRIPTION_REDUNDANCY = "subscription-redundancy";
   public static final String READ_TIMEOUT = "read-timeout";
@@ -746,7 +747,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   protected static final String COMPRESSOR = "compressor";
   /**
    * The name of the <code>off-heap</code> attribute
-   * 
+   *
    * @since Geode 1.0
    */
   protected static final String OFF_HEAP = "off-heap";
@@ -761,11 +762,11 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   /**
    * Given a public id, attempt to resolve it to a DTD. Returns an <code>InputSoure</code> for the
    * DTD.
-   * 
+   *
    * @throws IOException
    */
   public InputSource resolveEntity(String name, String publicId, String baseURI, String systemId)
-      throws SAXException, IOException {
+          throws SAXException, IOException {
     if (publicId == null || systemId == null) {
       // Likely schema based, resolve through plug-in resolvers.
       return resolveEntityByEntityResolvers(name, publicId, baseURI, systemId);
@@ -818,7 +819,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
       // Instruct the XML parser to open a URI connection to the
       // system id.
       version = CacheXmlVersion.valueForVersion(VERSION_LATEST); // we won't know the version, so
-                                                                 // assume the latest
+      // assume the latest
       return resolveEntityByEntityResolvers(name, publicId, baseURI, systemId);
     }
     InputSource result;
@@ -827,7 +828,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
       result = new InputSource(stream);
     } else {
       throw new SAXNotRecognizedException(
-          LocalizedStrings.CacheXml_DTD_NOT_FOUND_0.toLocalizedString(location));
+              LocalizedStrings.CacheXml_DTD_NOT_FOUND_0.toLocalizedString(location));
     }
     return result;
   }
@@ -839,7 +840,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
    */
   @Override
   public InputSource resolveEntity(String publicId, String systemId)
-      throws SAXException, IOException {
+          throws SAXException, IOException {
     return resolveEntity(null, publicId, null, systemId);
   }
 
@@ -850,13 +851,13 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
    */
   @Override
   public InputSource getExternalSubset(String name, String baseURI)
-      throws SAXException, IOException {
+          throws SAXException, IOException {
     return null;
   }
 
   /**
    * Resolve entity using discovered {@link EntityResolver2}s.
-   * 
+   *
    * @param publicId
    * @param systemId
    * @return {@link InputSource} for resolved entity if found, otherwise null.
@@ -865,12 +866,12 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
    * @since GemFire 8.1
    */
   private InputSource resolveEntityByEntityResolvers(String name, String publicId, String baseURI,
-      String systemId) throws SAXException, IOException {
+                                                     String systemId) throws SAXException, IOException {
     final ServiceLoader<EntityResolver2> entityResolvers =
-        ServiceLoader.load(EntityResolver2.class, ClassPathLoader.getLatest().asClassLoader());
+            ServiceLoader.load(EntityResolver2.class, ClassPathLoader.getLatest().asClassLoader());
     for (final EntityResolver2 entityResolver : entityResolvers) {
       final InputSource inputSource =
-          entityResolver.resolveEntity(name, publicId, baseURI, systemId);
+              entityResolver.resolveEntity(name, publicId, baseURI, systemId);
       if (null != inputSource) {
         return inputSource;
       }
@@ -888,7 +889,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
    */
   public void error(SAXParseException ex) throws SAXException {
     throw new CacheXmlException(
-        LocalizedStrings.CacheXml_ERROR_WHILE_PARSING_XML.toLocalizedString(), ex);
+            LocalizedStrings.CacheXml_ERROR_WHILE_PARSING_XML.toLocalizedString(), ex);
   }
 
   /**
@@ -896,11 +897,11 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
    */
   public void fatalError(SAXParseException ex) throws SAXException {
     throw new CacheXmlException(
-        LocalizedStrings.CacheXml_FATAL_ERROR_WHILE_PARSING_XML.toLocalizedString(), ex);
+            LocalizedStrings.CacheXml_FATAL_ERROR_WHILE_PARSING_XML.toLocalizedString(), ex);
   }
 
   /**
-   * 
+   *
    * @param attributes
    * @param name
    * @return String value for named attribute or null if attribute not defined.
@@ -911,7 +912,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   }
 
   /**
-   * 
+   *
    * @param attributes
    * @param name
    * @param defaultValue
@@ -919,7 +920,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
    * @since GemFire 8.1
    */
   public static final String getString(final Attributes attributes, final String name,
-      final String defaultValue) {
+                                       final String defaultValue) {
     final String value = attributes.getValue(name);
     if (null == value) {
       return defaultValue;
@@ -928,7 +929,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   }
 
   /**
-   * 
+   *
    * @param attributes
    * @param name
    * @return Integer value for named attribute or null if attribute not defined.
@@ -939,7 +940,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   }
 
   /**
-   * 
+   *
    * @param attributes
    * @param name
    * @param defaultValue
@@ -948,7 +949,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
    * @since GemFire 8.1
    */
   public static final Integer getInteger(final Attributes attributes, final String name,
-      final Integer defaultValue) {
+                                         final Integer defaultValue) {
     final String value = attributes.getValue(name);
     if (null == value) {
       return defaultValue;
@@ -957,7 +958,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   }
 
   /**
-   * 
+   *
    * @param attributes
    * @param name
    * @return Boolean value for named attribute or null if attribute not defined.
@@ -968,7 +969,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   }
 
   /**
-   * 
+   *
    * @param attributes
    * @param name
    * @param defaultValue
@@ -977,7 +978,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
    * @since GemFire 8.1
    */
   public static final Boolean getBoolean(final Attributes attributes, final String name,
-      final Boolean defaultValue) {
+                                         final Boolean defaultValue) {
     final String value = attributes.getValue(name);
     if (null == value) {
       return defaultValue;
@@ -986,7 +987,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   }
 
   /**
-   * 
+   *
    * @param attributes
    * @param name
    * @param clazz
@@ -994,12 +995,12 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
    * @since GemFire 8.1
    */
   public static final <E extends Enum<E>> E getEnum(final Attributes attributes, final String name,
-      final Class<E> clazz) {
+                                                    final Class<E> clazz) {
     return getEnum(attributes, name, clazz, null);
   }
 
   /**
-   * 
+   *
    * @param attributes
    * @param name
    * @param clazz
@@ -1008,7 +1009,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
    * @since GemFire 8.1
    */
   public static final <E extends Enum<E>> E getEnum(final Attributes attributes, final String name,
-      final Class<E> clazz, E defaultValue) {
+                                                    final Class<E> clazz, E defaultValue) {
     String value = attributes.getValue(name);
     if (null == value) {
       return defaultValue;

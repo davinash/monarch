@@ -111,7 +111,7 @@ public class StatsKey {
 
 
   public static final String FUNCTION_EXECUTIONS_COMPLETED_PROCESSING_TIME =
-      "functionExecutionsCompletedProcessingTime";
+          "functionExecutionsCompletedProcessingTime";
 
   public static final String FUNCTION_EXECUTIONS_RUNNING = "functionExecutionsRunning";
 
@@ -120,10 +120,10 @@ public class StatsKey {
   public static final String FUNCTION_EXECUTION_CALLS = "functionExecutionCalls";
 
   public static final String FUNCTION_EXECUTIONS_HASRESULT_COMPLETED_PROCESSING_TIME =
-      "functionExecutionsHasResultCompletedProcessingTime";
+          "functionExecutionsHasResultCompletedProcessingTime";
 
   public static final String FUNCTION_EXECUTIONS_HASRESULT_RUNNING =
-      "functionExecutionsHasResultRunning";
+          "functionExecutionsHasResultRunning";
 
   public static final String FUNCTION_EXECUTION_EXCEPTIONS = "functionExecutionsExceptions";
 
@@ -186,6 +186,9 @@ public class StatsKey {
   public static final String RECOVERIES_IN_PROGRESS = "recoveriesInProgress";
 
   public static final String DISK_SPACE = "diskSpace";
+
+  public static final String DELTA_READS = "deltareads";
+  public static final String DELTA_WRITES = "deltawrites";
 
 
   /* AMPOOL RELATED CHANGES START */
@@ -257,7 +260,9 @@ public class StatsKey {
   public static final String PUT_LOCAL = "putLocalCompleted";
 
   public static final String BUCKET_COUNT = "bucketCount";
+  /* AMPOOL SPECIFIC CHANGES START HERE */
   public static final String SCAN_COUNT = "scanCount";
+  /* AMPOOL SPECIFIC CHANGES END HERE */
   public static final String TOTAL_BUCKET_SIZE = "dataStoreEntryCount";
   public static final String AVG_BUCKET_SIZE = "avgBucketSize";
   public static final String LOW_REDUNDANCYBUCKET_COUNT = "lowRedundancyBucketCount";
@@ -307,7 +312,7 @@ public class StatsKey {
   public static final String GATEWAYSENDER_TOTAL_BATCHES_REDISTRIBUTED = "batchesRedistributed";
   public static final String GATEWAYSENDER_EVENTS_QUEUED_CONFLATED = "eventsNotQueuedConflated";
   public static final String GATEWAYSENDER_EVENTS_EXCEEDING_ALERT_THRESHOLD =
-      "eventsExceedingAlertThreshold";
+          "eventsExceedingAlertThreshold";
 
   /** AsyncEventQueue Stats **/
   public static final String ASYNCEVENTQUEUE_EVENTS_QUEUE_SIZE = "eventQueueSize";

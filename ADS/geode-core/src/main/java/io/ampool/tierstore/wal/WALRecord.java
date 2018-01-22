@@ -13,6 +13,11 @@
  */
 package io.ampool.tierstore.wal;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
@@ -23,6 +28,7 @@ import io.ampool.monarch.table.ftable.internal.BlockKey;
 import io.ampool.monarch.table.ftable.internal.BlockValue;
 import io.ampool.monarch.table.internal.Encoding;
 import io.ampool.monarch.table.internal.IMKey;
+import org.apache.geode.DataSerializer;
 
 public class WALRecord {
 
@@ -52,9 +58,22 @@ public class WALRecord {
     return bytes;
   }
 
+  void toData(final DataOutput out) throws IOException {
+    DataSerializer.writeObject(header.getBlockKey(), out);
+    DataSerializer.writeObject(blockValue, out);
+  }
+
+  static WALRecord fromData(final DataInput in) throws IOException {
+    try {
+      return new WALRecord(DataSerializer.readObject(in), DataSerializer.readObject(in));
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
   /**
    * Get the WAL header from record.
-   * 
+   *
    * @return WALHeader
    */
   public WALRecordHeader getHeader() {
@@ -76,9 +95,13 @@ public class WALRecord {
    * @return the stream of records/rows
    */
   public Stream<Object> getRecordStream() {
-    return StreamSupport.stream(
-        Spliterators.spliterator(blockValue.iterator(), blockValue.size(), Spliterator.ORDERED),
-        false);
+    Iterator<Object> itr = Collections.emptyIterator();
+    int size = 0;
+    if (blockValue != null) {
+      itr = blockValue.iterator();
+      size = blockValue.size();
+    }
+    return StreamSupport.stream(Spliterators.spliterator(itr, size, Spliterator.ORDERED), false);
   }
 
   public int size() {

@@ -49,13 +49,13 @@ public class MTableDiskPersistMetaStoreDUnitTest extends MTableDUnitHelper {
     closeMClientCache(client1);
 
     new ArrayList<>(Arrays.asList(vm0, vm1, vm2))
-        .forEach((VM) -> VM.invoke(new SerializableCallable() {
-          @Override
-          public Object call() throws Exception {
-            MCacheFactory.getAnyInstance().close();
-            return null;
-          }
-        }));
+            .forEach((VM) -> VM.invoke(new SerializableCallable() {
+              @Override
+              public Object call() throws Exception {
+                MCacheFactory.getAnyInstance().close();
+                return null;
+              }
+            }));
 
     super.tearDown2();
   }
@@ -81,7 +81,7 @@ public class MTableDiskPersistMetaStoreDUnitTest extends MTableDUnitHelper {
       Put record = new Put(Bytes.toBytes(KEY_PREFIX + rowIndex));
       for (int columnIndex = 0; columnIndex < NUM_OF_COLUMNS; columnIndex++) {
         record.addColumn(Bytes.toBytes(COLUMN_NAME_PREFIX + columnIndex),
-            Bytes.toBytes(tableName + VALUE_PREFIX + columnIndex));
+                Bytes.toBytes(tableName + VALUE_PREFIX + columnIndex));
       }
       table.put(record);
     }
@@ -90,10 +90,10 @@ public class MTableDiskPersistMetaStoreDUnitTest extends MTableDUnitHelper {
   private void verifyDataAfterRestart(String tableName) {
 
     Region actualTableRegion = MCacheFactory.getAnyInstance().getRegion(tableName);
-    assertEquals(MTableUtils.DEFAULT_DISK_STORE_NAME,
-        actualTableRegion.getAttributes().getDiskStoreName());
+    assertEquals(MTableUtils.DEFAULT_MTABLE_DISK_STORE_NAME,
+            actualTableRegion.getAttributes().getDiskStoreName());
     assertEquals(DataPolicy.PERSISTENT_PARTITION,
-        actualTableRegion.getAttributes().getDataPolicy());
+            actualTableRegion.getAttributes().getDataPolicy());
 
     assertNotNull(actualTableRegion);
     assertEquals(NUM_OF_ROWS, actualTableRegion.size());
@@ -110,7 +110,7 @@ public class MTableDiskPersistMetaStoreDUnitTest extends MTableDUnitHelper {
       /* Verify the row Id features */
       if (!Bytes.equals(result.getRowId(), Bytes.toBytes(KEY_PREFIX + rowIndex))) {
         System.out.println(
-            "expectedColumnName => " + Arrays.toString(Bytes.toBytes(KEY_PREFIX + rowIndex)));
+                "expectedColumnName => " + Arrays.toString(Bytes.toBytes(KEY_PREFIX + rowIndex)));
         System.out.println("actualColumnName   => " + Arrays.toString(result.getRowId()));
         Assert.fail("Invalid Row Id");
       }
@@ -123,13 +123,13 @@ public class MTableDiskPersistMetaStoreDUnitTest extends MTableDUnitHelper {
         if (!Bytes.equals(expectedColumnName, row.get(i).getColumnName())) {
           System.out.println("expectedColumnName => " + Arrays.toString(expectedColumnName));
           System.out
-              .println("actualColumnName   => " + Arrays.toString(row.get(i).getColumnName()));
+                  .println("actualColumnName   => " + Arrays.toString(row.get(i).getColumnName()));
           Assert.fail("Invalid Values for Column Name");
         }
         if (!Bytes.equals(exptectedValue, (byte[]) row.get(i).getColumnValue())) {
           System.out.println("exptectedValue => " + Arrays.toString(exptectedValue));
           System.out.println(
-              "actualValue    => " + Arrays.toString((byte[]) row.get(i).getColumnValue()));
+                  "actualValue    => " + Arrays.toString((byte[]) row.get(i).getColumnValue()));
           Assert.fail("Invalid Values for Column Value");
         }
         columnIndex++;
@@ -148,7 +148,7 @@ public class MTableDiskPersistMetaStoreDUnitTest extends MTableDUnitHelper {
     Iterator iterator = metaRegion.entrySet().iterator();
     while (iterator.hasNext()) {
       Map.Entry<String, MTableDescriptor> record =
-          (Map.Entry<String, MTableDescriptor>) iterator.next();
+              (Map.Entry<String, MTableDescriptor>) iterator.next();
       if (record == null) {
         continue;
       }
@@ -157,10 +157,10 @@ public class MTableDiskPersistMetaStoreDUnitTest extends MTableDUnitHelper {
       Region<Object, Object> actualTableRegion = mCache.getRegion(tableName);
       assertNotNull(actualTableRegion);
 
-      assertEquals(MTableUtils.DEFAULT_DISK_STORE_NAME,
-          actualTableRegion.getAttributes().getDiskStoreName());
+      assertEquals(MTableUtils.DEFAULT_MTABLE_DISK_STORE_NAME,
+              actualTableRegion.getAttributes().getDiskStoreName());
       assertEquals(DataPolicy.PERSISTENT_PARTITION,
-          actualTableRegion.getAttributes().getDataPolicy());
+              actualTableRegion.getAttributes().getDataPolicy());
       assertEquals(NUM_OF_ROWS, actualTableRegion.size());
 
       MTableDescriptor tableDescriptor = record.getValue();
@@ -177,7 +177,7 @@ public class MTableDiskPersistMetaStoreDUnitTest extends MTableDUnitHelper {
         i++;
       }
       assertEquals(MTableUtils.KEY_COLUMN_NAME,
-          allColumnDescriptors.get(allColumnDescriptors.size() - 1).getColumnNameAsString());
+              allColumnDescriptors.get(allColumnDescriptors.size() - 1).getColumnNameAsString());
       verifyDataAfterRestart(tableName);
     }
   }
@@ -199,22 +199,22 @@ public class MTableDiskPersistMetaStoreDUnitTest extends MTableDUnitHelper {
 
   private void closeAllMCache() {
     new ArrayList<>(Arrays.asList(vm0, vm1, vm2))
-        .forEach((VM) -> VM.invoke(new SerializableCallable() {
-          @Override
-          public Object call() throws Exception {
-            MCacheFactory.getAnyInstance().close();
-            return null;
-          }
-        }));
+            .forEach((VM) -> VM.invoke(new SerializableCallable() {
+              @Override
+              public Object call() throws Exception {
+                MCacheFactory.getAnyInstance().close();
+                return null;
+              }
+            }));
   }
 
   private void startAllServersAsync() {
     AsyncInvocation asyncInvocation1 =
-        (AsyncInvocation) asyncStartServerOn(vm0, DUnitLauncher.getLocatorString());
+            (AsyncInvocation) asyncStartServerOn(vm0, DUnitLauncher.getLocatorString());
     AsyncInvocation asyncInvocation2 =
-        (AsyncInvocation) asyncStartServerOn(vm1, DUnitLauncher.getLocatorString());
+            (AsyncInvocation) asyncStartServerOn(vm1, DUnitLauncher.getLocatorString());
     AsyncInvocation asyncInvocation3 =
-        (AsyncInvocation) asyncStartServerOn(vm2, DUnitLauncher.getLocatorString());
+            (AsyncInvocation) asyncStartServerOn(vm2, DUnitLauncher.getLocatorString());
     try {
       asyncInvocation1.join();
       asyncInvocation2.join();
@@ -226,13 +226,13 @@ public class MTableDiskPersistMetaStoreDUnitTest extends MTableDUnitHelper {
 
   private void verfyAllData() {
     new ArrayList<>(Arrays.asList(vm0, vm1, vm2))
-        .forEach((VM) -> VM.invoke(new SerializableCallable() {
-          @Override
-          public Object call() throws Exception {
-            verifyTablesAfterRestart();
-            return null;
-          }
-        }));
+            .forEach((VM) -> VM.invoke(new SerializableCallable() {
+              @Override
+              public Object call() throws Exception {
+                verifyTablesAfterRestart();
+                return null;
+              }
+            }));
   }
 
   @Test

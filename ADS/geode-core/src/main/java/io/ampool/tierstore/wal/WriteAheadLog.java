@@ -55,13 +55,13 @@ public class WriteAheadLog {
   private Map<String, WALWriter> writersMap = new ConcurrentHashMap<>();
   private int recordLimit = WAL_FILE_RECORD_LIMIT;
   private static boolean initialized = false;
-  private long fileExpirationTimeMins;
+  private long fileExpirationTimeMins = Long.getLong("ampool.wal.expiration.time", 10L);
 
   private Map<String, AtomicLong> bucketSeqNoMap = null;
 
   /**
    * Get instance of WriteAheadLog
-   * 
+   *
    * @return Singleton instance of WriteAheadLog
    */
   public static WriteAheadLog getInstance() {
@@ -79,30 +79,33 @@ public class WriteAheadLog {
 
   /**
    * Initialize the WAL instance with default file size(number of records)
-   * 
+   *
    * @param directory
    * @throws IOException
    */
   public void init(Path directory) throws IOException {
-    this.init(directory, WAL_FILE_RECORD_LIMIT, 10);
+    this.init(directory, WAL_FILE_RECORD_LIMIT);
   }
 
   /**
    * Initialize the WriteAheadLog instance
-   * 
+   *
    * @param directory WAL directory
    * @param recordLimit Max number of records a WAL file can contain.
    * @throws IOException
    */
-  synchronized public void init(Path directory, int recordLimit, int fileExpirationTimeMins)
-      throws IOException {
+  synchronized public void init(Path directory, int recordLimit) throws IOException {
+    init(directory, recordLimit, fileExpirationTimeMins);
+  }
+
+  synchronized public void init(Path directory, int recordLimit, final long fileExpirationTimeMins)
+          throws IOException {
     if (initialized) {
       throw new RuntimeException("WriteAheadLog can not be initialized multiple times");
     }
     walDirectory = directory;
     this.recordLimit = recordLimit;
     numFiles = 0;
-    this.fileExpirationTimeMins = fileExpirationTimeMins;
     /* Create the directory */
     if (!directory.toFile().exists()) {
       if (!directory.toFile().mkdir()) { /* No other thread should create this file */
@@ -111,6 +114,7 @@ public class WriteAheadLog {
     }
     /* populate the bucketId -> file seq Id map */
     bucketSeqNoMap = new HashMap<>();
+    this.fileExpirationTimeMins = fileExpirationTimeMins;
     String[] walFiles = directory.toFile().list();
     if (walFiles != null && walFiles.length != 0) {
       for (String walFile : walFiles) {
@@ -178,7 +182,7 @@ public class WriteAheadLog {
   /**
    * Move a file from processing state(being written by writer) to done state. It will also close
    * the writer associated with the WAL file.
-   * 
+   *
    * @param fileName Name of the WAL file.
    * @return New file name
    * @throws IOException
@@ -190,7 +194,7 @@ public class WriteAheadLog {
   /**
    * Move a file from processing state(being written by writer) to done state. It will also
    * optionally close the writer associated with the WAL file.
-   * 
+   *
    * @param fileName Name of the WAL file.
    * @param closeWriter Close the associated WAL writer.
    * @return New file name
@@ -221,7 +225,7 @@ public class WriteAheadLog {
         File newFile = new File(dirName + "/" + newBaseName);
         if (!oldFile.renameTo(newFile)) {
           throw new IOException("Error while renaming file " + oldFile.getAbsolutePath() + " to "
-              + newFile.getAbsolutePath());
+                  + newFile.getAbsolutePath());
         }
         return newFile.getAbsolutePath();
       } else {
@@ -237,7 +241,7 @@ public class WriteAheadLog {
   /**
    * Return a WAL writer for table name and partition id pair. If a WAL file is already open then a
    * reference to the existing writer will be returned else, a new writer will be created.
-   * 
+   *
    * @param tableName Name of the FTable.
    * @param partitionId Partition Id.
    * @return WALWriter for the table and partition pair.
@@ -253,7 +257,7 @@ public class WriteAheadLog {
         writer = writersMap.get(key);
         if (writer == null) {
           fileName = key + "_" + getNextSeqNo(tableName, partitionId) + WAL_INPROGRESS_SUFFIX;
-          writer = getWriter(fileName, recordLimit);
+          writer = getWriter(tableName, partitionId, fileName, recordLimit);
           writersMap.put(key, writer);
         }
       }
@@ -262,7 +266,7 @@ public class WriteAheadLog {
   }
 
   public int append(final String tableName, final int partitionId, final IMKey blockKey,
-      final BlockValue blockValue) throws IOException {
+                    final BlockValue blockValue) throws IOException {
     if (!initialized) {
       return 0;
     }
@@ -274,7 +278,7 @@ public class WriteAheadLog {
 
   /**
    * Return the path of WAL directory
-   * 
+   *
    * @return path of the WAL directory
    */
   public Path getWalDirectory() {
@@ -290,12 +294,12 @@ public class WriteAheadLog {
    */
   public Path getAbsolutePath(final String fileName) {
     return fileName.charAt(0) == '/' ? Paths.get(fileName)
-        : Paths.get(walDirectory + "/" + fileName);
+            : Paths.get(walDirectory + "/" + fileName);
   }
 
   /**
    * Get the reader for a WAL file
-   * 
+   *
    * @param fileName
    * @return WALReader
    */
@@ -305,17 +309,18 @@ public class WriteAheadLog {
 
   /**
    * Get the writer for a WAL file
-   * 
+   *
    * @param fileName
    * @return WALWriter
    */
-  public WALWriter getWriter(String fileName, int recordLimit) throws IOException {
-    return new WALWriter(getAbsolutePath(fileName), recordLimit);
+  public WALWriter getWriter(String tableName, int partitionId, String fileName, int recordLimit)
+          throws IOException {
+    return new WALWriter(tableName, partitionId, getAbsolutePath(fileName), recordLimit);
   }
 
   /**
    * Delete a WAL file
-   * 
+   *
    * @param fileName
    */
   /* TODO: delete only if the file is not being currently written */
@@ -331,7 +336,7 @@ public class WriteAheadLog {
 
   /**
    * Get a list of completed files which can be pickedup for next stage
-   * 
+   *
    * @return list of files which are full and can be moved to next stage
    */
   public String[] getCompletedFiles() {
@@ -373,7 +378,7 @@ public class WriteAheadLog {
 
   /**
    * Delete all WAL files belonging to a bucket.
-   * 
+   *
    * @param tableName
    * @param partitionId
    */
@@ -400,7 +405,7 @@ public class WriteAheadLog {
 
   /**
    * Get a list of files which are under process
-   * 
+   *
    * @return list of file which are currently being used by WAL writers
    */
 
@@ -435,7 +440,7 @@ public class WriteAheadLog {
   /**
    * Get files which are still in progress but are too old and need to be closed and moved to next
    * stage.
-   * 
+   *
    * @return list of expired files.
    */
   public String[] getExpiredFiles() {
@@ -444,7 +449,7 @@ public class WriteAheadLog {
     fileFilterList.add(new AgeFileFilter(new Date(epochDifference)));
     fileFilterList.add(new RegexFileFilter(".*" + WAL_INPROGRESS_SUFFIX));
     final String[] fileArr =
-        walDirectory.toFile().getAbsoluteFile().list(new AndFileFilter(fileFilterList));
+            walDirectory.toFile().getAbsoluteFile().list(new AndFileFilter(fileFilterList));
     if (fileArr == null) {
       return EMPTY_ARRAY;
     }
@@ -456,7 +461,7 @@ public class WriteAheadLog {
 
   /**
    * Get next sequence number
-   * 
+   *
    * @return next sequence number.
    */
   public long getNextSeqNo(String tableName, int partitionId) {
@@ -472,7 +477,7 @@ public class WriteAheadLog {
 
   /**
    * Given a WAL file name, return the associated tablename
-   * 
+   *
    * @param fileName
    * @return Associated table name
    */
@@ -485,7 +490,7 @@ public class WriteAheadLog {
     }
     if (nameComponents.length >= 3) {
       String tableName =
-          String.join("_", Arrays.copyOfRange(nameComponents, 0, nameComponents.length - 2));
+              String.join("_", Arrays.copyOfRange(nameComponents, 0, nameComponents.length - 2));
       return tableName;
     }
     return null;
@@ -493,7 +498,7 @@ public class WriteAheadLog {
 
   /**
    * Given a WAL file name, return the associated partition Id.
-   * 
+   *
    * @param fileName
    * @return Associated partition Id
    */
@@ -511,7 +516,7 @@ public class WriteAheadLog {
 
   /**
    * Given a WAL file name, return the associated sequence Number
-   * 
+   *
    * @param fileName
    * @return Associated sequence number.
    */
@@ -538,9 +543,9 @@ public class WriteAheadLog {
       return null;
     }
     final Pattern doneFileRegEx =
-        Pattern.compile("^" + tableName + "_" + "\\d+" + "_" + "\\d+" + WAL_DONE_SUFFIX + "\\z");
+            Pattern.compile("^" + tableName + "_" + "\\d+" + "_" + "\\d+" + WAL_DONE_SUFFIX + "\\z");
     final Pattern inProgressFileRegex = Pattern
-        .compile("^" + tableName + "_" + "\\d+" + "_" + "\\d+" + WAL_INPROGRESS_SUFFIX + "\\z$");
+            .compile("^" + tableName + "_" + "\\d+" + "_" + "\\d+" + WAL_INPROGRESS_SUFFIX + "\\z$");
     return walDirectory.toFile().list(new FilenameFilter() {
       @Override
       public boolean accept(File dir, String name) {
@@ -574,7 +579,7 @@ public class WriteAheadLog {
 
   /**
    * Get a list of files which are done
-   * 
+   *
    * @return list of file which are done by WAL writers
    */
 
@@ -602,9 +607,9 @@ public class WriteAheadLog {
 
     public AllFilesForBucketFilter(final String tableName, final int bucketId) {
       doneFileRegEx = Pattern
-          .compile("^" + tableName + "_" + bucketId + "_" + "\\d+" + WAL_DONE_SUFFIX + "\\z");
+              .compile("^" + tableName + "_" + bucketId + "_" + "\\d+" + WAL_DONE_SUFFIX + "\\z");
       inProgressFileRegex = Pattern.compile(
-          "^" + tableName + "_" + bucketId + "_" + "\\d+" + WAL_INPROGRESS_SUFFIX + "\\z$");
+              "^" + tableName + "_" + bucketId + "_" + "\\d+" + WAL_INPROGRESS_SUFFIX + "\\z$");
     }
 
     @Override
@@ -624,7 +629,7 @@ public class WriteAheadLog {
       return null;
     }
     final String[] list =
-        walDirectory.toFile().list(new AllFilesForBucketFilter(tableName, bucketID));
+            walDirectory.toFile().list(new AllFilesForBucketFilter(tableName, bucketID));
     if (list == null) {
       return null;
     }
@@ -634,7 +639,7 @@ public class WriteAheadLog {
 
   /**
    * Flush all WAL files for a table to tier1
-   * 
+   *
    * @param tableName
    */
   synchronized public void flush(String tableName, int partitionId) {
@@ -645,37 +650,67 @@ public class WriteAheadLog {
       String[] filesToFlush = getAllFilesForTableWithBucketId(tableName, partitionId);
       if (filesToFlush != null && filesToFlush.length > 0) {
         final TableDescriptor tableDescriptor = MTableUtils
-            .getTableDescriptor((MonarchCacheImpl) MCacheFactory.getAnyInstance(), tableName);
+                .getTableDescriptor((MonarchCacheImpl) MCacheFactory.getAnyInstance(), tableName);
         for (String walFileName : filesToFlush) {
-          String readerWalFileName = Paths.get(walFileName).getFileName().toString();
-          WALRecord[] walRecords = null;
-          try (WALReader reader = this.getReader(readerWalFileName)) {
-            do {
-              walRecords = reader.readNext(WAL_FILE_RECORD_LIMIT);
-              WALUtils.writeToStore(tableName, partitionId, tableDescriptor, walRecords);
-            } while (walRecords != null && walRecords.length == WAL_FILE_RECORD_LIMIT);
-          } catch (IOException e) {
-            logger.error("Error while writing to Tier1. Exception: " + e.getMessage());
-            throw new StoreInternalException(
-                "Error while writing to Tier1. Exception: " + e.getMessage());
+          final WALWriter writer = getCurrentWriter(tableName, partitionId);
+          /* if this file is also being appended to, then sync on the writer */
+          if (writer != null && writer.getFile().toString().equals(walFileName)) {
+            synchronized (writer) {
+              writeToStore(tableName, partitionId, tableDescriptor, walFileName);
+            }
+          } else {
+            writeToStore(tableName, partitionId, tableDescriptor, walFileName);
           }
-          try {
-            walFileName = this.markFileDone(walFileName);
-          } catch (IOException e) {
-            logger.error(
-                "WAL Flush, Error while marking WAL file done  Exception: " + e.getMessage());
-            throw new StoreInternalException(
-                "Error while marking WAL file done. Exception: " + e.getMessage());
-          }
-          this.deleteWALFile(walFileName);
         }
       }
     }
   }
 
   /**
+   * Write the WAL records to subsequent tier-store.
+   *
+   * @param tableName the table-name
+   * @param partitionId the partition/bucket id
+   * @param td the table descriptor
+   * @param file the WAL file to read records
+   */
+  private void writeToStore(String tableName, int partitionId, TableDescriptor td, String file) {
+    String readerWalFileName = Paths.get(file).getFileName().toString();
+    WALRecord[] walRecords = null;
+    try (WALReader reader = this.getReader(readerWalFileName)) {
+      do {
+        walRecords = reader.readNext(WAL_FILE_RECORD_LIMIT);
+        WALUtils.writeToStore(tableName, partitionId, td, walRecords);
+      } while (walRecords != null && walRecords.length == WAL_FILE_RECORD_LIMIT);
+    } catch (IOException e) {
+      logger.error("Error while writing to Tier1. Exception: " + e.getMessage());
+      throw new StoreInternalException(
+              "Error while writing to Tier1. Exception: " + e.getMessage());
+    }
+    try {
+      file = this.markFileDone(file);
+    } catch (IOException e) {
+      logger.error("WAL Flush, Error while marking WAL file done  Exception: " + e.getMessage());
+      throw new StoreInternalException(
+              "Error while marking WAL file done. Exception: " + e.getMessage());
+    }
+    this.deleteWALFile(file);
+  }
+
+  /**
+   * Get the currently active WAL writer.
+   *
+   * @param tableName the table-name
+   * @param partitionId the partition/bucket id
+   * @return currently active WAL writer
+   */
+  WALWriter getCurrentWriter(final String tableName, final int partitionId) {
+    return writersMap.get(tableName + "_" + partitionId);
+  }
+
+  /**
    * Delete all file for a table
-   * 
+   *
    * @param tableName
    */
   public void deleteTable(String tableName) {

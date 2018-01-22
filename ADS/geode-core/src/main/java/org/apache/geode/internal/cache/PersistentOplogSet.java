@@ -76,9 +76,9 @@ public class PersistentOplogSet implements OplogSet {
   final AtomicInteger inactiveOpenCount = new AtomicInteger();
 
   private final Map<Long, DiskRecoveryStore> pendingRecoveryMap =
-      new HashMap<Long, DiskRecoveryStore>();
+          new HashMap<Long, DiskRecoveryStore>();
   private final Map<Long, DiskRecoveryStore> currentRecoveryMap =
-      new HashMap<Long, DiskRecoveryStore>();
+          new HashMap<Long, DiskRecoveryStore>();
 
   final AtomicBoolean alreadyRecoveredOnce = new AtomicBoolean(false);
 
@@ -144,7 +144,15 @@ public class PersistentOplogSet implements OplogSet {
 
   }
 
-  private TreeSet<Oplog> getSortedOplogs() {
+  protected Oplog getOplog(long oplogID, PersistentOplogSet oplogSet) {
+    return new Oplog(oplogID, oplogSet);
+  }
+
+  protected Oplog getOplog(long oplogId, PersistentOplogSet parent, DirectoryHolder dirHolder) {
+    return new Oplog(oplogId, parent, dirHolder);
+  }
+
+  protected TreeSet<Oplog> getSortedOplogs() {
     TreeSet<Oplog> result = new TreeSet<Oplog>(new Comparator() {
       public int compare(Object arg0, Object arg1) {
         return Long.signum(((Oplog) arg1).getOplogId() - ((Oplog) arg0).getOplogId());
@@ -191,7 +199,7 @@ public class PersistentOplogSet implements OplogSet {
   }
 
   public void offlineModify(DiskRegionView drv, DiskEntry entry, byte[] value,
-      boolean isSerializedObject) {
+                            boolean isSerializedObject) {
     getChild().offlineModify(drv, entry, value, isSerializedObject);
   }
 
@@ -261,7 +269,7 @@ public class PersistentOplogSet implements OplogSet {
 
       Oplog oplog = getChild(oplogId);
       if (oplog == null) {
-        oplog = new Oplog(oplogId, this);
+        oplog = getOplog(oplogId, this);
         // oplogSet.add(oplog);
         addRecoveredOplog(oplog);
       }
@@ -417,7 +425,7 @@ public class PersistentOplogSet implements OplogSet {
           for (Map.Entry<String, Integer> me : prSizes.entrySet()) {
             parent.incLiveEntryCount(me.getValue());
             System.out.println(me.getKey() + " entryCount=" + me.getValue() + " bucketCount="
-                + prBuckets.get(me.getKey()));
+                    + prBuckets.get(me.getKey()));
           }
         }
         parent.getStats().endRecovery(start, byteCount);
@@ -458,9 +466,9 @@ public class PersistentOplogSet implements OplogSet {
       for (Oplog oplog : oplogSet) {
         long startOpLogRead = parent.getStats().startOplogRead();
         long bytesRead = oplog.recoverCrf(deletedIds,
-            // @todo make recoverValues per region
-            recoverValues(), recoverValuesSync(), this.alreadyRecoveredOnce.get(),
-            oplogsNeedingValueRecovery, latestOplog);
+                // @todo make recoverValues per region
+                recoverValues(), recoverValuesSync(), this.alreadyRecoveredOnce.get(),
+                oplogsNeedingValueRecovery, latestOplog);
         latestOplog = false;
         if (!this.alreadyRecoveredOnce.get()) {
           updateOplogEntryId(oplog.getMaxRecoveredOplogEntryId());
@@ -518,7 +526,7 @@ public class PersistentOplogSet implements OplogSet {
 
         long endRegionInit = System.currentTimeMillis();
         logger.info(LocalizedMessage.create(LocalizedStrings.DiskRegion_REGION_INIT_TIME,
-            endRegionInit - startRegionInit));
+                endRegionInit - startRegionInit));
       }
     }
     return byteCount;
@@ -545,7 +553,7 @@ public class PersistentOplogSet implements OplogSet {
       // This fixes bug 41822.
     }
     if (force || maxRecoveredOplogId > 0) {
-      setChild(new Oplog(maxRecoveredOplogId + 1, this, getNextDir()));
+      setChild(getOplog(maxRecoveredOplogId + 1, this, getNextDir()));
     }
   }
 
@@ -580,7 +588,7 @@ public class PersistentOplogSet implements OplogSet {
    * Creates and returns a new oplogEntryId for the given key. An oplogEntryId is needed when
    * storing a key/value pair on disk. A new one is only needed if the key is new. Otherwise the
    * oplogEntryId already allocated for a key can be reused for the same key.
-   * 
+   *
    * @return A disk id that can be used to access this key/value pair on disk
    */
   final long newOplogEntryId() {
@@ -591,7 +599,7 @@ public class PersistentOplogSet implements OplogSet {
   /**
    * Returns the next available DirectoryHolder which has space. If no dir has space then it will
    * return one anyway if compaction is enabled.
-   * 
+   *
    * @param minAvailableSpace the minimum amount of space we need in this directory.
    */
   DirectoryHolder getNextDir(int minAvailableSpace, boolean checkForWarning) {
@@ -642,15 +650,15 @@ public class PersistentOplogSet implements OplogSet {
              * .toLocalizedString(new Object[] {MAX_WAIT_FOR_SPACE, /, (1000)}));
              */
             logger.warn(LocalizedMessage.create(
-                LocalizedStrings.DiskRegion_COMPLEXDISKREGIONGETNEXTDIR_MAX_DIRECTORY_SIZE_WILL_GET_VIOLATED__GOING_AHEAD_WITH_THE_SWITCHING_OF_OPLOG_ANY_WAYS_CURRENTLY_AVAILABLE_SPACE_IN_THE_DIRECTORY_IS__0__THE_CAPACITY_OF_DIRECTORY_IS___1,
-                new Object[] {Long.valueOf(selectedHolder.getUsedSpace()),
-                    Long.valueOf(selectedHolder.getCapacity())}));
+                    LocalizedStrings.DiskRegion_COMPLEXDISKREGIONGETNEXTDIR_MAX_DIRECTORY_SIZE_WILL_GET_VIOLATED__GOING_AHEAD_WITH_THE_SWITCHING_OF_OPLOG_ANY_WAYS_CURRENTLY_AVAILABLE_SPACE_IN_THE_DIRECTORY_IS__0__THE_CAPACITY_OF_DIRECTORY_IS___1,
+                    new Object[] {Long.valueOf(selectedHolder.getUsedSpace()),
+                            Long.valueOf(selectedHolder.getCapacity())}));
           }
         } else {
           throw new DiskAccessException(
-              LocalizedStrings.DiskRegion_DISK_IS_FULL_COMPACTION_IS_DISABLED_NO_SPACE_CAN_BE_CREATED
-                  .toLocalizedString(),
-              parent);
+                  LocalizedStrings.DiskRegion_DISK_IS_FULL_COMPACTION_IS_DISABLED_NO_SPACE_CAN_BE_CREATED
+                          .toLocalizedString(),
+                  parent);
         }
       }
     }
@@ -914,7 +922,7 @@ public class PersistentOplogSet implements OplogSet {
 
   /**
    * Removes the oplog from the map given the oplogId
-   * 
+   *
    * @param id id of the oplog to be removed from the list
    * @return oplog Oplog which has been removed
    */
@@ -1036,7 +1044,7 @@ public class PersistentOplogSet implements OplogSet {
 
   /**
    * Add compactable oplogs to the list, up to the maximum size.
-   * 
+   *
    * @param l
    * @param max
    */

@@ -88,76 +88,6 @@ import org.junit.runner.RunWith;
 @Category(FTableTest.class)
 @RunWith(JUnitParamsRunner.class)
 public class FTableScannerTest {
-
-  @Test
-  public void handleSpecialColumnFilters() throws Exception {
-    Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, 1000l);
-    Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, 2000l);
-    FilterList list = new FilterList(FilterList.Operator.MUST_PASS_ALL, filter1, filter2);
-
-    Filter filter3 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, 5000l);
-    Filter filter4 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, 6000l);
-
-    FilterList list1 = new FilterList(FilterList.Operator.MUST_PASS_ALL, filter3, filter4);
-
-    FilterList list2 = new FilterList(FilterList.Operator.MUST_PASS_ONE, list, list1);
-
-    Scan scan = new Scan();
-    scan.setFilter(list2);
-
-    FTableScanner scanner = new FTableScanner();
-    final FilterList newFilter = scanner.handleSpecialColumnFilters(scan.getFilter());
-
-
-    // verify now the return list
-
-    assertTrue(newFilter.getOperator() == Operator.MUST_PASS_ONE);
-    final List<Filter> filters = newFilter.getFilters();
-    assertEquals(filters.size(), 2);
-    for (int i = 0; i < filters.size(); i++) {
-      final Filter filter = filters.get(i);
-      assertTrue(filter instanceof FilterList);
-      final FilterList filterList = (FilterList) filter;
-      assertTrue(filterList.getOperator() == Operator.MUST_PASS_ALL);
-      final List<Filter> filterss = filterList.getFilters();
-      assertEquals(filterss.size(), 2);
-      if (i == 0) {
-        // first filter
-        for (int j = 0; j < filterss.size(); j++) {
-          final Filter singleFilter = filterss.get(j);
-          assertTrue(singleFilter instanceof BlockKeyFilter);
-          final BlockKeyFilter sFilter = (BlockKeyFilter) singleFilter;
-          if (j == 0) {
-            assertTrue(sFilter.getOperator() == CompareOp.GREATER);
-            assertTrue(Bytes.toLong(((byte[]) (sFilter.getValue()))) == 1000l);
-          } else {
-            assertTrue(sFilter.getOperator() == CompareOp.LESS);
-            assertTrue(Bytes.toLong(((byte[]) (sFilter.getValue()))) == 2000l);
-          }
-        }
-      } else {
-        // second filter
-        for (int j = 0; j < filterss.size(); j++) {
-          final Filter singleFilter = filterss.get(j);
-          assertTrue(singleFilter instanceof BlockKeyFilter);
-          final BlockKeyFilter sFilter = (BlockKeyFilter) singleFilter;
-          if (j == 0) {
-            assertTrue(sFilter.getOperator() == CompareOp.GREATER);
-            assertTrue(Bytes.toLong(((byte[]) (sFilter.getValue()))) == 5000l);
-          } else {
-            assertTrue(sFilter.getOperator() == CompareOp.LESS);
-            assertTrue(Bytes.toLong(((byte[]) (sFilter.getValue()))) == 6000l);
-          }
-        }
-      }
-
-    }
-  }
-
   /* helper methods to mock the required objects and ingest the data in various tiers */
 
   /**
@@ -185,7 +115,7 @@ public class FTableScannerTest {
       Class<?> clazz = Class.forName(converterClass);
       return (ConverterDescriptor) clazz.getConstructor(TableDescriptor.class).newInstance(td);
     } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException
-        | InvocationTargetException | InstantiationException e) {
+            | InvocationTargetException | InstantiationException e) {
       e.printStackTrace();
     }
     return null;
@@ -214,13 +144,13 @@ public class FTableScannerTest {
     TierStoreWriter writer;
     try {
       final Constructor<?> c = StoreUtils
-          .getTierStoreConstructor(Class.forName("io.ampool.tierstore.stores.LocalTierStore"));
+              .getTierStoreConstructor(Class.forName("io.ampool.tierstore.stores.LocalTierStore"));
       lts = (TierStore) c.newInstance("local-disk-tier");
       reader = (TierStoreReader) Class.forName(ORC_READER_CLASS).newInstance();
       writer = (TierStoreWriter) Class.forName(ORC_WRITER_CLASS).newInstance();
       ReflectionUtils.setStaticFieldValue(c.getDeclaringClass(), "converterDescriptors", cdMap);
     } catch (ClassNotFoundException | IllegalAccessException | InstantiationException
-        | DefaultConstructorMissingException | InvocationTargetException e) {
+            | DefaultConstructorMissingException | InvocationTargetException e) {
       e.printStackTrace();
       throw new IOException("Error.." + e.getMessage());
     }
@@ -300,9 +230,9 @@ public class FTableScannerTest {
   }
 
   private static final String[] COLUMNS =
-      new String[] {"c1", "c2", "c3", FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME};
+          new String[] {"c1", "c2", "c3", FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME};
   private static final DataType[] TYPES = new DataType[] {BasicTypes.INT, BasicTypes.STRING,
-      BasicTypes.DOUBLE, FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE};
+          BasicTypes.DOUBLE, FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE};
   private static final int[] C1_OFFSET = {0, 10, 100};
   private static final String[] C2_PFX = {"String_", "W_String_", "T_String_"};
 
@@ -319,11 +249,11 @@ public class FTableScannerTest {
   private static StoreHandler STORE_HANDLER;
 
   private static LinkedHashMap<String, TierStoreConfiguration> OPTS =
-      new LinkedHashMap<String, TierStoreConfiguration>() {
-        {
-          put(TIER_1_NAME, new TierStoreConfiguration());
-        }
-      };
+          new LinkedHashMap<String, TierStoreConfiguration>() {
+            {
+              put(TIER_1_NAME, new TierStoreConfiguration());
+            }
+          };
 
   /* use the methods for data ingestion in respective tiers */
   private static Method M_MEM;
@@ -372,7 +302,7 @@ public class FTableScannerTest {
    * @return the total number of records retrieved by scan
    */
   private int getScanCount(final FTableScanner scanner, ScanContext sc)
-      throws IOException, InterruptedException {
+          throws IOException, InterruptedException {
     Map.Entry entry;
     int count = 0;
     while (scanner.hasNext()) {
@@ -396,7 +326,7 @@ public class FTableScannerTest {
    * @return the total number of records retrieved by scan
    */
   private int assertAndGetCount(final Scan scan, final FTableScanner scanner,
-      final int perTierCount, final int[] tierIdxArr) {
+                                final int perTierCount, final int[] tierIdxArr) {
     Map.Entry entry;
     Row row;
     int count = 0;
@@ -432,18 +362,18 @@ public class FTableScannerTest {
    */
   public Object[] dataScanCount() throws NoSuchMethodException {
     return new Object[][] {{new Method[] {M_MEM, M_WAL, M_TIER1}, 5, 15, new int[] {0, 1, 2}},
-        {new Method[] {M_MEM, M_TIER1}, 5, 10, new int[] {0, 2}},
-        {new Method[] {M_MEM, M_WAL}, 5, 10, new int[] {0, 1}},
-        {new Method[] {M_WAL, M_TIER1}, 5, 10, new int[] {1, 2}},
-        {new Method[] {M_MEM}, 5, 5, new int[] {0}}, {new Method[] {M_WAL}, 5, 5, new int[] {1}},
-        {new Method[] {M_TIER1}, 5, 5, new int[] {2}}, {new Method[] {}, 5, 0, new int[] {}},};
+            {new Method[] {M_MEM, M_TIER1}, 5, 10, new int[] {0, 2}},
+            {new Method[] {M_MEM, M_WAL}, 5, 10, new int[] {0, 1}},
+            {new Method[] {M_WAL, M_TIER1}, 5, 10, new int[] {1, 2}},
+            {new Method[] {M_MEM}, 5, 5, new int[] {0}}, {new Method[] {M_WAL}, 5, 5, new int[] {1}},
+            {new Method[] {M_TIER1}, 5, 5, new int[] {2}}, {new Method[] {}, 5, 0, new int[] {}},};
   }
 
   @Test
   @Parameters(method = "dataScanCount")
   public void testScanCount(final Method[] dms, final int perTierCount, final int totalCount,
-      final int[] tierIdx)
-      throws IOException, InvocationTargetException, IllegalAccessException, InterruptedException {
+                            final int[] tierIdx)
+          throws IOException, InvocationTargetException, IllegalAccessException, InterruptedException {
 
     for (final Method dm : dms) {
       dm.invoke(this, perTierCount);
@@ -455,14 +385,14 @@ public class FTableScannerTest {
 
     final ScanContext sc = new ScanContext(null, REGION, scan, td, null, null);
     int count = assertAndGetCount(scan,
-        new FTableScanner(sc, (RowTupleConcurrentSkipListMap) REGION_MAP.getInternalMap()),
-        perTierCount, tierIdx);
+            new FTableScanner(sc, (RowTupleConcurrentSkipListMap) REGION_MAP.getInternalMap()),
+            perTierCount, tierIdx);
     System.out.println("FTableScannerTest.testScanCount::: totalCount= " + count);
     assertEquals("Incorrect number of records.", totalCount, count);
   }
 
   private void setupAll(final int totalCount)
-      throws InvocationTargetException, IllegalAccessException {
+          throws InvocationTargetException, IllegalAccessException {
     M_MEM.invoke(this, totalCount);
     M_WAL.invoke(this, totalCount);
     M_TIER1.invoke(this, totalCount);
@@ -476,25 +406,25 @@ public class FTableScannerTest {
   private Object[] dataScanCountWithFilters() {
     return new Object[][] {{null, 5, 15},
         /* SingleColumnValueFilter -- multiple cases */
-        {new SingleColumnValueFilter("c1", CompareOp.EQUAL, null), 5, 0},
-        {new SingleColumnValueFilter("c1", CompareOp.NOT_EQUAL, null), 5, 15},
-        {new SingleColumnValueFilter("c1", CompareOp.NOT_EQUAL, 10L), 5, 14},
-        {new SingleColumnValueFilter("c2", CompareOp.REGEX, "Str.*"), 5, 5},
-        {new SingleColumnValueFilter("c2", CompareOp.REGEX, ".*Str.*"), 5, 15},
-        {new SingleColumnValueFilter("c2", CompareOp.REGEX, ".*[13]$"), 5, 6},
-        {new SingleColumnValueFilter("c3", CompareOp.LESS_OR_EQUAL, 3.3), 5, 9},
-        {new SingleColumnValueFilter("c3", CompareOp.GREATER, 4.4), 5, 3},
+            {new SingleColumnValueFilter("c1", CompareOp.EQUAL, null), 5, 0},
+            {new SingleColumnValueFilter("c1", CompareOp.NOT_EQUAL, null), 5, 15},
+            {new SingleColumnValueFilter("c1", CompareOp.NOT_EQUAL, 10L), 5, 14},
+            {new SingleColumnValueFilter("c2", CompareOp.REGEX, "Str.*"), 5, 5},
+            {new SingleColumnValueFilter("c2", CompareOp.REGEX, ".*Str.*"), 5, 15},
+            {new SingleColumnValueFilter("c2", CompareOp.REGEX, ".*[13]$"), 5, 6},
+            {new SingleColumnValueFilter("c3", CompareOp.LESS_OR_EQUAL, 3.3), 5, 9},
+            {new SingleColumnValueFilter("c3", CompareOp.GREATER, 4.4), 5, 3},
         /* SingleColumnValueFilter with AND */
-        {new FilterList(FilterList.Operator.MUST_PASS_ALL)
-            .addFilter(new SingleColumnValueFilter("c1", CompareOp.NOT_EQUAL, 0L))
-            .addFilter(new SingleColumnValueFilter("c2", CompareOp.REGEX, ".*[13]$")), 5, 6}, ////
-        {new FilterList(FilterList.Operator.MUST_PASS_ALL)
-            .addFilter(new SingleColumnValueFilter("c1", CompareOp.EQUAL, 10L))
-            .addFilter(new SingleColumnValueFilter("c2", CompareOp.REGEX, ".*[23]$")), 5, 0}, ////
+            {new FilterList(FilterList.Operator.MUST_PASS_ALL)
+                    .addFilter(new SingleColumnValueFilter("c1", CompareOp.NOT_EQUAL, 0L))
+                    .addFilter(new SingleColumnValueFilter("c2", CompareOp.REGEX, ".*[13]$")), 5, 6}, ////
+            {new FilterList(FilterList.Operator.MUST_PASS_ALL)
+                    .addFilter(new SingleColumnValueFilter("c1", CompareOp.EQUAL, 10L))
+                    .addFilter(new SingleColumnValueFilter("c2", CompareOp.REGEX, ".*[23]$")), 5, 0}, ////
         /* SingleColumnValueFilter with AND */
-        {new FilterList(FilterList.Operator.MUST_PASS_ONE)
-            .addFilter(new SingleColumnValueFilter("c1", CompareOp.EQUAL, 3))
-            .addFilter(new SingleColumnValueFilter("c2", CompareOp.REGEX, ".*[13]$")), 5, 6}, ////
+            {new FilterList(FilterList.Operator.MUST_PASS_ONE)
+                    .addFilter(new SingleColumnValueFilter("c1", CompareOp.EQUAL, 3))
+                    .addFilter(new SingleColumnValueFilter("c2", CompareOp.REGEX, ".*[13]$")), 5, 6}, ////
 
     };
   }
@@ -514,8 +444,8 @@ public class FTableScannerTest {
   @Test
   @Parameters(method = "dataScanCountWithFilters")
   public void testScanCountWithFilters(final Filter filter, final int tCount,
-      final int expectedCount)
-      throws InvocationTargetException, IllegalAccessException, InterruptedException, IOException {
+                                       final int expectedCount)
+          throws InvocationTargetException, IllegalAccessException, InterruptedException, IOException {
     setupAll(tCount);
 
     Scan scan = new Scan();
@@ -525,7 +455,7 @@ public class FTableScannerTest {
 
     final ScanContext sc = new ScanContext(null, REGION, scan, td, null, null);
     int count = getScanCount(
-        new FTableScanner(sc, (RowTupleConcurrentSkipListMap) REGION_MAP.getInternalMap()), sc);
+            new FTableScanner(sc, (RowTupleConcurrentSkipListMap) REGION_MAP.getInternalMap()), sc);
     System.out.println("FTableScannerTest.testScanCountWithFilters:: totalCount= " + count);
     assertEquals("Incorrect count from scan.", expectedCount, count);
   }

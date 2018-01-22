@@ -76,7 +76,7 @@ public class MTableDiskPersistanceTest extends MTableDUnitHelper {
 
     MTableDescriptor tableDescriptor = new MTableDescriptor();
     tableDescriptor.addColumn(Bytes.toBytes("NAME")).addColumn(Bytes.toBytes("ID"))
-        .addColumn(Bytes.toBytes("AGE")).addColumn(Bytes.toBytes("SALARY"));
+            .addColumn(Bytes.toBytes("AGE")).addColumn(Bytes.toBytes("SALARY"));
     tableDescriptor.setRedundantCopies(1);
     if (persistentEnabled) {
       tableDescriptor.enableDiskPersistence(MDiskWritePolicy.ASYNCHRONOUS);
@@ -100,42 +100,42 @@ public class MTableDiskPersistanceTest extends MTableDUnitHelper {
 
   private void verifyRegionAttributes(VM client, String tableName, boolean persistentEnabled) {
     SerializableRunnable verifyRegionAttr =
-        new SerializableRunnable("Verify MTable server default properties") {
-          private static final long serialVersionUID = 1L;
+            new SerializableRunnable("Verify MTable server default properties") {
+              private static final long serialVersionUID = 1L;
 
-          public void run() throws CacheException {
-            MCache cache = MCacheFactory.getAnyInstance();
-            Region region = cache.getRegion(tableName);
-            assertEquals(true, region.getAttributes().getDataPolicy().withPartitioning());
-            assertEquals(MTABLE_REGION_DEFAULT_PARTITION_REDUDANT_COPIES,
-                region.getAttributes().getPartitionAttributes().getRedundantCopies());
-            assertEquals(persistentEnabled,
-                region.getAttributes().getDataPolicy().withPersistence());
-            if (!persistentEnabled) {
-              assertNull(region.getAttributes().getDiskStoreName());
-              assertNotNull(cache.findDiskStore(MTableUtils.DEFAULT_DISK_STORE_NAME));
-            } else {
-              assertEquals(region.getAttributes().getDataPolicy(), DataPolicy.PERSISTENT_PARTITION);
-              assertNotNull(region.getAttributes().getDiskStoreName());
-              assertNotNull(cache.findDiskStore(MTableUtils.DEFAULT_DISK_STORE_NAME));
-              int filesCount = 0;
-              for (File file : cache.findDiskStore(MTableUtils.DEFAULT_DISK_STORE_NAME)
-                  .getDiskDirs()) {
-                List<File> files = (List<File>) FileUtils.listFiles(file, TrueFileFilter.INSTANCE,
-                    TrueFileFilter.INSTANCE);
-                for (File file2 : files) {
-                  filesCount++;
+              public void run() throws CacheException {
+                MCache cache = MCacheFactory.getAnyInstance();
+                Region region = cache.getRegion(tableName);
+                assertEquals(true, region.getAttributes().getDataPolicy().withPartitioning());
+                assertEquals(MTABLE_REGION_DEFAULT_PARTITION_REDUDANT_COPIES,
+                        region.getAttributes().getPartitionAttributes().getRedundantCopies());
+                assertEquals(persistentEnabled,
+                        region.getAttributes().getDataPolicy().withPersistence());
+                if (!persistentEnabled) {
+                  assertNull(region.getAttributes().getDiskStoreName());
+                  assertNotNull(cache.findDiskStore(MTableUtils.DEFAULT_MTABLE_DISK_STORE_NAME));
+                } else {
+                  assertEquals(region.getAttributes().getDataPolicy(), DataPolicy.PERSISTENT_PARTITION);
+                  assertNotNull(region.getAttributes().getDiskStoreName());
+                  assertNotNull(cache.findDiskStore(MTableUtils.DEFAULT_MTABLE_DISK_STORE_NAME));
+                  int filesCount = 0;
+                  for (File file : cache.findDiskStore(MTableUtils.DEFAULT_MTABLE_DISK_STORE_NAME)
+                          .getDiskDirs()) {
+                    List<File> files = (List<File>) FileUtils.listFiles(file, TrueFileFilter.INSTANCE,
+                            TrueFileFilter.INSTANCE);
+                    for (File file2 : files) {
+                      filesCount++;
+                    }
+                  }
+
+                  assertTrue(filesCount > 2);
                 }
+                assertEquals(persistentEnabled,
+                        region.getAttributes().getDataPolicy().withPersistence());
+                File diskDir = getDiskDir();
+                assertNotNull(getDiskDir());
               }
-
-              assertTrue(filesCount > 2);
-            }
-            assertEquals(persistentEnabled,
-                region.getAttributes().getDataPolicy().withPersistence());
-            File diskDir = getDiskDir();
-            assertNotNull(getDiskDir());
-          }
-        };
+            };
     client.invoke(verifyRegionAttr);
   }
 
@@ -191,20 +191,20 @@ public class MTableDiskPersistanceTest extends MTableDUnitHelper {
             List<Cell> row = result.getCells();
 
             Iterator<MColumnDescriptor> iteratorColumnDescriptor =
-                mtable.getTableDescriptor().getAllColumnDescriptors().iterator();
+                    mtable.getTableDescriptor().getAllColumnDescriptors().iterator();
 
             for (int k = 0; k < row.size() - 1; k++) {
               byte[] expectedColumnName = iteratorColumnDescriptor.next().getColumnName();
               byte[] expectedColumnValue =
-                  (byte[]) myput.getColumnValueMap().get(new ByteArrayKey(expectedColumnName));
+                      (byte[]) myput.getColumnValueMap().get(new ByteArrayKey(expectedColumnName));
               if (!Bytes.equals(expectedColumnName, row.get(k).getColumnName())) {
                 Assert.fail("Invalid Values for Column Name");
               }
               if (!Bytes.equals(expectedColumnValue, (byte[]) row.get(k).getColumnValue())) {
                 System.out
-                    .println("expectedColumnValue =>  " + Arrays.toString(expectedColumnValue));
+                        .println("expectedColumnValue =>  " + Arrays.toString(expectedColumnValue));
                 System.out.println("actuaColumnValue    =>  "
-                    + Arrays.toString((byte[]) row.get(k).getColumnValue()));
+                        + Arrays.toString((byte[]) row.get(k).getColumnValue()));
                 Assert.fail("Invalid Values for Column Value");
               }
             }
@@ -268,19 +268,19 @@ public class MTableDiskPersistanceTest extends MTableDUnitHelper {
         List<Cell> row = result.getCells();
 
         Iterator<MColumnDescriptor> iteratorColumnDescriptor =
-            mtable.getTableDescriptor().getAllColumnDescriptors().iterator();
+                mtable.getTableDescriptor().getAllColumnDescriptors().iterator();
 
         for (int k = 0; k < row.size() - 1; k++) {
           byte[] expectedColumnName = iteratorColumnDescriptor.next().getColumnName();
           byte[] expectedColumnValue =
-              (byte[]) myput.getColumnValueMap().get(new ByteArrayKey(expectedColumnName));
+                  (byte[]) myput.getColumnValueMap().get(new ByteArrayKey(expectedColumnName));
           if (!Bytes.equals(expectedColumnName, row.get(k).getColumnName())) {
             Assert.fail("Invalid Values for Column Name");
           }
           if (!Bytes.equals(expectedColumnValue, (byte[]) row.get(k).getColumnValue())) {
             System.out.println("expectedColumnValue =>  " + Arrays.toString(expectedColumnValue));
             System.out.println(
-                "actuaColumnValue    =>  " + Arrays.toString((byte[]) row.get(k).getColumnValue()));
+                    "actuaColumnValue    =>  " + Arrays.toString((byte[]) row.get(k).getColumnValue()));
             Assert.fail("Invalid Values for Column Value");
           }
         }
@@ -314,20 +314,20 @@ public class MTableDiskPersistanceTest extends MTableDUnitHelper {
             List<Cell> row = result.getCells();
 
             Iterator<MColumnDescriptor> iteratorColumnDescriptor =
-                mtable.getTableDescriptor().getAllColumnDescriptors().iterator();
+                    mtable.getTableDescriptor().getAllColumnDescriptors().iterator();
 
             for (Cell cell : row) {
               byte[] expectedColumnName = iteratorColumnDescriptor.next().getColumnName();
               byte[] expectedColumnValue =
-                  (byte[]) myput.getColumnValueMap().get(new ByteArrayKey(expectedColumnName));
+                      (byte[]) myput.getColumnValueMap().get(new ByteArrayKey(expectedColumnName));
               if (!Bytes.equals(expectedColumnName, cell.getColumnName())) {
                 Assert.fail("Invalid Values for Column Name");
               }
               if (!Bytes.equals(expectedColumnValue, (byte[]) cell.getColumnValue())) {
                 System.out
-                    .println("expectedColumnValue =>  " + Arrays.toString(expectedColumnValue));
+                        .println("expectedColumnValue =>  " + Arrays.toString(expectedColumnValue));
                 System.out.println(
-                    "actuaColumnValue    =>  " + Arrays.toString((byte[]) cell.getColumnValue()));
+                        "actuaColumnValue    =>  " + Arrays.toString((byte[]) cell.getColumnValue()));
                 Assert.fail("Invalid Values for Column Value");
               }
             }

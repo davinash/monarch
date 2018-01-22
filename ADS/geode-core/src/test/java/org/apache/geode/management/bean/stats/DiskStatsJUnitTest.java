@@ -77,6 +77,22 @@ public class DiskStatsJUnitTest extends MBeanStatsTestCase {
     assertTrue(getDiskWritesRate() > 0);
   }
 
+  @Test
+  public void testDeltaStats() throws InterruptedException {
+    diskStoreStats.incDeltaWrites();
+    diskStoreStats.incDeltaWrites();
+    diskStoreStats.incDeltaReads();
+    diskStoreStats.incDeltaBytesWritten(111, false);
+    diskStoreStats.incDeltaBytesRead(112, false);
+
+    sample();
+
+    assertEquals(1, diskStoreStats.getDeltaReads());
+    assertEquals(2, diskStoreStats.getDeltaWrites());
+    assertEquals(112, diskStoreStats.getDeltaBytesRead());
+    assertEquals(111, diskStoreStats.getDeltaBytesWritten());
+  }
+
   private long getDiskReadsAvgLatency() {
     return bridge.getDiskReadsAvgLatency();
   }

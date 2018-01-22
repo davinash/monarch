@@ -35,6 +35,7 @@ import io.ampool.monarch.table.internal.IMKey;
 import io.ampool.monarch.table.internal.MTableUtils;
 import io.ampool.monarch.table.region.map.RowTupleConcurrentSkipListMap;
 import io.ampool.monarch.types.CompareOp;
+import io.ampool.orc.OrcUtils;
 import io.ampool.store.StoreHandler;
 import io.ampool.tierstore.SharedTierStore;
 import io.ampool.tierstore.TierStore;
@@ -50,9 +51,6 @@ import org.apache.logging.log4j.Logger;
 public class UpdateTableFunction implements Function, InternalEntity {
   private static final long serialVersionUID = 6096309114892773481L;
   private static final Logger logger = LogService.getLogger();
-  private FilterList blockFilters;
-  private BlockKey startKey = null;
-  private BlockKey stopKey = null;
 
   @Override
   public void execute(FunctionContext context) {
@@ -60,10 +58,9 @@ public class UpdateTableFunction implements Function, InternalEntity {
     String tableName = (String) args[0];
     Filter filter = (Filter) args[1];
     Map<byte[], Object> colValues = (Map<byte[], Object>) args[2];
-    blockFilters = handleSpecialColumnFilters(filter);
     try {
       TableDescriptor td = (TableDescriptor) CacheFactory.getAnyInstance()
-          .getRegion(MTableUtils.AMPL_META_REGION_NAME).get(tableName);
+              .getRegion(MTableUtils.AMPL_META_REGION_NAME).get(tableName);
       updateFTable(tableName, filter, colValues, td);
       context.getResultSender().sendResult(true);
     } catch (Exception e) {
@@ -73,7 +70,7 @@ public class UpdateTableFunction implements Function, InternalEntity {
   }
 
   private void updateFTable(final String tableName, final Filter filter,
-      Map<byte[], Object> colValues, final TableDescriptor td) {
+                            Map<byte[], Object> colValues, final TableDescriptor td) {
     /*
      * Truncate from in memory Truncate from WAL Truncate from Tiers 1 to N
      */
@@ -102,7 +99,7 @@ public class UpdateTableFunction implements Function, InternalEntity {
   }
 
   private void updateInMemory(final String tableName, final Filter filter,
-      Map<Integer, Object> colValues, final TableDescriptor td) {
+                              Map<Integer, Object> colValues, final TableDescriptor td) {
     /**
      * For all primary buckets for the region For all the blocks in a bucket If the block falls in
      * range lock the block Process all records in block and re-arrange.
@@ -112,18 +109,19 @@ public class UpdateTableFunction implements Function, InternalEntity {
     }
     int totalBuckets = td.getTotalNumOfSplits();
     Region region = CacheFactory.getAnyInstance().getRegion(tableName);
+    final OrcUtils.OrcOptions opts = new OrcUtils.OrcOptions(filter, td);
     for (int i = 0; i < totalBuckets; i++) {
       BucketRegion br = ((PartitionedRegion) region).getDataStore().getLocalBucketById(i);
       if (br != null && br.getBucketAdvisor().isHosting() && br.getBucketAdvisor().isPrimary()) {
-        updateBucket(region, br, filter, colValues, td);
+        updateBucket(region, br, filter, colValues, td, opts);
       }
     }
   }
 
   private void updateBucket(Region region, final BucketRegion br, final Filter filter,
-      Map<Integer, Object> colValues, TableDescriptor td) {
+                            Map<Integer, Object> colValues, TableDescriptor td, final OrcUtils.OrcOptions opts) {
     RowTupleConcurrentSkipListMap internalMap =
-        (RowTupleConcurrentSkipListMap) br.getRegionMap().getInternalMap();
+            (RowTupleConcurrentSkipListMap) br.getRegionMap().getInternalMap();
     Map realMap = internalMap.getInternalMap();
 
     /* TODO: Can we skip this bucket? */
@@ -132,10 +130,6 @@ public class UpdateTableFunction implements Function, InternalEntity {
     while (itr.hasNext()) {
       Map.Entry<IMKey, RegionEntry> blockRegionEntry = itr.next();
       final BlockKey lastKey = (BlockKey) blockRegionEntry.getKey();
-      if (filterRowKey(lastKey)) {
-        /* block not of interest */
-        continue;
-      }
       synchronized (lastKey) {
         Object value = blockRegionEntry.getValue()._getValue();
         if (value == null || Token.isInvalidOrRemoved(value)) {
@@ -145,58 +139,27 @@ public class UpdateTableFunction implements Function, InternalEntity {
           value = ((VMCachedDeserializable) value).getDeserializedForReading();
         }
         BlockValue blockValue = (BlockValue) value;
-        int oldIdx = blockValue.getCurrentIndex();
-        updateBlock(lastKey, blockValue, filter, colValues, td);
-        if (blockValue.getCurrentIndex() == 0) {
-          // TODO: remove the block, this will maintain the order of keys in the table
-          region.destroy(lastKey);
-        } else if (oldIdx != blockValue.getCurrentIndex()) {
+        /* based on column-statistics, skip the blocks that do not have rows matching filters */
+        if (!OrcUtils.isBlockNeeded(opts, blockValue)) {
+          continue;
+        }
+        final boolean isUpdated = blockValue.updateBlock(lastKey, filter, colValues, td);
+        if (isUpdated) {
           region.put(lastKey, blockValue);
         }
       }
     }
   }
 
-  private void updateBlock(BlockKey lastKey, BlockValue blockValue, final Filter filter,
-      Map<Integer, Object> colValues, TableDescriptor td) {
-    blockValue.updateBlock(lastKey, filter, colValues, td);
-  }
-
-  /**
-   * Running RowFilter before fetching value if present
-   *
-   * @param blockKey Block key
-   * @return
-   */
-  private boolean filterRowKey(final BlockKey blockKey) {
-    boolean filterRowKey = false;
-    Filter filter = blockFilters;
-    if (filter instanceof BlockKeyFilter) {
-      filterRowKey = ((BlockKeyFilter) filter).filterBlockKey(blockKey);
-    } else if (filter instanceof FilterList) {
-      List<Filter> filters = ((FilterList) filter).getFilters();
-      for (Filter mFilter : filters) {
-        if (mFilter instanceof BlockKeyFilter) {
-          boolean dofilter = ((BlockKeyFilter) mFilter).filterBlockKey(blockKey);;
-          if (dofilter) {
-            filterRowKey = true;
-            break;
-          }
-        }
-      }
-    }
-    return filterRowKey;
-  }
-
   private void updateInTiers(final String tableName, final Filter filter,
-      Map<Integer, Object> colValues, final TableDescriptor td) throws IOException {
+                             Map<Integer, Object> colValues, final TableDescriptor td) throws IOException {
     if (td == null) {
       throw new FTableNotExistsException("Table not found: " + tableName);
     }
     int totalBuckets = td.getTotalNumOfSplits();
     Region region = CacheFactory.getAnyInstance().getRegion(tableName);
     for (Map.Entry<String, TierStoreConfiguration> tierEntry : ((FTableDescriptor) td)
-        .getTierStores().entrySet()) {
+            .getTierStores().entrySet()) {
       String storeName = tierEntry.getKey();
       TierStore store = StoreHandler.getInstance().getTierStore(storeName);
       boolean isShared = store instanceof SharedTierStore;
@@ -205,7 +168,7 @@ public class UpdateTableFunction implements Function, InternalEntity {
         if (br != null && br.getBucketAdvisor().isHosting()) {
           if (!isShared || br.getBucketAdvisor().isPrimary()) {
             updateTierBucket(store, tableName, i, filter, colValues, td,
-                tierEntry.getValue().getTierProperties());
+                    tierEntry.getValue().getTierProperties());
           }
         }
       }
@@ -213,8 +176,8 @@ public class UpdateTableFunction implements Function, InternalEntity {
   }
 
   private void updateTierBucket(TierStore store, String tableName, int i, Filter filter,
-      Map<Integer, Object> colValues, TableDescriptor td, Properties tierProperties)
-      throws IOException {
+                                Map<Integer, Object> colValues, TableDescriptor td, Properties tierProperties)
+          throws IOException {
     store.updateBucket(tableName, i, filter, colValues, td, tierProperties);
   }
 
@@ -225,127 +188,6 @@ public class UpdateTableFunction implements Function, InternalEntity {
     int totalBuckets = td.getTotalNumOfSplits();
     for (int i = 0; i < totalBuckets; i++) {
       StoreHandler.getInstance().flushWriteAheadLog(tableName, i);
-    }
-  }
-
-  public FilterList handleSpecialColumnFilters(Filter filter) {
-    final FilterList blockFiltersList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-    if (filter instanceof FilterList) {
-      final FilterList filterList = (FilterList) filter;
-      filterList.getFilters().forEach(mFilter -> {
-        if (mFilter instanceof FilterList) {
-          // as this contains list either of one should pass so changing operator to
-          // Operator.MUST_PASS_ONE
-          blockFiltersList.setOperator(FilterList.Operator.MUST_PASS_ONE);
-          blockFiltersList.addFilter(transformFilterList((FilterList) mFilter));
-        } else {
-          final BlockKeyFilter blockKeyFilter = getBlockKeyFilter(mFilter);
-          if (blockKeyFilter != null) {
-            blockFiltersList.addFilter(blockKeyFilter);
-          }
-        }
-      });
-    } else {
-      final BlockKeyFilter blockKeyFilter = getBlockKeyFilter(filter);
-      if (blockKeyFilter != null) {
-        blockFiltersList.addFilter(blockKeyFilter);
-      }
-    }
-    return blockFiltersList;
-  }
-
-
-  public FilterList transformFilterList(FilterList filters) {
-    FilterList newFilterList = new FilterList(filters.getOperator());
-    filters.getFilters().forEach(mFilter -> {
-      if (mFilter instanceof FilterList) {
-        newFilterList.addFilter(transformFilterList((FilterList) mFilter));
-      } else {
-        final BlockKeyFilter blockKeyFilter = getBlockKeyFilter(mFilter);
-        if (blockKeyFilter != null) {
-          newFilterList.addFilter(blockKeyFilter);
-        }
-      }
-    });
-    return newFilterList;
-  }
-
-  BlockKeyFilter getBlockKeyFilter(Filter filter) {
-    BlockKeyFilter blockKeyFilter = null;
-    if (filter instanceof SingleColumnValueFilter && ((SingleColumnValueFilter) filter)
-        .getColumnNameString().equals(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME)) {
-      final SingleColumnValueFilter columnValueFilter = ((SingleColumnValueFilter) filter);
-      final Object val = columnValueFilter.getValue();
-      if ((val instanceof byte[])) {
-        blockKeyFilter = new BlockKeyFilter(columnValueFilter.getOperator(), (byte[]) val);
-      } else if ((val instanceof Long)) {
-        blockKeyFilter =
-            new BlockKeyFilter(columnValueFilter.getOperator(), Bytes.toBytes((Long) val));
-      }
-      // updateStartStopRow to get correct range map
-      updateStartStopRow(columnValueFilter.getOperator(), val);
-    }
-    return blockKeyFilter;
-  }
-
-  private void updateStartStopRow(final CompareOp operator, final Object val) {
-    long timeStamp = -1l;
-    if ((val instanceof byte[])) {
-      timeStamp = Bytes.toLong((byte[]) val);
-    } else if ((val instanceof Long)) {
-      timeStamp = (Long) val;
-    } else {
-      return;
-    }
-    switch (operator) {
-      case LESS:
-        // update stop key if current key is greater than old one
-        if (stopKey == null) {
-          stopKey = new BlockKey(timeStamp);
-        } else {
-          if (timeStamp > stopKey.getStartTimeStamp()) {
-            stopKey.setStartTimeStamp(timeStamp);
-          }
-        }
-        break;
-      case LESS_OR_EQUAL:
-        // as we want to include stopKey too so will add 1 to current value
-        if (stopKey == null) {
-          stopKey = new BlockKey(timeStamp + 1);
-        } else {
-          if (timeStamp >= stopKey.getStartTimeStamp()) {
-            stopKey.setStartTimeStamp(timeStamp + 1);
-          }
-        }
-        break;
-      case GREATER:
-        // update start key if current key is smaller than old one
-        if (startKey == null) {
-          startKey = new BlockKey(timeStamp);
-        } else {
-          if (timeStamp < startKey.getStartTimeStamp()) {
-            startKey.setStartTimeStamp(timeStamp);
-          }
-        }
-        break;
-      case GREATER_OR_EQUAL:
-        if (startKey == null) {
-          startKey = new BlockKey(timeStamp - 1);
-        } else {
-          if (timeStamp <= startKey.getStartTimeStamp()) {
-            startKey.setStartTimeStamp(timeStamp - 1);
-          }
-        }
-        break;
-      case EQUAL:
-        // if start and/or stopkey not set then set with this value
-        if (startKey == null) {
-          startKey = new BlockKey(timeStamp);
-        }
-        if (stopKey == null) {
-          stopKey = new BlockKey(timeStamp);
-        }
-        break;
     }
   }
 

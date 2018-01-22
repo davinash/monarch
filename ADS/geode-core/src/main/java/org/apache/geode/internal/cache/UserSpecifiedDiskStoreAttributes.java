@@ -40,7 +40,8 @@ public class UserSpecifiedDiskStoreAttributes extends DiskStoreAttributes {
   private boolean hasDiskDirSizes = false;
   private boolean hasDiskUsageWarningPercentage = false;
   private boolean hasDiskUsageCriticalPercentage = false;
-  private static final int HAS_COUNT = 11;
+  private boolean hasEnableDeltaPersistence = false;
+  private static final int HAS_COUNT = 12;
 
   public boolean hasAutoCompact() {
     return hasAutoCompact;
@@ -84,6 +85,10 @@ public class UserSpecifiedDiskStoreAttributes extends DiskStoreAttributes {
 
   public boolean hasDiskUsageCriticalPercentage() {
     return hasDiskUsageCriticalPercentage;
+  }
+
+  public boolean hasEnableDeltaPersistence() {
+    return hasEnableDeltaPersistence;
   }
 
   public void setHasAutoCompact(boolean hasAutoCompact) {
@@ -130,6 +135,10 @@ public class UserSpecifiedDiskStoreAttributes extends DiskStoreAttributes {
     this.hasDiskUsageCriticalPercentage = true;
   }
 
+  public void setHasEnableDeltaPersistence(boolean hasEnableDeltaPersistence) {
+    this.hasEnableDeltaPersistence = hasEnableDeltaPersistence;
+  }
+
   public void setAllHasFields(boolean b) {
     int hasCounter = 0;
     Field thisFields[] = UserSpecifiedDiskStoreAttributes.class.getDeclaredFields();
@@ -140,7 +149,7 @@ public class UserSpecifiedDiskStoreAttributes extends DiskStoreAttributes {
           thisFields[i].setBoolean(this, b);
         } catch (IllegalAccessException ouch) {
           Assert.assertTrue(false,
-              "Could not access field" + thisFields[i].getName() + " on " + getClass());
+                  "Could not access field" + thisFields[i].getName() + " on " + getClass());
         }
       }
     }
@@ -167,7 +176,7 @@ public class UserSpecifiedDiskStoreAttributes extends DiskStoreAttributes {
           Assert.assertTrue(false, "Could not access method " + fieldName + " on " + getClass());
         } catch (IllegalArgumentException e) {
           Assert.assertTrue(false,
-              "Illegal argument trying to set field " + e.getLocalizedMessage());
+                  "Illegal argument trying to set field " + e.getLocalizedMessage());
         } catch (InvocationTargetException e) {
           Assert.assertTrue(false, "Failed trying to invoke method " + e.getLocalizedMessage());
         }
@@ -180,7 +189,7 @@ public class UserSpecifiedDiskStoreAttributes extends DiskStoreAttributes {
       }
     }
     Assert.assertTrue(hasCounter == HAS_COUNT,
-        "Expected " + HAS_COUNT + " methods, got " + hasCounter + " last field: " + fieldName);
+            "Expected " + HAS_COUNT + " methods, got " + hasCounter + " last field: " + fieldName);
     Assert.assertTrue(thisFields.length == HAS_COUNT);
   }
 }

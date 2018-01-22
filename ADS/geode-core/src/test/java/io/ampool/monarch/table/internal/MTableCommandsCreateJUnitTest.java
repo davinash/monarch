@@ -24,26 +24,27 @@ import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 import java.util.stream.Stream;
 
+import org.apache.geode.cache.execute.ResultCollector;
 import org.apache.geode.distributed.DistributedMember;
 import org.apache.geode.internal.cache.DescMTableFunction;
 import org.apache.geode.internal.cache.DiskStoreAttributes;
 import org.apache.geode.management.cli.Result;
 import org.apache.geode.management.internal.cli.CliUtil;
 import org.apache.geode.management.internal.cli.commands.MTableCommands;
+import org.apache.geode.management.internal.cli.domain.DiskStoreDetails;
+import org.apache.geode.management.internal.cli.functions.CliFunctionResult;
 import org.apache.geode.management.internal.cli.functions.CreateDiskStoreFunction;
+import org.apache.geode.management.internal.cli.functions.DescribeDiskStoreFunction;
 import org.apache.geode.management.internal.cli.functions.DestroyDiskStoreFunction;
 import org.apache.geode.management.internal.cli.i18n.CliStrings;
 import org.apache.geode.management.internal.cli.json.GfJsonArray;
 import org.apache.geode.management.internal.cli.json.GfJsonException;
 import org.apache.geode.management.internal.cli.json.GfJsonObject;
 import org.apache.geode.management.internal.cli.result.CommandResult;
+import org.apache.geode.management.internal.configuration.domain.XmlEntity;
 import org.apache.geode.test.junit.categories.MonarchTest;
 import io.ampool.monarch.table.MCache;
 import io.ampool.monarch.table.MCacheFactory;
@@ -65,16 +66,16 @@ public class MTableCommandsCreateJUnitTest {
   private static final String TABLE_NAME = "MTableCommandsCreateJUnitTest_CreateTable";
   /** the sequence of arguments for create table command **/
   private static final String[] ARGS_SEQUENCE = new String[] {CREATE_MTABLE__NAME,
-      CREATE_MTABLE__TYPE, CREATE_MTABLE_COLUMNS, CREATE_MTABLE_SCHEMA,
-      CREATE_MTABLE__REDUNDANT_COPIES, CREATE_MTABLE__RECOVERY_DELAY,
-      CREATE_MTABLE__STARTUP_RECOVERY_DELAY, CREATE_MTABLE__MAX_VERSIONS,
-      CREATE_MTABLE__DISK_PERSISTENCE, CREATE_MTABLE__DISK_WRITE_POLICY, CREATE_MTABLE__DISKSTORE,
-      CREATE_MTABLE__SPLITS, CREATE_MTABLE__EVICTION_POLICY, CREATE_MTABLE__EXPIRATION_TIMEOUT,
-      CREATE_MTABLE__EXPIRATION_ACTION, CREATE_MTABLE__BLOCK_SIZE, CREATE_TABLE__LOCAL_MAX_MEMORY,
-      CREATE_TABLE__LOCAL_MAX_MEMORY_PCT, CREATE_MTABLE__TIERSTORES, TIER1_TIME_TO_EXPIRE,
-      TIER2_TIME_TO_EXPIRE, TIER1_TIME_PARTITION_INTERVAL, TIER2_TIME_PARTITION_INTERVAL,
-      CREATE_MTABLE__OBSERVER_COPROCESSORS, CREATE_MTABLE__FTABLE_PARTITION_COLUMN_NAME,
-      CREATE_MTABLE__CACHE_LOADER_CLASS, CREATE_MTABLE__FTABLE_BLOCK_FORMAT};
+          CREATE_MTABLE__TYPE, CREATE_MTABLE_COLUMNS, CREATE_MTABLE_SCHEMA,
+          CREATE_MTABLE__REDUNDANT_COPIES, CREATE_MTABLE__RECOVERY_DELAY,
+          CREATE_MTABLE__STARTUP_RECOVERY_DELAY, CREATE_MTABLE__MAX_VERSIONS,
+          CREATE_MTABLE__DISK_PERSISTENCE, CREATE_MTABLE__DISK_WRITE_POLICY, CREATE_MTABLE__DISKSTORE,
+          CREATE_MTABLE__SPLITS, CREATE_MTABLE__EVICTION_POLICY, CREATE_MTABLE__EXPIRATION_TIMEOUT,
+          CREATE_MTABLE__EXPIRATION_ACTION, CREATE_MTABLE__BLOCK_SIZE, CREATE_TABLE__LOCAL_MAX_MEMORY,
+          CREATE_TABLE__LOCAL_MAX_MEMORY_PCT, CREATE_MTABLE__TIERSTORES, TIER1_TIME_TO_EXPIRE,
+          TIER2_TIME_TO_EXPIRE, TIER1_TIME_PARTITION_INTERVAL, TIER2_TIME_PARTITION_INTERVAL,
+          CREATE_MTABLE__OBSERVER_COPROCESSORS, CREATE_MTABLE__FTABLE_PARTITION_COLUMN_NAME,
+          CREATE_MTABLE__CACHE_LOADER_CLASS, CREATE_MTABLE__FTABLE_BLOCK_FORMAT};
 
   @BeforeClass
   public static void setUpClass() {
@@ -116,7 +117,7 @@ public class MTableCommandsCreateJUnitTest {
    * @throws InvocationTargetException
    */
   private CommandResult executeCommand(final Map<String, Object> map)
-      throws IllegalAccessException, InvocationTargetException {
+          throws IllegalAccessException, InvocationTargetException {
 
     Objects.requireNonNull(map);
     Object[] args = Stream.of(ARGS_SEQUENCE).map(type -> {
@@ -149,7 +150,7 @@ public class MTableCommandsCreateJUnitTest {
    */
   @Test
   public void testCreateColumnsAndSchema_BothNull()
-      throws InvocationTargetException, IllegalAccessException, GfJsonException {
+          throws InvocationTargetException, IllegalAccessException, GfJsonException {
     CommandResult result = executeCommand(Collections.emptyMap());
     assertEquals(Result.Status.ERROR, result.getStatus());
     assertTrue(result.getContent().getString("message").contains(CREATE_MTABLE___HELP));
@@ -168,7 +169,7 @@ public class MTableCommandsCreateJUnitTest {
    */
   @Test
   public void testCreateColumnsAndSchema_BothEmpty()
-      throws InvocationTargetException, IllegalAccessException, GfJsonException {
+          throws InvocationTargetException, IllegalAccessException, GfJsonException {
     Map<String, Object> map = new HashMap<String, Object>(2) {
       {
         put("schema-json", "");
@@ -193,7 +194,7 @@ public class MTableCommandsCreateJUnitTest {
    */
   @Test
   public void testCreateTableInvalidSchema()
-      throws InvocationTargetException, IllegalAccessException, GfJsonException {
+          throws InvocationTargetException, IllegalAccessException, GfJsonException {
     Map<String, Object> inputs = new HashMap<String, Object>(1) {
       {
         put("schema-json", "abc");
@@ -202,7 +203,7 @@ public class MTableCommandsCreateJUnitTest {
     CommandResult result = executeCommand(inputs);
     assertEquals(Result.Status.ERROR, result.getStatus());
     assertTrue("Invalid schema.",
-        result.getContent().getString("message").contains("Invalid schema"));
+            result.getContent().getString("message").contains("Invalid schema"));
   }
 
   /**
@@ -214,7 +215,7 @@ public class MTableCommandsCreateJUnitTest {
    */
   @Test
   public void testCreateTableColumnsAndSchemaTogether()
-      throws InvocationTargetException, IllegalAccessException, GfJsonException {
+          throws InvocationTargetException, IllegalAccessException, GfJsonException {
     /** offset in the result from where column information starts.. **/
     final int OFFSET = 6;
     final String[][] COLUMNS = new String[][] {{"c1", "INT"}, {"c2", "map<DOUBLE,array<LONG>>"}};
@@ -244,7 +245,7 @@ public class MTableCommandsCreateJUnitTest {
    */
   @Test
   public void testCreateTableWithSchema_1()
-      throws InvocationTargetException, IllegalAccessException, GfJsonException {
+          throws InvocationTargetException, IllegalAccessException, GfJsonException {
     /** offset in the result from where column information starts.. **/
     final int OFFSET = 5;
     final String[][] COLUMNS = new String[][] {{"c1", "INT"}, {"c2", "map<DOUBLE,array<LONG>>"}};
@@ -264,7 +265,7 @@ public class MTableCommandsCreateJUnitTest {
 
     /** assert on columns **/
     GfJsonObject details = result1.getContent().getJSONObject("__sections__-0")
-        .getJSONObject("__sections__-0").getJSONObject("__tables__-0").getJSONObject("content");
+            .getJSONObject("__sections__-0").getJSONObject("__tables__-0").getJSONObject("content");
 
     final GfJsonArray typeArray = details.getJSONArray("Type");
     int offset = -1;
@@ -284,7 +285,7 @@ public class MTableCommandsCreateJUnitTest {
   }
 
   private static final String SCHEMA =
-      TypeUtils.getJsonSchema(new String[][] {{"c1", "INT"}, {"c2", "map<DOUBLE,array<LONG>>"}});
+          TypeUtils.getJsonSchema(new String[][] {{"c1", "INT"}, {"c2", "map<DOUBLE,array<LONG>>"}});
 
   /**
    * A simple helper method to assert that the table creation is successful with specified options.
@@ -296,12 +297,12 @@ public class MTableCommandsCreateJUnitTest {
    * @throws GfJsonException
    */
   private void assertCreateTableSuccess(final TableType type, final Map<String, Object> inputs)
-      throws InvocationTargetException, IllegalAccessException, GfJsonException {
+          throws InvocationTargetException, IllegalAccessException, GfJsonException {
     inputs.put(CREATE_MTABLE__TYPE, type);
 
     CommandResult result = executeCommand(inputs);
     assertEquals("Incorrect status for " + inputs.get(CREATE_MTABLE__TYPE), Result.Status.OK,
-        result.getStatus());
+            result.getStatus());
 
     COMMANDS.deleteMtable(TABLE_NAME);
   }
@@ -318,16 +319,16 @@ public class MTableCommandsCreateJUnitTest {
    * @throws GfJsonException
    */
   private void assertCreateTableError(final TableType type, final Map<String, Object> inputs,
-      final String expectedMessage)
-      throws InvocationTargetException, IllegalAccessException, GfJsonException {
+                                      final String expectedMessage)
+          throws InvocationTargetException, IllegalAccessException, GfJsonException {
     inputs.put(CREATE_MTABLE__TYPE, type);
 
     CommandResult result = executeCommand(inputs);
     assertEquals("Incorrect status for " + inputs.get(CREATE_MTABLE__TYPE), Result.Status.ERROR,
-        result.getStatus());
+            result.getStatus());
     if (expectedMessage != null) {
       assertEquals("Incorrect error message for " + inputs.get(CREATE_MTABLE__TYPE),
-          expectedMessage, result.getContent().getJSONArray("message").get(0));
+              expectedMessage, result.getContent().getJSONArray("message").get(0));
     }
   }
 
@@ -340,7 +341,7 @@ public class MTableCommandsCreateJUnitTest {
    */
   @Test
   public void testMaxVersions()
-      throws InvocationTargetException, IllegalAccessException, GfJsonException {
+          throws InvocationTargetException, IllegalAccessException, GfJsonException {
     Map<String, Object> inputs = new HashMap<String, Object>(1) {
       {
         put("schema-json", SCHEMA);
@@ -353,7 +354,7 @@ public class MTableCommandsCreateJUnitTest {
     assertCreateTableSuccess(UNORDERED, inputs);
 
     assertCreateTableError(IMMUTABLE, inputs,
-        CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_NOT, CREATE_MTABLE__MAX_VERSIONS));
+            CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_NOT, CREATE_MTABLE__MAX_VERSIONS));
   }
 
   /**
@@ -365,7 +366,7 @@ public class MTableCommandsCreateJUnitTest {
    */
   @Test
   public void testEnableDiskPersistence()
-      throws InvocationTargetException, IllegalAccessException, GfJsonException {
+          throws InvocationTargetException, IllegalAccessException, GfJsonException {
     Map<String, Object> inputs = new HashMap<String, Object>(1) {
       {
         put("schema-json", SCHEMA);
@@ -378,7 +379,7 @@ public class MTableCommandsCreateJUnitTest {
     assertCreateTableSuccess(UNORDERED, inputs);
 
     assertCreateTableError(IMMUTABLE, inputs,
-        CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_NOT, CREATE_MTABLE__DISK_PERSISTENCE));
+            CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_NOT, CREATE_MTABLE__DISK_PERSISTENCE));
 
     /** with disk-persistence=false **/
     inputs.put(CREATE_MTABLE__DISK_PERSISTENCE, false);
@@ -388,7 +389,7 @@ public class MTableCommandsCreateJUnitTest {
     assertCreateTableSuccess(UNORDERED, inputs);
 
     assertCreateTableError(IMMUTABLE, inputs,
-        CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_NOT, CREATE_MTABLE__DISK_PERSISTENCE));
+            CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_NOT, CREATE_MTABLE__DISK_PERSISTENCE));
   }
 
   /**
@@ -400,7 +401,7 @@ public class MTableCommandsCreateJUnitTest {
    */
   @Test
   public void testEvictionPolicy()
-      throws InvocationTargetException, IllegalAccessException, GfJsonException {
+          throws InvocationTargetException, IllegalAccessException, GfJsonException {
     Map<String, Object> inputs = new HashMap<String, Object>(1) {
       {
         put("schema-json", SCHEMA);
@@ -414,7 +415,7 @@ public class MTableCommandsCreateJUnitTest {
     assertCreateTableSuccess(UNORDERED, inputs);
 
     assertCreateTableError(IMMUTABLE, inputs,
-        CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_NOT, CREATE_MTABLE__EVICTION_POLICY));
+            CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_NOT, CREATE_MTABLE__EVICTION_POLICY));
 
     /** with eviction-policy=OVERFLOW_TO_TIER **/
     inputs.put(CREATE_MTABLE__EVICTION_POLICY, MEvictionPolicy.OVERFLOW_TO_TIER);
@@ -423,7 +424,7 @@ public class MTableCommandsCreateJUnitTest {
     assertCreateTableError(UNORDERED, inputs, null);
 
     assertCreateTableError(IMMUTABLE, inputs,
-        CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_NOT, CREATE_MTABLE__EVICTION_POLICY));
+            CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_NOT, CREATE_MTABLE__EVICTION_POLICY));
   }
 
   /**
@@ -435,7 +436,7 @@ public class MTableCommandsCreateJUnitTest {
    */
   @Test
   public void testExpirationActionAndTimeout()
-      throws InvocationTargetException, IllegalAccessException, GfJsonException {
+          throws InvocationTargetException, IllegalAccessException, GfJsonException {
     Map<String, Object> inputs = new HashMap<String, Object>(2) {
       {
         put("schema-json", SCHEMA);
@@ -450,7 +451,7 @@ public class MTableCommandsCreateJUnitTest {
     assertCreateTableSuccess(UNORDERED, inputs);
 
     assertCreateTableError(IMMUTABLE, inputs,
-        CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_NOT, CREATE_MTABLE__EXPIRATION_ACTION));
+            CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_NOT, CREATE_MTABLE__EXPIRATION_ACTION));
 
     /** with expiration-timeout=10 **/
     inputs.remove(CREATE_MTABLE__EXPIRATION_ACTION);
@@ -460,7 +461,7 @@ public class MTableCommandsCreateJUnitTest {
     assertCreateTableSuccess(UNORDERED, inputs);
 
     assertCreateTableError(IMMUTABLE, inputs,
-        CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_NOT, CREATE_MTABLE__EXPIRATION_TIMEOUT));
+            CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_NOT, CREATE_MTABLE__EXPIRATION_TIMEOUT));
   }
 
   /**
@@ -472,7 +473,7 @@ public class MTableCommandsCreateJUnitTest {
    */
   @Test
   public void testDiskWritePolicy()
-      throws InvocationTargetException, IllegalAccessException, GfJsonException {
+          throws InvocationTargetException, IllegalAccessException, GfJsonException {
     Map<String, Object> inputs = new HashMap<String, Object>(2) {
       {
         put("schema-json", SCHEMA);
@@ -486,7 +487,7 @@ public class MTableCommandsCreateJUnitTest {
     assertCreateTableSuccess(UNORDERED, inputs);
 
     assertCreateTableError(IMMUTABLE, inputs,
-        CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_NOT, CREATE_MTABLE__DISK_WRITE_POLICY));
+            CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_NOT, CREATE_MTABLE__DISK_WRITE_POLICY));
 
     /** with disk-write-policy=SYNCHRONOUS **/
     inputs.put(CREATE_MTABLE__DISK_WRITE_POLICY, MDiskWritePolicy.SYNCHRONOUS);
@@ -495,7 +496,7 @@ public class MTableCommandsCreateJUnitTest {
     assertCreateTableSuccess(UNORDERED, inputs);
 
     assertCreateTableError(IMMUTABLE, inputs,
-        CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_NOT, CREATE_MTABLE__DISK_WRITE_POLICY));
+            CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_NOT, CREATE_MTABLE__DISK_WRITE_POLICY));
   }
 
   /**
@@ -507,7 +508,7 @@ public class MTableCommandsCreateJUnitTest {
    */
   @Test
   public void testBlockSize()
-      throws InvocationTargetException, IllegalAccessException, GfJsonException {
+          throws InvocationTargetException, IllegalAccessException, GfJsonException {
     Map<String, Object> inputs = new HashMap<String, Object>(2) {
       {
         put("schema-json", SCHEMA);
@@ -517,10 +518,10 @@ public class MTableCommandsCreateJUnitTest {
     };
 
     assertCreateTableError(ORDERED_VERSIONED, inputs,
-        CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_FOR, CREATE_MTABLE__BLOCK_SIZE));
+            CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_FOR, CREATE_MTABLE__BLOCK_SIZE));
 
     assertCreateTableError(UNORDERED, inputs,
-        CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_FOR, CREATE_MTABLE__BLOCK_SIZE));
+            CliStrings.format(CREATE_MTABLE__IMMUTABLE_TYPE_FOR, CREATE_MTABLE__BLOCK_SIZE));
 
     assertCreateTableSuccess(IMMUTABLE, inputs);
   }
@@ -534,7 +535,7 @@ public class MTableCommandsCreateJUnitTest {
    */
   @Test
   public void testDiskStore()
-      throws InvocationTargetException, IllegalAccessException, GfJsonException {
+          throws InvocationTargetException, IllegalAccessException, GfJsonException {
     final String dsName = "disk_store_abc";
     Map<String, Object> inputs = new HashMap<String, Object>(2) {
       {
@@ -567,12 +568,38 @@ public class MTableCommandsCreateJUnitTest {
     CliUtil.executeFunction(new DestroyDiskStoreFunction(), new Object[] {dsName}, dm);
   }
 
+
+  /**
+   * Test for disk store attributes
+   */
+  @Test
+  public void testDiskStoreWithDiskAttributes() {
+    final String dsName = "disk_store_abc";
+    DistributedMember dm = cache.getDistributedSystem().getDistributedMember();
+    DiskStoreAttributes dsa = new DiskStoreAttributes();
+    dsa.enableDeltaPersistence = true;
+    dsa.queueSize = 99;
+    dsa.autoCompact = false;
+    ResultCollector<?, ?> resultCollector =
+            CliUtil.executeFunction(new CreateDiskStoreFunction(), new Object[] {dsName, dsa}, dm);
+    ArrayList resultList = ((ArrayList) resultCollector.getResult());
+    XmlEntity xmlEntity = ((CliFunctionResult) resultList.get(0)).getXmlEntity();
+    System.out.println(xmlEntity.getXmlDefinition());
+    assertTrue(xmlEntity.getXmlDefinition().contains("enable-delta-persistence=\"true\""));
+    assertTrue(xmlEntity.getXmlDefinition().contains("queue-size=\"99\""));
+
+    resultCollector = CliUtil.executeFunction(new DescribeDiskStoreFunction(), dsName, dm);
+    DiskStoreDetails diskStoreDetails =
+            (DiskStoreDetails) ((ArrayList) resultCollector.getResult()).get(0);
+    assertTrue(diskStoreDetails.getEnableDeltaPersistence());
+  }
+
   /**
    * Test for local-max-memory and total-max-memory
    */
   @Test
   public void testTotalAndLocalMaxMemory()
-      throws InvocationTargetException, IllegalAccessException, GfJsonException {
+          throws InvocationTargetException, IllegalAccessException, GfJsonException {
     TableType[] tableTypesEnum = {ORDERED_VERSIONED, UNORDERED, IMMUTABLE};
     for (int i = 0; i < tableTypesEnum.length; i++) {
       /* Set local max memory */
@@ -612,12 +639,12 @@ public class MTableCommandsCreateJUnitTest {
    * @throws GfJsonException
    */
   private void assertProperty(final String name, final String expectedValue)
-      throws GfJsonException {
+          throws GfJsonException {
     assertProperty(name, expectedValue, true);
   }
 
   private void assertProperty(final String name, final String expectedValue, boolean deleteTable)
-      throws GfJsonException {
+          throws GfJsonException {
     CommandResult result = (CommandResult) COMMANDS.describeMtable(TABLE_NAME);
     assertEquals(Result.Status.OK, result.getStatus());
 
@@ -626,7 +653,7 @@ public class MTableCommandsCreateJUnitTest {
     }
 
     GfJsonObject content = result.getContent().getJSONObject("__sections__-0")
-        .getJSONObject("__sections__-0").getJSONObject("__tables__-0").getJSONObject("content");
+            .getJSONObject("__sections__-0").getJSONObject("__tables__-0").getJSONObject("content");
     GfJsonArray names = content.getJSONArray("Name");
     GfJsonArray values = content.getJSONArray("Value");
 

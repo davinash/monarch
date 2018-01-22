@@ -32,6 +32,8 @@ public class FTableDescriptorHelper {
       }
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
     }
+    tableDescriptor.setRedundantCopies(1);
+    tableDescriptor.setTotalNumOfSplits(7);
     return tableDescriptor;
   }
 
@@ -54,7 +56,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(PartitionResolver partitionResolver,
-      MEvictionPolicy mevictionPolicy) {
+                                                     MEvictionPolicy mevictionPolicy) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -75,7 +77,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(byte[] partitioningColumn,
-      MEvictionPolicy mevictionPolicy) {
+                                                     MEvictionPolicy mevictionPolicy) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -86,7 +88,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(byte[] partitioningColumn,
-      PartitionResolver partitionResolver) {
+                                                     PartitionResolver partitionResolver) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -97,7 +99,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(byte[] partitioningColumn,
-      PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy) {
+                                                     PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -117,7 +119,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns,
-      MEvictionPolicy mevictionPolicy) {
+                                                     MEvictionPolicy mevictionPolicy) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -127,7 +129,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns,
-      PartitionResolver partitionResolver) {
+                                                     PartitionResolver partitionResolver) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -137,7 +139,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns,
-      PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy) {
+                                                     PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -157,7 +159,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, byte[] partitioningColumn,
-      MEvictionPolicy mevictionPolicy) {
+                                                     MEvictionPolicy mevictionPolicy) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -168,7 +170,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, byte[] partitioningColumn,
-      PartitionResolver partitionResolver) {
+                                                     PartitionResolver partitionResolver) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -179,7 +181,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, byte[] partitioningColumn,
-      PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy) {
+                                                     PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -199,7 +201,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      MEvictionPolicy mevictionPolicy) {
+                                                     MEvictionPolicy mevictionPolicy) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -209,7 +211,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      PartitionResolver partitionResolver) {
+                                                     PartitionResolver partitionResolver) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -219,7 +221,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy) {
+                                                     PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -230,7 +232,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      byte[] partitioningColumn, MEvictionPolicy mevictionPolicy) {
+                                                     byte[] partitioningColumn, MEvictionPolicy mevictionPolicy) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -241,7 +243,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      byte[] partitioningColumn) {
+                                                     byte[] partitioningColumn) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -251,7 +253,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      byte[] partitioningColumn, PartitionResolver partitionResolver) {
+                                                     byte[] partitioningColumn, PartitionResolver partitionResolver) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -262,8 +264,8 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      byte[] partitioningColumn, PartitionResolver partitionResolver,
-      MEvictionPolicy mevictionPolicy) {
+                                                     byte[] partitioningColumn, PartitionResolver partitionResolver,
+                                                     MEvictionPolicy mevictionPolicy) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -284,7 +286,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(MEvictionPolicy mevictionPolicy,
-      String recoveryDiskStore) {
+                                                     String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -295,7 +297,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(PartitionResolver partitionResolver,
-      String recoveryDiskStore) {
+                                                     String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -306,7 +308,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(PartitionResolver partitionResolver,
-      MEvictionPolicy mevictionPolicy, String recoveryDiskStore) {
+                                                     MEvictionPolicy mevictionPolicy, String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -319,7 +321,7 @@ public class FTableDescriptorHelper {
 
 
   public static FTableDescriptor getFTableDescriptor(byte[] partitioningColumn,
-      String recoveryDiskStore) {
+                                                     String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -330,7 +332,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(byte[] partitioningColumn,
-      MEvictionPolicy mevictionPolicy, String recoveryDiskStore) {
+                                                     MEvictionPolicy mevictionPolicy, String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -342,7 +344,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(byte[] partitioningColumn,
-      PartitionResolver partitionResolver, String recoveryDiskStore) {
+                                                     PartitionResolver partitionResolver, String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -354,8 +356,8 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(byte[] partitioningColumn,
-      PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy,
-      String recoveryDiskStore) {
+                                                     PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy,
+                                                     String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -377,7 +379,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns,
-      MEvictionPolicy mevictionPolicy, String recoveryDiskStore) {
+                                                     MEvictionPolicy mevictionPolicy, String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -388,7 +390,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns,
-      PartitionResolver partitionResolver, String recoveryDiskStore) {
+                                                     PartitionResolver partitionResolver, String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -399,8 +401,8 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns,
-      PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy,
-      String recoveryDiskStore) {
+                                                     PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy,
+                                                     String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -412,7 +414,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, byte[] partitioningColumn,
-      String recoveryDiskStore) {
+                                                     String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -423,7 +425,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, byte[] partitioningColumn,
-      MEvictionPolicy mevictionPolicy, String recoveryDiskStore) {
+                                                     MEvictionPolicy mevictionPolicy, String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -435,7 +437,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, byte[] partitioningColumn,
-      PartitionResolver partitionResolver, String recoveryDiskStore) {
+                                                     PartitionResolver partitionResolver, String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -447,8 +449,8 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, byte[] partitioningColumn,
-      PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy,
-      String recoveryDiskStore) {
+                                                     PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy,
+                                                     String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -461,7 +463,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      String recoveryDiskStore) {
+                                                     String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -471,7 +473,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      MEvictionPolicy mevictionPolicy, String recoveryDiskStore) {
+                                                     MEvictionPolicy mevictionPolicy, String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -482,7 +484,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      PartitionResolver partitionResolver, String recoveryDiskStore) {
+                                                     PartitionResolver partitionResolver, String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -493,8 +495,8 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy,
-      String recoveryDiskStore) {
+                                                     PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy,
+                                                     String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -506,7 +508,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      byte[] partitioningColumn, MEvictionPolicy mevictionPolicy, String recoveryDiskStore) {
+                                                     byte[] partitioningColumn, MEvictionPolicy mevictionPolicy, String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -518,7 +520,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      byte[] partitioningColumn, String recoveryDiskStore) {
+                                                     byte[] partitioningColumn, String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -529,7 +531,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      byte[] partitioningColumn, PartitionResolver partitionResolver, String recoveryDiskStore) {
+                                                     byte[] partitioningColumn, PartitionResolver partitionResolver, String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -541,8 +543,8 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      byte[] partitioningColumn, PartitionResolver partitionResolver,
-      MEvictionPolicy mevictionPolicy, String recoveryDiskStore) {
+                                                     byte[] partitioningColumn, PartitionResolver partitionResolver,
+                                                     MEvictionPolicy mevictionPolicy, String recoveryDiskStore) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -556,7 +558,7 @@ public class FTableDescriptorHelper {
 
 
   public static FTableDescriptor getFTableDescriptor(MEvictionPolicy mevictionPolicy,
-      int numCopies) {
+                                                     int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -567,7 +569,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(PartitionResolver partitionResolver,
-      int numCopies) {
+                                                     int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -578,7 +580,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(PartitionResolver partitionResolver,
-      MEvictionPolicy mevictionPolicy, int numCopies) {
+                                                     MEvictionPolicy mevictionPolicy, int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -601,7 +603,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(byte[] partitioningColumn,
-      MEvictionPolicy mevictionPolicy, int numCopies) {
+                                                     MEvictionPolicy mevictionPolicy, int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -613,7 +615,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(byte[] partitioningColumn,
-      PartitionResolver partitionResolver, int numCopies) {
+                                                     PartitionResolver partitionResolver, int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -625,7 +627,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(byte[] partitioningColumn,
-      PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy, int numCopies) {
+                                                     PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy, int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -647,7 +649,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns,
-      MEvictionPolicy mevictionPolicy, int numCopies) {
+                                                     MEvictionPolicy mevictionPolicy, int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -658,7 +660,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns,
-      PartitionResolver partitionResolver, int numCopies) {
+                                                     PartitionResolver partitionResolver, int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -669,7 +671,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns,
-      PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy, int numCopies) {
+                                                     PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy, int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -681,7 +683,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, byte[] partitioningColumn,
-      int numCopies) {
+                                                     int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -692,7 +694,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, byte[] partitioningColumn,
-      MEvictionPolicy mevictionPolicy, int numCopies) {
+                                                     MEvictionPolicy mevictionPolicy, int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -704,7 +706,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, byte[] partitioningColumn,
-      PartitionResolver partitionResolver, int numCopies) {
+                                                     PartitionResolver partitionResolver, int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -716,7 +718,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, byte[] partitioningColumn,
-      PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy, int numCopies) {
+                                                     PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy, int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -729,7 +731,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      int numCopies) {
+                                                     int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -739,7 +741,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      MEvictionPolicy mevictionPolicy, int numCopies) {
+                                                     MEvictionPolicy mevictionPolicy, int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -750,7 +752,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      PartitionResolver partitionResolver, int numCopies) {
+                                                     PartitionResolver partitionResolver, int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -761,7 +763,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy, int numCopies) {
+                                                     PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy, int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -773,7 +775,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      byte[] partitioningColumn, MEvictionPolicy mevictionPolicy, int numCopies) {
+                                                     byte[] partitioningColumn, MEvictionPolicy mevictionPolicy, int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -785,7 +787,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      byte[] partitioningColumn, int numCopies) {
+                                                     byte[] partitioningColumn, int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -796,7 +798,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      byte[] partitioningColumn, PartitionResolver partitionResolver, int numCopies) {
+                                                     byte[] partitioningColumn, PartitionResolver partitionResolver, int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -808,8 +810,8 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      byte[] partitioningColumn, PartitionResolver partitionResolver,
-      MEvictionPolicy mevictionPolicy, int numCopies) {
+                                                     byte[] partitioningColumn, PartitionResolver partitionResolver,
+                                                     MEvictionPolicy mevictionPolicy, int numCopies) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -823,7 +825,7 @@ public class FTableDescriptorHelper {
 
 
   public static FTableDescriptor getFTableDescriptor(MEvictionPolicy mevictionPolicy, int numCopies,
-      int numSplits) {
+                                                     int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -835,7 +837,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(PartitionResolver partitionResolver,
-      int numCopies, int numSplits) {
+                                                     int numCopies, int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -847,7 +849,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(PartitionResolver partitionResolver,
-      MEvictionPolicy mevictionPolicy, int numCopies, int numSplits) {
+                                                     MEvictionPolicy mevictionPolicy, int numCopies, int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -861,7 +863,7 @@ public class FTableDescriptorHelper {
 
 
   public static FTableDescriptor getFTableDescriptor(byte[] partitioningColumn, int numCopies,
-      int numSplits) {
+                                                     int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -873,7 +875,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(byte[] partitioningColumn,
-      MEvictionPolicy mevictionPolicy, int numCopies, int numSplits) {
+                                                     MEvictionPolicy mevictionPolicy, int numCopies, int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -886,7 +888,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(byte[] partitioningColumn,
-      PartitionResolver partitionResolver, int numCopies, int numSplits) {
+                                                     PartitionResolver partitionResolver, int numCopies, int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -899,8 +901,8 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(byte[] partitioningColumn,
-      PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy, int numCopies,
-      int numSplits) {
+                                                     PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy, int numCopies,
+                                                     int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -924,7 +926,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns,
-      MEvictionPolicy mevictionPolicy, int numCopies, int numSplits) {
+                                                     MEvictionPolicy mevictionPolicy, int numCopies, int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -936,7 +938,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns,
-      PartitionResolver partitionResolver, int numCopies, int numSplits) {
+                                                     PartitionResolver partitionResolver, int numCopies, int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -948,8 +950,8 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns,
-      PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy, int numCopies,
-      int numSplits) {
+                                                     PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy, int numCopies,
+                                                     int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -962,7 +964,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, byte[] partitioningColumn,
-      int numCopies, int numSplits) {
+                                                     int numCopies, int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -974,7 +976,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, byte[] partitioningColumn,
-      MEvictionPolicy mevictionPolicy, int numCopies, int numSplits) {
+                                                     MEvictionPolicy mevictionPolicy, int numCopies, int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -987,7 +989,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, byte[] partitioningColumn,
-      PartitionResolver partitionResolver, int numCopies, int numSplits) {
+                                                     PartitionResolver partitionResolver, int numCopies, int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -1000,8 +1002,8 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, byte[] partitioningColumn,
-      PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy, int numCopies,
-      int numSplits) {
+                                                     PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy, int numCopies,
+                                                     int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -1015,7 +1017,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      int numCopies, int numSplits) {
+                                                     int numCopies, int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -1025,7 +1027,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      MEvictionPolicy mevictionPolicy, int numCopies, int numSplits) {
+                                                     MEvictionPolicy mevictionPolicy, int numCopies, int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -1037,7 +1039,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      PartitionResolver partitionResolver, int numCopies, int numSplits) {
+                                                     PartitionResolver partitionResolver, int numCopies, int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -1049,8 +1051,8 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy, int numCopies,
-      int numSplits) {
+                                                     PartitionResolver partitionResolver, MEvictionPolicy mevictionPolicy, int numCopies,
+                                                     int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -1062,7 +1064,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      byte[] partitioningColumn, MEvictionPolicy mevictionPolicy, int numCopies, int numSplits) {
+                                                     byte[] partitioningColumn, MEvictionPolicy mevictionPolicy, int numCopies, int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -1075,7 +1077,7 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      byte[] partitioningColumn, int numCopies, int numSplits) {
+                                                     byte[] partitioningColumn, int numCopies, int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -1087,8 +1089,8 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      byte[] partitioningColumn, PartitionResolver partitionResolver, int numCopies,
-      int numSplits) {
+                                                     byte[] partitioningColumn, PartitionResolver partitionResolver, int numCopies,
+                                                     int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);
@@ -1101,8 +1103,8 @@ public class FTableDescriptorHelper {
   }
 
   public static FTableDescriptor getFTableDescriptor(int numColumns, String colPrefix,
-      byte[] partitioningColumn, PartitionResolver partitionResolver,
-      MEvictionPolicy mevictionPolicy, int numCopies, int numSplits) {
+                                                     byte[] partitioningColumn, PartitionResolver partitionResolver,
+                                                     MEvictionPolicy mevictionPolicy, int numCopies, int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < numColumns; i++) {
       tableDescriptor.addColumn(colPrefix + i);

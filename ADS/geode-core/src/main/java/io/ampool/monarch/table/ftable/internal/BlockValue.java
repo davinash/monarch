@@ -28,6 +28,7 @@ import io.ampool.monarch.table.Row;
 import io.ampool.monarch.table.TableDescriptor;
 import io.ampool.monarch.table.filter.Filter;
 import io.ampool.monarch.table.ftable.FTableDescriptor;
+import io.ampool.monarch.table.ftable.PersistenceDelta;
 import io.ampool.monarch.table.ftable.Record;
 import io.ampool.monarch.table.internal.ByteArrayKey;
 import io.ampool.monarch.table.internal.Encoding;
@@ -47,7 +48,7 @@ import org.apache.geode.internal.Version;
 import org.apache.geode.internal.cache.EntryEventImpl;
 import org.apache.geode.internal.cache.lru.Sizeable;
 
-public class BlockValue implements DataSerializableFixedID, Delta, /*PersistenceDelta,*/ Sizeable {
+public class BlockValue implements DataSerializableFixedID, Delta, PersistenceDelta, Sizeable {
 
   AtomicInteger currentIndex;
   private int valueSize;
@@ -495,44 +496,44 @@ public class BlockValue implements DataSerializableFixedID, Delta, /*Persistence
     fromDeltaInternal(in);
   }
 
-//  @Override
-//  public synchronized boolean hasPersistenceDelta() {
-//    if (this.lastPersistenceDelta == 0) {
-//      return false;
-//    }
-//    if (this.records == null || records.size() < lastPersistenceDelta) {
-//      return false;
-//    }
-//    return true;
-//  }
-//
-//  public int getLastPersistenceDelta() {
-//    return lastPersistenceDelta;
-//  }
-//
-//  @Override
-//  public synchronized void toPersistenceDelta(DataOutput out) {
-//    try {
-//      toDeltaInternal(out, this.lastPersistenceDelta);
-//      this.lastPersistenceDelta = size();
-//    } catch (Exception ex) {
-//      throw new RuntimeException(ex);
-//    }
-//  }
-//
-//  @Override
-//  public synchronized void fromPersistenceDelta(DataInput in) {
-//    try {
-//      fromDeltaInternal(in);
-//    } catch (Exception ex) {
-//      throw new RuntimeException(ex);
-//    }
-//  }
-//
-//  @Override
-//  public synchronized void resetPersistenceDelta() {
-//    this.lastPersistenceDelta = size();
-//  }
+  @Override
+  public synchronized boolean hasPersistenceDelta() {
+    if (this.lastPersistenceDelta == 0) {
+      return false;
+    }
+    if (this.records == null || records.size() < lastPersistenceDelta) {
+      return false;
+    }
+    return true;
+  }
+
+  public int getLastPersistenceDelta() {
+    return lastPersistenceDelta;
+  }
+
+  @Override
+  public synchronized void toPersistenceDelta(DataOutput out) {
+    try {
+      toDeltaInternal(out, this.lastPersistenceDelta);
+      this.lastPersistenceDelta = size();
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
+  }
+
+  @Override
+  public synchronized void fromPersistenceDelta(DataInput in) {
+    try {
+      fromDeltaInternal(in);
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
+  }
+
+  @Override
+  public synchronized void resetPersistenceDelta() {
+    this.lastPersistenceDelta = size();
+  }
 
   @Override
   public String toString() {

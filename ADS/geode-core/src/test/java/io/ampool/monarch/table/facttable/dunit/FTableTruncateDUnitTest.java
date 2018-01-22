@@ -49,6 +49,7 @@ import io.ampool.monarch.table.ftable.FTable;
 import io.ampool.monarch.table.ftable.FTableDescriptor;
 import io.ampool.monarch.table.ftable.Record;
 import io.ampool.monarch.table.ftable.internal.BlockValue;
+import io.ampool.monarch.table.internal.AbstractTableDescriptor;
 import io.ampool.monarch.table.internal.AdminImpl;
 import io.ampool.monarch.table.internal.IMKey;
 import io.ampool.monarch.table.region.map.RowTupleConcurrentSkipListMap;
@@ -97,6 +98,11 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
   @Override
   public void tearDown2() throws Exception {
+    final Admin admin = MClientCacheFactory.getAnyInstance().getAdmin();
+    final String tableName = getMethodName();
+    if (admin.existsFTable(tableName)) {
+      admin.deleteFTable(tableName);
+    }
     closeMClientCache();
     closeMClientCache(client1);
     allServers.forEach((VM) -> VM.invoke(new SerializableCallable() {
@@ -113,7 +119,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
   @Parameterized.Parameter
   public static FTableDescriptor.BlockFormat blockFormat;
 
-  @Parameterized.Parameters(name = "BlockFormat: {0}")
+  @Parameterized.Parameters(name = "BlockFormat__{0}")
   public static Collection<FTableDescriptor.BlockFormat> data() {
     return Arrays.asList(FTableDescriptor.BlockFormat.values());
   }
@@ -125,18 +131,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
    * @return the test method name
    */
   public static String getMethodName() {
-    final String methodName = getTestMethodName();
-    final int index = methodName.indexOf('[');
-    return index > 0 ? methodName.substring(0, index) : methodName;
-  }
-
-  @After
-  public void cleanUpMethod() {
-    final Admin admin = MClientCacheFactory.getAnyInstance().getAdmin();
-    final String tableName = getMethodName();
-    if (admin.existsFTable(tableName)) {
-      admin.deleteFTable(tableName);
-    }
+    return getTestMethodName().replaceAll("\\W+", "_");
   }
 
   protected MTable createMTable(MTableType tableType, String tableName) {
@@ -168,7 +163,8 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
   private FTable createFtable(String tableName) {
     FTableDescriptor fd = new FTableDescriptor();
-    fd.setBlockSize(1000);
+    fd.setBlockSize(13);
+    fd.setTotalNumOfSplits(11);
 
     for (int i = 0; i < NUM_COLS; i++) {
       fd.addColumn("COL_" + i);
@@ -228,7 +224,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
             BucketRegion br = pr.getDataStore().getLocalBucketById(i);
             if (br != null) {
               RowTupleConcurrentSkipListMap internalMap =
-                  (RowTupleConcurrentSkipListMap) br.getRegionMap().getInternalMap();
+                      (RowTupleConcurrentSkipListMap) br.getRegionMap().getInternalMap();
               Map realMap = internalMap.getInternalMap();
               Iterator<Map.Entry<IMKey, RegionEntry>> itr = realMap.entrySet().iterator();
               while (itr.hasNext()) {
@@ -286,10 +282,10 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     // truncate the table
     Filter filter = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).truncateFTable(tableName,
-          filter);
+              filter);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -332,10 +328,10 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     // truncate the table
     Filter filter = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).truncateFTable(tableName,
-          filter);
+              filter);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -390,9 +386,9 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     // truncate the table
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start);
+            CompareOp.GREATER, start);
 
     FilterList filterList = new FilterList();
     filterList.addFilter(filter1);
@@ -401,7 +397,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).truncateFTable(tableName,
-          filterList);
+              filterList);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -456,9 +452,9 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     // truncate the table
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start);
+            CompareOp.GREATER, start);
 
     FilterList filterList = new FilterList();
     filterList.addFilter(filter1);
@@ -467,7 +463,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).truncateFTable(tableName,
-          filterList);
+              filterList);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -483,7 +479,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
    */
   @Test
   public void testTruncatePartialBlockMultiRangeWithInsertionTimeFilter()
-      throws InterruptedException {
+          throws InterruptedException {
     String tableName = getMethodName();
     Exception e = null;
 
@@ -548,14 +544,14 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     // truncate the table
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start);
+            CompareOp.GREATER, start);
 
     Filter filter3 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end1);
+            CompareOp.LESS, end1);
     Filter filter4 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start1);
+            CompareOp.GREATER, start1);
 
     FilterList filterList1 = new FilterList();
     FilterList filterList2 = new FilterList();
@@ -575,7 +571,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).truncateFTable(tableName,
-          filterList);
+              filterList);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -626,9 +622,9 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     // truncate the table
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start);
+            CompareOp.GREATER, start);
 
     FilterList filterList = new FilterList();
     filterList.addFilter(filter1);
@@ -638,7 +634,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).truncateFTable(tableName,
-          filterList);
+              filterList);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -647,7 +643,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     verifyRecordCountOnClient(tableName, 399);
     try {
-      Thread.sleep(10000);
+      Thread.sleep(500);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
@@ -705,9 +701,9 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     // truncate the table
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start);
+            CompareOp.GREATER, start);
 
     FilterList filterList = new FilterList();
     filterList.addFilter(filter1);
@@ -715,11 +711,11 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
     filterList.setOperator(FilterList.Operator.MUST_PASS_ALL);
     verifyRecordCountOnServers(tableName, 2000);
 
-    Thread.sleep(1000l);
+    Thread.sleep(500);
 
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).truncateFTable(tableName,
-          filterList);
+              filterList);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -728,7 +724,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     verifyRecordCountOnClient(tableName, 1399);
     try {
-      Thread.sleep(20000);
+      Thread.sleep(500);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
@@ -742,7 +738,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
    */
   @Test
   public void testTruncatePartialBlockEndMultiNodeMultiBlocksInSingleBucket()
-      throws InterruptedException {
+          throws InterruptedException {
     String tableName = getMethodName();
     Exception e = null;
 
@@ -784,9 +780,9 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     // truncate the table
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start);
+            CompareOp.GREATER, start);
 
     FilterList filterList = new FilterList();
     filterList.addFilter(filter1);
@@ -795,14 +791,14 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnServers(tableName, 2000);
 
     try {
-      Thread.sleep(20000);
+      Thread.sleep(500);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
 
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).truncateFTable(tableName,
-          filterList);
+              filterList);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -811,7 +807,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     verifyRecordCountOnClient(tableName, 1399);
     try {
-      Thread.sleep(20000);
+      Thread.sleep(500);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
@@ -832,7 +828,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
     Exception e = null;
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).truncateFTable(table.getName(),
-          null);
+              null);
     } catch (Exception e1) {
       e = e1;
     }
@@ -844,7 +840,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
     Exception une = null;
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin())
-          .truncateFTable(unordered.getName(), null);
+              .truncateFTable(unordered.getName(), null);
     } catch (Exception e1) {
       une = e1;
     }
@@ -856,7 +852,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
     Exception fe = null;
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).truncateMTable(ftable.getName(),
-          null, false);
+              null, false);
     } catch (Exception e1) {
       fe = e1;
     }
@@ -866,7 +862,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
     Exception fe1 = null;
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin())
-          .truncateMTable(ftable.getName());
+              .truncateMTable(ftable.getName());
     } catch (Exception e1) {
       fe1 = e1;
     }
@@ -876,7 +872,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).deleteMTable(table.getName());
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin())
-          .deleteMTable(unordered.getName());
+              .deleteMTable(unordered.getName());
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).deleteFTable(ftable.getName());
     } catch (Exception e1) {
       e.printStackTrace();
@@ -933,9 +929,9 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     // truncate the table
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start);
+            CompareOp.GREATER, start);
 
     FilterList filterList = new FilterList();
     filterList.addFilter(filter1);
@@ -944,14 +940,14 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnServers(tableName, 2000);
 
     try {
-      Thread.sleep(20000);
+      Thread.sleep(500);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
 
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).truncateFTable(tableName,
-          filterList);
+              filterList);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -960,7 +956,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     verifyRecordCountOnClient(tableName, 1399);
     try {
-      Thread.sleep(20000);
+      Thread.sleep(500);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
@@ -974,10 +970,18 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
     for (VM vm : allServers) {
       asyncStartServerOn(vm, DUnitLauncher.getLocatorString());
     }
-    Thread.sleep(5000l);
+    Thread.sleep(5_000);
 
-    verifyRecordCountOnClient(tableName, 1399);
-    verifyRecordCountOnServers(tableName, 1399);
+    FTableDescriptor ftd =
+            MClientCacheFactory.getAnyInstance().getFTable(tableName).getTableDescriptor();
+
+    if (((AbstractTableDescriptor) ftd).isDiskPersistenceEnabled()) {
+      verifyRecordCountOnClient(tableName, 1399);
+      verifyRecordCountOnServers(tableName, 1399);
+    }
+
+
+
   }
 
   /**
@@ -1024,7 +1028,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     verifyRecordCountOnServers(tableName, 2000);
     try {
-      Thread.sleep(20000);
+      Thread.sleep(500);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
@@ -1039,7 +1043,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     verifyRecordCountOnClient(tableName, 1999);
     try {
-      Thread.sleep(20000);
+      Thread.sleep(500);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
@@ -1097,9 +1101,9 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     // truncate the table
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start);
+            CompareOp.GREATER, start);
 
     FilterList filterList = new FilterList();
     filterList.addFilter(filter1);
@@ -1107,7 +1111,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
     filterList.setOperator(FilterList.Operator.MUST_PASS_ALL);
     verifyRecordCountOnServers(tableName, 2000);
 
-    Thread.sleep(1000l);
+    Thread.sleep(500);
 
     try {
       MClientCacheFactory.getAnyInstance().getAdmin().truncateFTable(tableName, filterList);
@@ -1118,9 +1122,8 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
     assertNull(e);
 
     verifyRecordCountOnClient(tableName, 1399);
-    Thread.sleep(1000l);
+    Thread.sleep(500);
 
-    // TODO: check
     verifyRecordCountOnServers(tableName, 1399);
     verifyRecordCountOnClient(tableName, 1399);
   }
@@ -1129,9 +1132,9 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
    * Most of the above tests put data in a single bucket(same records hash) this will verify the
    * functionality on multi bucket case with restart.
    */
-  // TODO @Test
+  @Test
   public void testTruncatePartialBlockMultiNodeMultiBucketWithRestart()
-      throws InterruptedException {
+          throws InterruptedException {
     String tableName = getMethodName();
     Exception e = null;
 
@@ -1176,9 +1179,9 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
 
     // truncate the table
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start);
+            CompareOp.GREATER, start);
 
     FilterList filterList = new FilterList();
     filterList.addFilter(filter1);
@@ -1186,7 +1189,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
     filterList.setOperator(FilterList.Operator.MUST_PASS_ALL);
     verifyRecordCountOnServers(tableName, 2000);
 
-    Thread.sleep(1000l);
+    Thread.sleep(500);
 
     try {
       MClientCacheFactory.getAnyInstance().getAdmin().truncateFTable(tableName, filterList);
@@ -1197,23 +1200,14 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
     assertNull(e);
 
     verifyRecordCountOnClient(tableName, 1399);
-    Thread.sleep(1000l);
-    // TODO: check
-    // verifyRecordCountOnServers(tableName, 1399);
+    Thread.sleep(500);
+    verifyRecordCountOnServers(tableName, 1399);
     verifyRecordCountOnClient(tableName, 1399);
 
-    for (VM vm : allServers) {
-      stopServerOn(vm);
-    }
+    restartServers(allServers);
+    Thread.sleep(5_000);
 
-    Collections.reverse(allServers);
-    for (VM vm : allServers) {
-      startServerOn(vm, DUnitLauncher.getLocatorString());
-    }
-    Collections.reverse(allServers);
-
-    // TODO: check
-    // verifyRecordCountOnServers(tableName, 1399);
+    verifyRecordCountOnServers(tableName, 1399);
     verifyRecordCountOnClient(tableName, 1399);
   }
 
@@ -1221,12 +1215,12 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
   public void testTruncateWithColumnValueFilter2() {
     String tableName = getMethodName();
     Pair<String, BasicTypes>[] schema =
-        new Pair[] {new Pair("NAME", BasicTypes.STRING), new Pair("ID", BasicTypes.STRING),
-            new Pair("AGE", BasicTypes.INT), new Pair("SALARY", BasicTypes.LONG),
-            new Pair("DEPT", BasicTypes.STRING), new Pair("DOJ", BasicTypes.DATE),};
+            new Pair[] {new Pair("NAME", BasicTypes.STRING), new Pair("ID", BasicTypes.STRING),
+                    new Pair("AGE", BasicTypes.INT), new Pair("SALARY", BasicTypes.LONG),
+                    new Pair("DEPT", BasicTypes.STRING), new Pair("DOJ", BasicTypes.DATE),};
     Long startTimeStamp;
 
-    Integer blockSize = 10;
+    Integer blockSize = 13;
     Integer numBuckets = 4;
 
     Integer partitionColIdx = 1;
@@ -1275,10 +1269,10 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
   }
 
   public void scanRecordsAfterTS(Long startTimeStamp, Integer numBuckets, FTable fTable,
-      int expRecords) {
+                                 int expRecords) {
     Scan scan = new Scan();
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, startTimeStamp);
+            CompareOp.GREATER, startTimeStamp);
     scan.setFilter(filter1);
 
     Scanner scanner = fTable.getScanner(scan);
@@ -1294,7 +1288,7 @@ public class FTableTruncateDUnitTest extends MTableDUnitHelper {
   }
 
   public void appendRecords(Pair<String, BasicTypes>[] schema, Integer numBuckets,
-      Integer numOfEntries, Integer repeatDataLoop, FTable fTable) {
+                            Integer numOfEntries, Integer repeatDataLoop, FTable fTable) {
     int batchAppendSize = numOfEntries / 2;
 
     Record[] batchRecords = new Record[batchAppendSize];

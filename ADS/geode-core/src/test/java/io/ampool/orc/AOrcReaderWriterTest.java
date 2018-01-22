@@ -18,11 +18,15 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.lang.reflect.Array;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.sql.Date;
+import java.util.*;
 import java.util.function.BiFunction;
 
+import io.ampool.monarch.table.MColumnDescriptor;
+import io.ampool.monarch.table.Row;
 import io.ampool.monarch.table.Schema;
 import io.ampool.monarch.table.filter.Filter;
 import io.ampool.monarch.table.filter.FilterList;
@@ -30,9 +34,7 @@ import io.ampool.monarch.table.filter.SingleColumnValueFilter;
 import io.ampool.monarch.table.ftable.FTableDescriptor;
 import io.ampool.monarch.table.ftable.Record;
 import io.ampool.monarch.table.ftable.internal.BlockValue;
-import io.ampool.monarch.types.CompareOp;
-import io.ampool.monarch.types.DataTypeFactory;
-import io.ampool.monarch.types.StructType;
+import io.ampool.monarch.types.*;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.apache.commons.io.FileUtils;
@@ -66,7 +68,7 @@ import org.junit.runner.RunWith;
 @RunWith(JUnitParamsRunner.class)
 public class AOrcReaderWriterTest {
   private static final String schema =
-      "struct<f1:int,f2:bigint,f3:array<double>,f4:string,f5:binary>";
+          "struct<f1:int,f2:bigint,f3:array<double>,f4:string,f5:binary>";
   private static final SettableStructObjectInspector ROW_OI;
   private static final SettableStructObjectInspector ROW_OI_R;
 
@@ -95,21 +97,21 @@ public class AOrcReaderWriterTest {
   };
   private static final FTableDescriptor TD = new FTableDescriptor();
   private static final StructType aSchema = (StructType) DataTypeFactory
-      .getTypeFromString("struct<f1:INT,f2:LONG,f3:array<DOUBLE>,f4:STRING,f5:BINARY>");
+          .getTypeFromString("struct<f1:INT,f2:LONG,f3:array<DOUBLE>,f4:STRING,f5:BINARY>");
 
   static {
     final TypeInfo ti = TypeInfoUtils.getTypeInfoFromTypeString(schema);
     ROW_OI = (SettableStructObjectInspector) TypeInfoUtils
-        .getStandardJavaObjectInspectorFromTypeInfo(ti);
+            .getStandardJavaObjectInspectorFromTypeInfo(ti);
     ROW_OI_R = (SettableStructObjectInspector) OrcStruct.createObjectInspector(ti);
     for (int j = 0; j < SIZE; j++) {
       VALUES[j] = new Object[] {(j), ((j + 1) * 11L),
-          Arrays.asList((j * 100 + (0.1)), (j * 100 + (0.2)), (j * 100 + (0.3))), ("String_" + j),
-          (new byte[] {0, (byte) j})};
+              Arrays.asList((j * 100 + (0.1)), (j * 100 + (0.2)), (j * 100 + (0.3))), ("String_" + j),
+              (new byte[] {0, (byte) j})};
       VALUES_R[j] = new Object[] {new IntWritable(j), new LongWritable((j + 1) * 11L),
-          Arrays.asList(new DoubleWritable(j * 100 + (0.1)), new DoubleWritable(j * 100 + (0.2)),
-              new DoubleWritable(j * 100 + (0.3))),
-          new Text("String_" + j), new BytesWritable(new byte[] {0, (byte) j})};
+              Arrays.asList(new DoubleWritable(j * 100 + (0.1)), new DoubleWritable(j * 100 + (0.2)),
+                      new DoubleWritable(j * 100 + (0.3))),
+              new Text("String_" + j), new BytesWritable(new byte[] {0, (byte) j})};
     }
 
     TD.setSchema(new Schema(aSchema.getColumnNames(), aSchema.getColumnTypes()));
@@ -117,7 +119,7 @@ public class AOrcReaderWriterTest {
     /* Create ORC buffer with multiple row-index-strides */
     try {
       final OrcFile.WriterOptions wOpts = OrcFile.writerOptions(new Configuration())
-          .rowIndexStride(MAX_STRIDE_SIZE).inspector(ROW_OI);
+              .rowIndexStride(MAX_STRIDE_SIZE).inspector(ROW_OI);
       AWriter aWriter = OrcUtils.createWriter(wOpts);
       List<? extends StructField> fields = ROW_OI.getAllStructFieldRefs();
       List x = (List) ROW_OI.create();
@@ -167,14 +169,14 @@ public class AOrcReaderWriterTest {
       row = reader.next(row);
       for (int i = 0; i < fields.size(); i++) {
         assertEquals("Incorrect value: row= " + counter + ", column= " + i, VALUES_R[counter][i],
-            ROW_OI_R.getStructFieldData(row, fields.get(i)));
+                ROW_OI_R.getStructFieldData(row, fields.get(i)));
       }
       counter++;
     }
   }
 
   private ExprNodeDesc getExprNodeDesc(final TypeInfo colType, final String colName,
-      final Object value, final TypeInfo retType, final GenericUDF udf) {
+                                       final Object value, final TypeInfo retType, final GenericUDF udf) {
     ExprNodeDesc exprNodeDesc = new ExprNodeGenericFuncDesc(retType, udf, new ArrayList<>(2));
     exprNodeDesc.getChildren().add(new ExprNodeColumnDesc(colType, colName, colName, false));
     exprNodeDesc.getChildren().add(new ExprNodeConstantDesc(colType, value));
@@ -190,7 +192,7 @@ public class AOrcReaderWriterTest {
   @Test
   public void testWriteOrcToMemoryAndRead() throws IOException {
     final OrcFile.WriterOptions wOpts =
-        OrcFile.writerOptions(new Configuration()).inspector(ROW_OI);
+            OrcFile.writerOptions(new Configuration()).inspector(ROW_OI);
     final OrcFile.ReaderOptions rOpts = new OrcFile.ReaderOptions(new Configuration());
 
     AWriter aWriter = OrcUtils.createWriter(wOpts);
@@ -212,7 +214,7 @@ public class AOrcReaderWriterTest {
     file.deleteOnExit();
 
     final OrcFile.WriterOptions wOpts =
-        OrcFile.writerOptions(new Configuration()).inspector(ROW_OI);
+            OrcFile.writerOptions(new Configuration()).inspector(ROW_OI);
     final OrcFile.ReaderOptions rOpts = new OrcFile.ReaderOptions(new Configuration());
 
     final AWriter aWriter = OrcUtils.createWriter(wOpts);
@@ -236,7 +238,7 @@ public class AOrcReaderWriterTest {
     file.deleteOnExit();
 
     final OrcFile.WriterOptions wOpts =
-        OrcFile.writerOptions(new Configuration()).inspector(ROW_OI);
+            OrcFile.writerOptions(new Configuration()).inspector(ROW_OI);
     final OrcFile.ReaderOptions rOpts = new OrcFile.ReaderOptions(new Configuration());
 
     final Writer writer = OrcFile.createWriter(new Path(file.toString()), wOpts);
@@ -248,31 +250,31 @@ public class AOrcReaderWriterTest {
 
   public static Object[] dataWithPredicates() {
     return new Object[][] {{null, ALL_STRIDES_SIZE},
-        {new SingleColumnValueFilter("f1", CompareOp.LESS, 2400), 3 * MAX_STRIDE_SIZE},
-        {new SingleColumnValueFilter("f2", CompareOp.GREATER_OR_EQUAL, 14999),
-            1 * MAX_STRIDE_SIZE},
-        {new SingleColumnValueFilter("f2", CompareOp.GREATER_OR_EQUAL, 14999),
-            1 * MAX_STRIDE_SIZE},
-        {new SingleColumnValueFilter("f4", CompareOp.EQUAL, "String_22222"), 1 * MAX_STRIDE_SIZE},
-        {new SingleColumnValueFilter("f4", CompareOp.GREATER_OR_EQUAL, "String_22222"),
-            3 * MAX_STRIDE_SIZE},
-        {new SingleColumnValueFilter("f2", CompareOp.NOT_EQUAL, 11111), ALL_STRIDES_SIZE},
-        {new FilterList(FilterList.Operator.MUST_PASS_ALL)
-            .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS_OR_EQUAL, 2400)).addFilter(
-                new SingleColumnValueFilter("f2", CompareOp.GREATER_OR_EQUAL, 12500)),
-            1 * MAX_STRIDE_SIZE},
-        {new FilterList(FilterList.Operator.MUST_PASS_ALL)
-            .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS_OR_EQUAL, 5000))
-            .addFilter(new SingleColumnValueFilter("f2", CompareOp.GREATER_OR_EQUAL, 10000)),
-            ALL_STRIDES_SIZE},
-        {new FilterList(FilterList.Operator.MUST_PASS_ONE)
-            .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS_OR_EQUAL, 2400))
-            .addFilter(new SingleColumnValueFilter("f2", CompareOp.GREATER_OR_EQUAL, 12500)),
-            ALL_STRIDES_SIZE},
-        {new FilterList(FilterList.Operator.MUST_PASS_ONE)
-            .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS_OR_EQUAL, 1400))
-            .addFilter(new SingleColumnValueFilter("f2", CompareOp.GREATER_OR_EQUAL, 13500)),
-            4 * MAX_STRIDE_SIZE},};
+            {new SingleColumnValueFilter("f1", CompareOp.LESS, 2400), 3 * MAX_STRIDE_SIZE},
+            {new SingleColumnValueFilter("f2", CompareOp.GREATER_OR_EQUAL, 14999),
+                    1 * MAX_STRIDE_SIZE},
+            {new SingleColumnValueFilter("f2", CompareOp.GREATER_OR_EQUAL, 14999),
+                    1 * MAX_STRIDE_SIZE},
+            {new SingleColumnValueFilter("f4", CompareOp.EQUAL, "String_22222"), 1 * MAX_STRIDE_SIZE},
+            {new SingleColumnValueFilter("f4", CompareOp.GREATER_OR_EQUAL, "String_22222"),
+                    3 * MAX_STRIDE_SIZE},
+            {new SingleColumnValueFilter("f2", CompareOp.NOT_EQUAL, 11111), ALL_STRIDES_SIZE},
+            {new FilterList(FilterList.Operator.MUST_PASS_ALL)
+                    .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS_OR_EQUAL, 2400)).addFilter(
+                    new SingleColumnValueFilter("f2", CompareOp.GREATER_OR_EQUAL, 12500)),
+                    1 * MAX_STRIDE_SIZE},
+            {new FilterList(FilterList.Operator.MUST_PASS_ALL)
+                    .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS_OR_EQUAL, 5000))
+                    .addFilter(new SingleColumnValueFilter("f2", CompareOp.GREATER_OR_EQUAL, 10000)),
+                    ALL_STRIDES_SIZE},
+            {new FilterList(FilterList.Operator.MUST_PASS_ONE)
+                    .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS_OR_EQUAL, 2400))
+                    .addFilter(new SingleColumnValueFilter("f2", CompareOp.GREATER_OR_EQUAL, 12500)),
+                    ALL_STRIDES_SIZE},
+            {new FilterList(FilterList.Operator.MUST_PASS_ONE)
+                    .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS_OR_EQUAL, 1400))
+                    .addFilter(new SingleColumnValueFilter("f2", CompareOp.GREATER_OR_EQUAL, 13500)),
+                    4 * MAX_STRIDE_SIZE},};
   }
 
   /**
@@ -292,7 +294,7 @@ public class AOrcReaderWriterTest {
     final OrcUtils.OrcOptions orcOptions = new OrcUtils.OrcOptions(f, TD);
 
     final RecordReader rows = OrcUtils.createReader(ORC_BYTES_WITH_MULTIPLE_STRIDES, rOpts)
-        .rowsOptions(orcOptions.getOptions());
+            .rowsOptions(orcOptions.getOptions());
     int count = 0;
     Object row = null;
     while (rows.hasNext()) {
@@ -307,32 +309,31 @@ public class AOrcReaderWriterTest {
   private static final FTableDescriptor BLOCK_VALUE_TD = new FTableDescriptor();
   static {
     BLOCK_VALUE_TD.setSchema(Schema.fromString(
-        "struct<f1:INT,f2:LONG,f3:STRING,f4:FLOAT,f5:BOOLEAN,__INSERTION_TIMESTAMP__:LONG>"));
+            "struct<f1:INT,f2:LONG,f3:STRING,f4:FLOAT,f5:BOOLEAN,__INSERTION_TIMESTAMP__:LONG>"));
     final Object[] VALUES_1 = new Object[] {11, 1111L, "String_1", 11.11f, false, 0L};
     final Record record1 = new Record();
     for (int i = 0; i < BLOCK_VALUE_TD.getNumOfColumns(); i++) {
       record1.add(BLOCK_VALUE_TD.getColumnDescriptorByIndex(i).getColumnName(), VALUES_1[i]);
     }
     BLOCK_VALUE.addAndUpdateStats(record1, BLOCK_VALUE_TD);
-    System.out.println(BLOCK_VALUE.getColumnStatistics().toString());
   }
 
   public static Object[] dataIsBlockNeeded() {
     return new Object[][] { ///
-        {null, true}, ////
-        {new SingleColumnValueFilter("f1", CompareOp.EQUAL, 11), true},
-        {new SingleColumnValueFilter("f1", CompareOp.NOT_EQUAL, 11), false},
-        {new SingleColumnValueFilter("f1", CompareOp.LESS, 1), false},
-        {new SingleColumnValueFilter("f2", CompareOp.GREATER_OR_EQUAL, 1111L), true},
-        {new SingleColumnValueFilter("f2", CompareOp.LESS, 1111L), false},
-        {new SingleColumnValueFilter("f3", CompareOp.EQUAL, "String_1"), true},
-        {new SingleColumnValueFilter("f3", CompareOp.GREATER, "String_0"), true},
-        {new SingleColumnValueFilter("f3", CompareOp.GREATER, "String_2"), false},
-        {new SingleColumnValueFilter("f4", CompareOp.EQUAL, 11.11f), true},
-        {new SingleColumnValueFilter("f4", CompareOp.NOT_EQUAL, 11.11f), false},
-        {new SingleColumnValueFilter("f5", CompareOp.NOT_EQUAL, false), false},
-        {new SingleColumnValueFilter("f5", CompareOp.EQUAL, false), true},
-        {new SingleColumnValueFilter("f5", CompareOp.EQUAL, true), false}, ///
+            {null, true}, ////
+            {new SingleColumnValueFilter("f1", CompareOp.EQUAL, 11), true},
+            {new SingleColumnValueFilter("f1", CompareOp.NOT_EQUAL, 11), false},
+            {new SingleColumnValueFilter("f1", CompareOp.LESS, 1), false},
+            {new SingleColumnValueFilter("f2", CompareOp.GREATER_OR_EQUAL, 1111L), true},
+            {new SingleColumnValueFilter("f2", CompareOp.LESS, 1111L), false},
+            {new SingleColumnValueFilter("f3", CompareOp.EQUAL, "String_1"), true},
+            {new SingleColumnValueFilter("f3", CompareOp.GREATER, "String_0"), true},
+            {new SingleColumnValueFilter("f3", CompareOp.GREATER, "String_2"), false},
+            {new SingleColumnValueFilter("f4", CompareOp.EQUAL, 11.11f), true},
+            {new SingleColumnValueFilter("f4", CompareOp.NOT_EQUAL, 11.11f), false},
+            {new SingleColumnValueFilter("f5", CompareOp.NOT_EQUAL, false), false},
+            {new SingleColumnValueFilter("f5", CompareOp.EQUAL, false), true},
+            {new SingleColumnValueFilter("f5", CompareOp.EQUAL, true), false}, ///
     };
   }
 
@@ -340,6 +341,102 @@ public class AOrcReaderWriterTest {
   @Parameters(method = "dataIsBlockNeeded")
   public void testIsBlockNeeded(final Filter f, final boolean expected) {
     assertEquals("Incorrect status for isBlockNeeded.", expected,
-        OrcUtils.isBlockNeeded(new OrcUtils.OrcOptions(f, BLOCK_VALUE_TD), BLOCK_VALUE));
+            OrcUtils.isBlockNeeded(new OrcUtils.OrcOptions(f, BLOCK_VALUE_TD), BLOCK_VALUE));
+  }
+
+  @Test
+  public void testConvertOrcBytes() {
+    final String str =
+            "struct<col_tinyint:BYTE,col_smallint:SHORT,col_int:INT,col_bigint:LONG,col_boolean:BOOLEAN,col_float:FLOAT,col_double:DOUBLE,col_string:STRING,col_int_array:array<INT>,col_string_array:array<STRING>,col_map:map<INT,STRING>,col_struct:struct<id:STRING,name:STRING,val:INT>,col_timestamp:TIMESTAMP,col_binary:BINARY,col_decimal:BIG_DECIMAL(10,5),col_char:CHARS(10),col_varchar:VARCHAR(26),col_date:DATE,__INSERTION_TIMESTAMP__:LONG>";
+    final String orcSchema =
+            "struct<col_tinyint:tinyint,col_smallint:smallint,col_int:int,col_bigint:bigint,col_boolean:boolean,col_float:float,col_double:double,col_string:string,col_int_array:array<int>,col_string_array:array<string>,col_map:map<int,string>,col_struct:struct<id:string,name:string,val:int>,col_timestamp:timestamp,col_binary:binary,col_decimal:decimal(10,5),col_char:string(10),col_varchar:varchar(26),col_date:date,__INSERTION_TIMESTAMP__:bigint>";
+    final FTableDescriptor td = new FTableDescriptor();
+    td.setSchema(Schema.fromString(str));
+    td.setBlockSize(1);
+    td.setBlockFormat(FTableDescriptor.BlockFormat.ORC_BYTES);
+    assertEquals("Incorrect ORC schema.", orcSchema, td.getOrcSchema());
+
+    Record record = new Record();
+    final Object[][] expectedValues = new Object[2][];
+    final BlockValue bv = new BlockValue(1);
+    expectedValues[0] = addToRecord(td, record);
+    bv.addAndUpdateStats(record, td);
+    record.clear();
+    expectedValues[1] = addToRecord(td, record);
+    bv.addAndUpdateStats(record, td);
+    bv.close(td);
+
+    final Iterator<Object> iterator = bv.iterator();
+    int rId = 0;
+    while (iterator.hasNext()) {
+      final Row row = (Row) iterator.next();
+      final Object[] values = expectedValues[rId++];
+      assertEquals("Incorrect number of column returned.", td.getNumOfColumns(), row.size());
+      for (int j = 0; j < td.getNumOfColumns(); j++) {
+        final Object value = row.getValue(j);
+        final Object expected = values[j];
+        if (expected == null || value == null) {
+          continue;
+        }
+        if (expected.getClass().isArray()) {
+          assertEquals("Incorrect value.length for columnId= " + j, Array.getLength(expected),
+                  Array.getLength(value));
+          for (int k = 0; k < Array.getLength(value); k++) {
+            assertEquals("Incorrect value.length for columnId= " + j + ", at index= " + k,
+                    Array.get(expected, k), Array.get(value, k));
+          }
+        } else {
+          if (td.getColumnDescriptorByIndex(j).getColumnType().equals(BasicTypes.VARCHAR)) {
+            assertEquals("Incorrect value for columnId= " + j, ((String) expected).substring(0, 26),
+                    value);
+          } else if (td.getColumnDescriptorByIndex(j).getColumnType() instanceof MapType) {
+            assertEquals("Incorrect value for columnId= " + j, MAP_STRING, value.toString());
+          } else if (value instanceof BigDecimal) {
+            BigDecimal e = ((BigDecimal) expected).stripTrailingZeros();
+            BigDecimal a = ((BigDecimal) value).stripTrailingZeros();
+            assertEquals("Incorrect value for columnId= " + j, e, a);
+          } else {
+            assertEquals("Incorrect value for columnId= " + j, expected, value);
+          }
+        }
+      }
+    }
+  }
+
+  /* ORC reader gives HashMap and not LinkedHashMap.. need to update if fixed in ORC-reader */
+  private static final String MAP_STRING = "{20=val2, 10=val1}";
+
+  private Object[] addToRecord(FTableDescriptor td, Record record) {
+    Object[] values = new Object[td.getNumOfColumns()];
+    int i = 0;
+    for (MColumnDescriptor cd : td.getSchema().getColumnDescriptors()) {
+      values[i++] = TypeUtils.getRandomValue(cd.getColumnType());
+      if (cd.getColumnType().equals(BasicTypes.BIG_DECIMAL)) {
+        BigDecimal bd = (BigDecimal) values[i - 1];
+        values[i - 1] = new BigDecimal(bd.toBigInteger(), 5, new MathContext(10));
+      } else if (cd.getColumnType().equals(BasicTypes.VARCHAR)) {
+        final String s = (String) values[i - 1];
+        final StringBuilder ns = new StringBuilder(s);
+        final int len = s.length();
+        int al = len;
+        while (true) {
+          ns.append(s);
+          al += len;
+          if (al > 40) {
+            break;
+          }
+        }
+        values[i - 1] = ns.toString();
+      } else if (cd.getColumnType().equals(BasicTypes.DATE)) {
+        values[i - 1] = Date.valueOf(values[i - 1].toString());
+      } else if (cd.getColumnType() instanceof MapType) {
+        Map<Integer, String> map = new LinkedHashMap<>(2);
+        map.put(10, "val1");
+        map.put(20, "val2");
+        values[i - 1] = map;
+      }
+      record.add(cd.getColumnNameAsString(), values[i - 1]);
+    }
+    return values;
   }
 }

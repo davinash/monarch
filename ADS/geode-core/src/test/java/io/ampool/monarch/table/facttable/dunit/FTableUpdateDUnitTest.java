@@ -92,6 +92,11 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
   @Override
   public void tearDown2() throws Exception {
+    final Admin admin = MClientCacheFactory.getAnyInstance().getAdmin();
+    final String tableName = getMethodName();
+    if (admin.existsFTable(tableName)) {
+      admin.deleteFTable(tableName);
+    }
     closeMClientCache();
     closeMClientCache(client1);
     allServers.forEach((VM) -> VM.invoke(new SerializableCallable() {
@@ -120,23 +125,13 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
    * @return the test method name
    */
   public static String getMethodName() {
-    final String methodName = getTestMethodName();
-    final int index = methodName.indexOf('[');
-    return index > 0 ? methodName.substring(0, index) : methodName;
-  }
-
-  @After
-  public void cleanUpMethod() {
-    final Admin admin = MClientCacheFactory.getAnyInstance().getAdmin();
-    final String tableName = getMethodName();
-    if (admin.existsFTable(tableName)) {
-      admin.deleteFTable(tableName);
-    }
+    return getTestMethodName().replaceAll("\\W+", "_");
   }
 
   private FTable createFtable(String tableName) {
     FTableDescriptor fd = new FTableDescriptor();
-    fd.setBlockSize(1000);
+    fd.setBlockSize(13);
+    fd.setTotalNumOfSplits(11);
 
     for (int i = 0; i < NUM_COLS; i++) {
       fd.addColumn("COL_" + i);
@@ -205,7 +200,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
             BucketRegion br = pr.getDataStore().getLocalBucketById(i);
             if (br != null) {
               RowTupleConcurrentSkipListMap internalMap =
-                  (RowTupleConcurrentSkipListMap) br.getRegionMap().getInternalMap();
+                      (RowTupleConcurrentSkipListMap) br.getRegionMap().getInternalMap();
               Map realMap = internalMap.getInternalMap();
               Iterator<Map.Entry<IMKey, RegionEntry>> itr = realMap.entrySet().iterator();
               while (itr.hasNext()) {
@@ -262,13 +257,13 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnClient(tableName, 2000);
 
     Filter filter = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Map<byte[], Object> newColValues = new LinkedHashMap<>();
     newColValues.put(Bytes.toBytes("COL_0"), Bytes.toBytes("UPDATED_COL0"));
     newColValues.put(Bytes.toBytes("COL_9"), Bytes.toBytes("UPDATED_COL9"));
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).updateFTable(tableName, filter,
-          newColValues);
+              newColValues);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -277,11 +272,14 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
     verifyRecordCountOnClient(tableName, 2000);
     verifyUpdatedRowsOnClient(table, filter, 1000);
-    verifyNonUpdatedRowsOnClient(table, new SingleColumnValueFilter(
-        FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME, CompareOp.GREATER_OR_EQUAL, end), 1000);
+    verifyNonUpdatedRowsOnClient(table,
+            new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
+                    CompareOp.GREATER_OR_EQUAL, end),
+            1000, "COL_AFTER");
   }
 
-  private void verifyNonUpdatedRowsOnClient(FTable table, Filter filter, int expectedCount) {
+  private void verifyNonUpdatedRowsOnClient(FTable table, Filter filter, int expectedCount,
+                                            final String prefix) {
     Scan scan = new Scan();
     scan.setFilter(filter);
     Scanner scanner = table.getScanner(scan);
@@ -296,11 +294,11 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
       for (Cell cell : cells) {
         if (Bytes.compareTo(cell.getColumnName(), Bytes.toBytes("COL_0")) == 0) {
           assertEquals(0,
-              Bytes.compareTo((byte[]) cell.getColumnValue(), Bytes.toBytes("COL_AFTER0")));
+                  Bytes.compareTo((byte[]) cell.getColumnValue(), Bytes.toBytes(prefix + "0")));
         }
         if (Bytes.compareTo(cell.getColumnName(), Bytes.toBytes("COL_9")) == 0) {
           assertEquals(0,
-              Bytes.compareTo((byte[]) cell.getColumnValue(), Bytes.toBytes("COL_AFTER9")));
+                  Bytes.compareTo((byte[]) cell.getColumnValue(), Bytes.toBytes(prefix + "9")));
         }
       }
     }
@@ -323,11 +321,11 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
       for (Cell cell : cells) {
         if (Bytes.compareTo(cell.getColumnName(), Bytes.toBytes("COL_0")) == 0) {
           assertEquals("Incorrect value for COL_0.", "UPDATED_COL0",
-              Bytes.toString((byte[]) cell.getColumnValue()));
+                  Bytes.toString((byte[]) cell.getColumnValue()));
         }
         if (Bytes.compareTo(cell.getColumnName(), Bytes.toBytes("COL_9")) == 0) {
           assertEquals("Incorrect value for COL_9.", "UPDATED_COL9",
-              Bytes.toString((byte[]) cell.getColumnValue()));
+                  Bytes.toString((byte[]) cell.getColumnValue()));
         }
       }
     }
@@ -368,13 +366,13 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnClient(tableName, 2000);
 
     Filter filter = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Map<byte[], Object> newColValues = new LinkedHashMap<>();
     newColValues.put(Bytes.toBytes("COL_0"), Bytes.toBytes("UPDATED_COL0"));
     newColValues.put(Bytes.toBytes("COL_9"), Bytes.toBytes("UPDATED_COL9"));
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).updateFTable(tableName, filter,
-          newColValues);
+              newColValues);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -383,8 +381,10 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
     verifyRecordCountOnClient(tableName, 2000);
     verifyUpdatedRowsOnClient(table, filter, 500);
-    verifyNonUpdatedRowsOnClient(table, new SingleColumnValueFilter(
-        FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME, CompareOp.GREATER_OR_EQUAL, end), 1500);
+    verifyNonUpdatedRowsOnClient(table,
+            new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
+                    CompareOp.GREATER_OR_EQUAL, end),
+            1500, "COL_AFTER");
   }
 
   @Test
@@ -428,9 +428,9 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnClient(tableName, 2000);
 
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start);
+            CompareOp.GREATER, start);
 
     FilterList filterList = new FilterList();
     filterList.addFilter(filter1);
@@ -441,7 +441,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     newColValues.put(Bytes.toBytes("COL_9"), Bytes.toBytes("UPDATED_COL9"));
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).updateFTable(tableName,
-          filterList, newColValues);
+              filterList, newColValues);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -451,10 +451,14 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnClient(tableName, 2000);
     verifyUpdatedRowsOnClient(table, filterList, 250);
     filterList.setOperator(FilterList.Operator.MUST_PASS_ONE);
-    verifyNonUpdatedRowsOnClient(table, new SingleColumnValueFilter(
-        FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME, CompareOp.GREATER_OR_EQUAL, end), 1250);
-    verifyNonUpdatedRowsOnClient(table, new SingleColumnValueFilter(
-        FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME, CompareOp.LESS_OR_EQUAL, start), 500);
+    verifyNonUpdatedRowsOnClient(table,
+            new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
+                    CompareOp.GREATER_OR_EQUAL, end),
+            1250, "COL_AFTER");
+    verifyNonUpdatedRowsOnClient(table,
+            new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
+                    CompareOp.LESS_OR_EQUAL, start),
+            500, "COL_AFTER");
   }
 
   @Test
@@ -498,9 +502,9 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnClient(tableName, 2000);
 
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start);
+            CompareOp.GREATER, start);
 
     FilterList filterList = new FilterList();
     filterList.addFilter(filter1);
@@ -511,7 +515,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     newColValues.put(Bytes.toBytes("COL_9"), Bytes.toBytes("UPDATED_COL9"));
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).updateFTable(tableName,
-          filterList, newColValues);
+              filterList, newColValues);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -521,10 +525,14 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnClient(tableName, 2000);
     verifyRecordCountOnServers(tableName, 2000);
     verifyUpdatedRowsOnClient(table, filterList, 500);
-    verifyNonUpdatedRowsOnClient(table, new SingleColumnValueFilter(
-        FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME, CompareOp.GREATER_OR_EQUAL, end), 1000);
-    verifyNonUpdatedRowsOnClient(table, new SingleColumnValueFilter(
-        FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME, CompareOp.LESS_OR_EQUAL, start), 500);
+    verifyNonUpdatedRowsOnClient(table,
+            new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
+                    CompareOp.GREATER_OR_EQUAL, end),
+            1000, "COL_AFTER");
+    verifyNonUpdatedRowsOnClient(table,
+            new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
+                    CompareOp.LESS_OR_EQUAL, start),
+            500, "COL_AFTER");
   }
 
   /**
@@ -532,7 +540,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
    */
   @Test
   public void testUpdatePartialBlockMultiRangeWithInsertionTimeFilter()
-      throws InterruptedException {
+          throws InterruptedException {
     String tableName = getMethodName();
     Exception e = null;
 
@@ -594,14 +602,14 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnServers(tableName, 2000);
 
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start);
+            CompareOp.GREATER, start);
 
     Filter filter3 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end1);
+            CompareOp.LESS, end1);
     Filter filter4 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start1);
+            CompareOp.GREATER, start1);
 
     FilterList filterList1 = new FilterList();
     FilterList filterList2 = new FilterList();
@@ -625,7 +633,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).updateFTable(tableName,
-          filterList, newColValues);
+              filterList, newColValues);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -638,18 +646,20 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     verifyUpdatedRowsOnClient(table, filterList, 449);
 
     Filter filter5 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS_OR_EQUAL, start);
-    verifyNonUpdatedRowsOnClient(table, filter5, 300);
+            CompareOp.LESS_OR_EQUAL, start);
+    verifyNonUpdatedRowsOnClient(table, filter5, 300, "COL_AFTER");
 
     FilterList filterList3 = new FilterList();
     filterList3.addFilter(new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS_OR_EQUAL, start1));
+            CompareOp.LESS_OR_EQUAL, start1));
     filterList3.addFilter(new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER_OR_EQUAL, end));
+            CompareOp.GREATER_OR_EQUAL, end));
     filterList3.setOperator(FilterList.Operator.MUST_PASS_ALL);
-    verifyNonUpdatedRowsOnClient(table, filterList3, 251);
-    verifyNonUpdatedRowsOnClient(table, new SingleColumnValueFilter(
-        FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME, CompareOp.GREATER_OR_EQUAL, end1), 1000);
+    verifyNonUpdatedRowsOnClient(table, filterList3, 251, "COL_AFTER");
+    verifyNonUpdatedRowsOnClient(table,
+            new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
+                    CompareOp.GREATER_OR_EQUAL, end1),
+            1000, "COL_AFTER");
   }
 
   /**
@@ -690,9 +700,9 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnClient(tableName, 1000);
 
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start);
+            CompareOp.GREATER, start);
 
     FilterList filterList = new FilterList();
     filterList.addFilter(filter1);
@@ -706,7 +716,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).updateFTable(tableName,
-          filterList, newColValues);
+              filterList, newColValues);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -715,7 +725,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
     verifyRecordCountOnClient(tableName, 1000);
     try {
-      Thread.sleep(10000);
+      Thread.sleep(100);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
@@ -723,8 +733,10 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnClient(tableName, 1000);
 
     verifyUpdatedRowsOnClient(table, filterList, 601);
-    verifyNonUpdatedRowsOnClient(table, new SingleColumnValueFilter(
-        FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME, CompareOp.LESS_OR_EQUAL, start), 399);
+    verifyNonUpdatedRowsOnClient(table,
+            new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
+                    CompareOp.LESS_OR_EQUAL, start),
+            399, "COL_AFTER");
   }
 
 
@@ -732,7 +744,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
    * Verify that the updated block is (multiple blocks of data, with each buckcet having one block)
    * replicated to secondary and the update happens only on primary
    */
-  // @Test
+  @Test
   public void testUpdatePartialBlockEndMultiNodeMultiBlocks() throws InterruptedException {
     String tableName = getMethodName();
     Exception e = null;
@@ -774,9 +786,9 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnClient(tableName, 2000);
 
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start);
+            CompareOp.GREATER, start);
 
     FilterList filterList = new FilterList();
     filterList.addFilter(filter1);
@@ -785,7 +797,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnServers(tableName, 2000);
 
     try {
-      Thread.sleep(20000);
+      Thread.sleep(100);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
@@ -796,7 +808,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).updateFTable(tableName,
-          filterList, newColValues);
+              filterList, newColValues);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -805,7 +817,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
     verifyRecordCountOnClient(tableName, 2000);
     try {
-      Thread.sleep(20000);
+      Thread.sleep(100);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
@@ -816,20 +828,20 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
     FilterList filterList1 = new FilterList();
     filterList1.addFilter(new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER_OR_EQUAL, end));
+            CompareOp.GREATER_OR_EQUAL, end));
     filterList1.addFilter(new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS_OR_EQUAL, start));
+            CompareOp.LESS_OR_EQUAL, start));
     filterList1.setOperator(FilterList.Operator.MUST_PASS_ONE);
-    verifyNonUpdatedRowsOnClient(table, filterList1, 1399);
+    verifyNonUpdatedRowsOnClient(table, filterList1, 1399, "COL_AFTER");
   }
 
   /**
    * Verify that the updated block is (multiple blocks of data, with each bucket having multiple
    * blocks) replicated to secondary and the update happens only on primary
    */
-  // @Test
+  @Test
   public void testUpdatePartialBlockEndMultiNodeMultiBlocksInSingleBucket()
-      throws InterruptedException {
+          throws InterruptedException {
     String tableName = getMethodName();
     Exception e = null;
 
@@ -869,9 +881,9 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnClient(tableName, 2000);
 
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start);
+            CompareOp.GREATER, start);
 
     FilterList filterList = new FilterList();
     filterList.addFilter(filter1);
@@ -880,7 +892,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnServers(tableName, 2000);
 
     try {
-      Thread.sleep(20000);
+      Thread.sleep(100);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
@@ -891,7 +903,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).updateFTable(tableName,
-          filterList, newColValues);
+              filterList, newColValues);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -900,7 +912,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
     verifyRecordCountOnClient(tableName, 2000);
     try {
-      Thread.sleep(20000);
+      Thread.sleep(100);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
@@ -910,17 +922,17 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
     FilterList filterList1 = new FilterList();
     filterList1.addFilter(new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER_OR_EQUAL, end));
+            CompareOp.GREATER_OR_EQUAL, end));
     filterList1.addFilter(new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS_OR_EQUAL, start));
+            CompareOp.LESS_OR_EQUAL, start));
     filterList1.setOperator(FilterList.Operator.MUST_PASS_ONE);
-    verifyNonUpdatedRowsOnClient(table, filterList1, 1399);
+    verifyNonUpdatedRowsOnClient(table, filterList1, 1399, "COL_BEFORE");
   }
 
   /**
    * Verify that the changes are persisted on all nodes and server recovery has no issues
    */
-  // @Test
+  @Test
   public void testUpdateFullBlockMultiNodeWithRecovery() throws InterruptedException {
     String tableName = getMethodName();
     Exception e = null;
@@ -962,9 +974,9 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnClient(tableName, 2000);
 
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start);
+            CompareOp.GREATER, start);
 
     FilterList filterList = new FilterList();
     filterList.addFilter(filter1);
@@ -973,7 +985,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnServers(tableName, 2000);
 
     try {
-      Thread.sleep(20000);
+      Thread.sleep(100);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
@@ -984,7 +996,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
     try {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).updateFTable(tableName,
-          filterList, newColValues);
+              filterList, newColValues);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -993,7 +1005,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
     verifyRecordCountOnClient(tableName, 2000);
     try {
-      Thread.sleep(20000);
+      Thread.sleep(100);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
@@ -1004,26 +1016,22 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
     FilterList filterList1 = new FilterList();
     filterList1.addFilter(new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER_OR_EQUAL, end));
+            CompareOp.GREATER_OR_EQUAL, end));
     filterList1.addFilter(new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS_OR_EQUAL, start));
+            CompareOp.LESS_OR_EQUAL, start));
     filterList1.setOperator(FilterList.Operator.MUST_PASS_ONE);
-    verifyNonUpdatedRowsOnClient(table, filterList1, 1399);
+    verifyNonUpdatedRowsOnClient(table, filterList1, 1399, "COL_BEFORE");
 
 
     // restart all servers
-    for (VM vm : allServers) {
-      stopServerOn(vm);
-    }
-    for (VM vm : allServers) {
-      startServerOn(vm, DUnitLauncher.getLocatorString());
-    }
+    restartServers(allServers);
+    Thread.sleep(5_000);
 
     verifyRecordCountOnClient(tableName, 2000);
     verifyRecordCountOnServers(tableName, 2000);
 
     verifyUpdatedRowsOnClient(table, filterList, 601);
-    verifyNonUpdatedRowsOnClient(table, filterList1, 1399);
+    verifyNonUpdatedRowsOnClient(table, filterList1, 1399, "COL_BEFORE");
   }
 
   /**
@@ -1037,6 +1045,8 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     MClientCache cache = MClientCacheFactory.getAnyInstance();
     FTableDescriptor ftd = new FTableDescriptor();
     ftd.addColumn("COL1", new MTableColumnType("INT"));
+    ftd.setTotalNumOfSplits(11);
+    ftd.setBlockSize(13);
     ftd.setRedundantCopies(2);
     ftd.setBlockFormat(blockFormat);
     FTable table = cache.getAdmin().createFTable(tableName, ftd);
@@ -1069,7 +1079,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
     verifyRecordCountOnServers(tableName, 2000);
     try {
-      Thread.sleep(20000);
+      Thread.sleep(100);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
@@ -1087,7 +1097,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
     verifyRecordCountOnClient(tableName, 2000);
     try {
-      Thread.sleep(20000);
+      Thread.sleep(100);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
@@ -1170,9 +1180,9 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnClient(tableName, 2000);
 
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, end);
+            CompareOp.LESS, end);
     Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, start);
+            CompareOp.GREATER, start);
 
     FilterList filterList = new FilterList();
     filterList.addFilter(filter1);
@@ -1181,7 +1191,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
     verifyRecordCountOnServers(tableName, 2000);
 
     try {
-      Thread.sleep(20000);
+      Thread.sleep(100);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
@@ -1190,7 +1200,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
     try {
       MClientCacheFactory.getAnyInstance().getAdmin().updateFTable(tableName, filterList,
-          newColValues);
+              newColValues);
     } catch (Exception e1) {
       e1.printStackTrace();
       e = e1;
@@ -1199,7 +1209,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
 
     verifyRecordCountOnClient(tableName, 2000);
     try {
-      Thread.sleep(20000);
+      Thread.sleep(100);
     } catch (InterruptedException e1) {
       e1.printStackTrace();
     }
@@ -1216,7 +1226,7 @@ public class FTableUpdateDUnitTest extends MTableDUnitHelper {
         break;
       }
       assertEquals(0, Bytes.compareTo(Bytes.toBytes("COL_UPDATED"),
-          (byte[]) row.getCells().get(1).getColumnValue()));
+              (byte[]) row.getCells().get(1).getColumnValue()));
     }
     scanner.close();
   }

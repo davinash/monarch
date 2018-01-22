@@ -64,7 +64,6 @@ public class CreateDiskStoreFunction extends FunctionAdapter implements Internal
 
       XmlEntity xmlEntity = new XmlEntity(CacheXml.DISK_STORE, "name", diskStoreName);
       context.getResultSender().lastResult(new CliFunctionResult(memberId, xmlEntity, "Success"));
-
     } catch (CacheClosedException cce) {
       context.getResultSender().lastResult(new CliFunctionResult(memberId, false, null));
 

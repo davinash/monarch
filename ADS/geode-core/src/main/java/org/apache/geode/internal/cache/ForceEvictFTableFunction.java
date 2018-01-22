@@ -24,11 +24,14 @@ import io.ampool.monarch.table.ftable.internal.BlockKey;
 import io.ampool.monarch.table.ftable.internal.BlockValue;
 import io.ampool.monarch.table.internal.IMKey;
 import io.ampool.monarch.table.region.map.RowTupleConcurrentSkipListMap;
+import io.ampool.monarch.table.region.map.RowTupleLRURegionMap;
 import org.apache.geode.cache.CacheFactory;
 import org.apache.geode.cache.Region;
 import org.apache.geode.cache.execute.Function;
 import org.apache.geode.cache.execute.FunctionContext;
 import org.apache.geode.internal.InternalEntity;
+import org.apache.geode.internal.cache.lru.LRUEntry;
+import org.apache.geode.internal.cache.lru.NewLRUClockHand;
 import org.apache.geode.internal.logging.LogService;
 import org.apache.logging.log4j.Logger;
 
@@ -79,31 +82,21 @@ public class ForceEvictFTableFunction implements Function, InternalEntity {
     Region region = CacheFactory.getAnyInstance().getRegion(tableName);
     for (int i = 0; i < totalBuckets; i++) {
       BucketRegion br = ((PartitionedRegion) region).getDataStore().getLocalBucketById(i);
-      if (br != null && br.getBucketAdvisor().isHosting() && br.getBucketAdvisor().isPrimary()) {
+      if (br != null && br.getBucketAdvisor().isHosting()) {
         flushFromBucket(br);
       }
     }
   }
 
   private void flushFromBucket(final BucketRegion br) {
-    RowTupleConcurrentSkipListMap internalMap =
-        (RowTupleConcurrentSkipListMap) br.getRegionMap().getInternalMap();
-    Map realMap = internalMap.getInternalMap();
-
-    Iterator<Map.Entry<IMKey, RegionEntry>> itr = realMap.entrySet().iterator();
-    while (itr.hasNext()) {
-      Map.Entry<IMKey, RegionEntry> blockRegionEntry = itr.next();
-      final BlockKey lastKey = (BlockKey) blockRegionEntry.getKey();
-      synchronized (lastKey) {
-        Object value = blockRegionEntry.getValue()._getValue();
-        if (value == null || Token.isInvalidOrRemoved(value)) {
-          continue;
-        }
-        if (value instanceof VMCachedDeserializable) {
-          value = ((VMCachedDeserializable) value).getDeserializedForReading();
-        }
-        BlockValue blockValue = (BlockValue) value;
-        pushBlocktoWAL(br, lastKey, blockValue);
+    final NewLRUClockHand lruList = ((RowTupleLRURegionMap) br.entries)._getLruList();
+    while (true) {
+      final LRUEntry lruEntry = (LRUEntry) lruList.getLRUEntry();
+      if (lruEntry == null) {
+        break;
+      }
+      if (TierHelper.overflowToNextStorageTier(br, lruEntry) != 0) {
+        br.incEvictions(1L);
       }
     }
   }

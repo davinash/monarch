@@ -1,3 +1,16 @@
+/*
+ * Copyright (c) 2017 Ampool, Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License. See accompanying LICENSE file.
+ */
 package io.ampool.monarch.table.facttable.dunit;
 
 import io.ampool.monarch.table.Bytes;
@@ -38,6 +51,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import static org.apache.geode.test.dunit.Assert.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -47,6 +61,7 @@ public class ForceEvictFTableDUnitTest extends MTableDUnitHelper {
   private static final int NUM_COLS = 10;
   List<VM> allServers = null;
   private static final TestDUnitBase testBase = new TestDUnitBase();
+  private String tableName = null;
 
   @Override
   public void postSetUp() throws Exception {
@@ -66,6 +81,10 @@ public class ForceEvictFTableDUnitTest extends MTableDUnitHelper {
 
   @Override
   public void tearDown2() throws Exception {
+    if (tableName != null) {
+      MClientCacheFactory.getAnyInstance().getAdmin().deleteFTable(tableName);
+      tableName = null;
+    }
     closeMClientCache();
     closeMClientCache(client1);
     allServers.forEach((VM) -> VM.invoke(new SerializableCallable() {
@@ -81,7 +100,7 @@ public class ForceEvictFTableDUnitTest extends MTableDUnitHelper {
 
   private FTable createFtable(String tableName) {
     FTableDescriptor fd = new FTableDescriptor();
-    fd.setBlockSize(1000);
+    fd.setBlockSize(2);
 
     fd.setEvictionPolicy(MEvictionPolicy.OVERFLOW_TO_TIER);
     for (int i = 0; i < NUM_COLS; i++) {
@@ -132,7 +151,7 @@ public class ForceEvictFTableDUnitTest extends MTableDUnitHelper {
    */
   @Test
   public void testforceFTableEviction() throws InterruptedException {
-    String tableName = "testTableFlush";
+    this.tableName = "testTableFlush";
     int numOfRecords = 1000;
     int memoryCount = 0;
     int walCount = 0;
@@ -160,7 +179,7 @@ public class ForceEvictFTableDUnitTest extends MTableDUnitHelper {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).forceFTableEviction(tableName);
     } catch (Exception e1) {
       System.out.println(
-          "FTableFlushToTierDUnitTest.testTableFlush Exception Caught ===> " + e.toString());
+              "FTableFlushToTierDUnitTest.testTableFlush Exception Caught ===> " + e.toString());
       e1.printStackTrace();
       e = e1;
     }
@@ -174,6 +193,101 @@ public class ForceEvictFTableDUnitTest extends MTableDUnitHelper {
     flushWAL(tableName);
     walCount = getCountFromWalScan(tableName);
     assertEquals(0, walCount);
+
+    verifyRecordCountOnClient(tableName, numOfRecords);
+    assertEquals("EvictionCount should match number of evicted entries.", numOfRecords,
+            getTotalEvictedCount(tableName));
+  }
+
+  private void asyncStartVm(final VM vm) {
+    try {
+      asyncStartServerOn(vm, DUnitLauncher.getLocatorString()).join();
+    } catch (Exception e) {
+      ////
+    }
+  }
+
+  @Test
+  public void testForceEvictWithRestart() throws InterruptedException {
+    this.tableName = "testForceEvictWithRestart";
+    int numOfRecords = 1000;
+
+    FTableDescriptor fd = new FTableDescriptor();
+    fd.setRedundantCopies(2).setTotalNumOfSplits(1)
+            .setEvictionPolicy(MEvictionPolicy.OVERFLOW_TO_TIER).setBlockSize(100);
+    for (int i = 0; i < NUM_COLS; i++) {
+      fd.addColumn("COL_" + i);
+    }
+    MClientCacheFactory.getAnyInstance().getAdmin().createFTable(tableName, fd);
+
+    FTable table = MClientCacheFactory.getAnyInstance().getFTable(tableName);
+    for (int j = 0; j < numOfRecords; j++) {
+      Record record = new Record();
+      for (int i = 0; i < NUM_COLS; i++) {
+        record.add("COL_" + i, Bytes.toBytes("COL_BEFORE" + i));
+      }
+      table.append(record);
+      /* make sure that delta is written to disk-store in async mode */
+      if (j % 50 == 0) {
+        Thread.sleep(2_000);
+      }
+    }
+    // Verify that the records are populated
+    verifyRecordCountOnClient(tableName, numOfRecords);
+
+    long totalSizeBeforeRestart = getTotalSize(tableName);
+    System.out.println("totalSizeBeforeRestart = " + totalSizeBeforeRestart);
+
+    allServers.forEach(this::stopServerOn);
+    allServers.parallelStream().forEach(this::asyncStartVm);
+    Thread.sleep(5_000);
+
+    assertEquals("Incorrect total-size after restart.", totalSizeBeforeRestart,
+            getTotalSize(tableName));
+
+    try {
+      MClientCacheFactory.getAnyInstance().getAdmin().forceFTableEviction(tableName);
+    } catch (Exception e1) {
+      fail("No expected expected.", e1);
+    }
+    int walCount = getCountFromWalScan(tableName);
+    assertEquals(numOfRecords * 3, walCount);
+
+    verifyRecordCountOnClient(tableName, numOfRecords);
+  }
+
+  private long getTotalEvictedCount(final String tableName) {
+    long totalCount = 0;
+    for (VM vm : new VM[] {vm0, vm1, vm2}) {
+      totalCount += vm.invoke(() -> {
+        final Region<Object, Object> region = MCacheFactory.getAnyInstance().getRegion(tableName);
+        assertNotNull(region);
+        long count = 0;
+        for (BucketRegion br : ((PartitionedRegion) region).getDataStore()
+                .getAllLocalBucketRegions()) {
+          count += br.getEvictions();
+        }
+        return count;
+      });
+    }
+    return totalCount;
+  }
+
+  private long getTotalSize(final String tableName) {
+    long totalSize = 0;
+    for (VM vm : new VM[] {vm0, vm1, vm2}) {
+      totalSize += vm.invoke(() -> {
+        final Region<Object, Object> region = MCacheFactory.getAnyInstance().getRegion(tableName);
+        assertNotNull(region);
+        long size = 0;
+        for (BucketRegion br : ((PartitionedRegion) region).getDataStore()
+                .getAllLocalBucketRegions()) {
+          size += br.getBytesInMemory();
+        }
+        return size;
+      });
+    }
+    return totalSize;
   }
 
   private void flushWAL(final String tableName) {
@@ -193,17 +307,17 @@ public class ForceEvictFTableDUnitTest extends MTableDUnitHelper {
 
   public int getCountFromWalScan(String ftable) {
     return (getCountFromWal(vm0, ftable) + getCountFromWal(vm1, ftable)
-        + getCountFromWal(vm2, ftable));
+            + getCountFromWal(vm2, ftable));
   }
 
   private static int getRegionCountOnServer(final VM vm, final String regionName)
-      throws RMIException {
+          throws RMIException {
     return (int) vm.invoke(new SerializableCallable() {
       @Override
 
       public Object call() throws Exception {
         final PartitionedRegion pr =
-            (PartitionedRegion) MCacheFactory.getAnyInstance().getRegion(regionName);
+                (PartitionedRegion) MCacheFactory.getAnyInstance().getRegion(regionName);
         assertNotNull(pr);
         return (getTotalEntryCount(pr));
       }

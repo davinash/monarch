@@ -198,13 +198,13 @@ public class DiskStoreMBeanBridge {
     diskWritesRate = new StatsRate(StatsKey.DISK_WRITEN_BYTES, StatType.LONG_TYPE, monitor);
 
     diskFlushTimeAvgLatency = new StatsAverageLatency(StatsKey.NUM_FLUSHES, StatType.LONG_TYPE,
-        StatsKey.TOTAL_FLUSH_TIME, monitor);
+            StatsKey.TOTAL_FLUSH_TIME, monitor);
 
     diskReadsAvgLatency = new StatsAverageLatency(StatsKey.DISK_READ_BYTES, StatType.LONG_TYPE,
-        StatsKey.DISK_READS_TIME, monitor);
+            StatsKey.DISK_READS_TIME, monitor);
 
     diskWritesAvgLatency = new StatsAverageLatency(StatsKey.DISK_WRITEN_BYTES, StatType.LONG_TYPE,
-        StatsKey.DISK_WRITES_TIME, monitor);
+            StatsKey.DISK_WRITES_TIME, monitor);
   }
 
 
@@ -273,5 +273,13 @@ public class DiskStoreMBeanBridge {
 
   public void setDiskUsageCriticalPercentage(float criticalPercent) {
     diskStore.setDiskUsageCriticalPercentage(criticalPercent);
+  }
+
+  public long getDeltaWrites() {
+    return getDiskStoreStatistic(StatsKey.DELTA_WRITES).longValue();
+  }
+
+  public long getDeltaReads() {
+    return getDiskStoreStatistic(StatsKey.DELTA_READS).longValue();
   }
 }

@@ -11,9 +11,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import io.ampool.monarch.table.exceptions.MCheckOperationFailException;
+import io.ampool.monarch.table.exceptions.RowKeyDoesNotExistException;
 import io.ampool.monarch.table.internal.MTableRow;
 import io.ampool.monarch.table.internal.MTableUtils;
 import org.apache.geode.cache.*;
+import org.apache.geode.internal.cache.MonarchCacheImpl;
+import org.apache.geode.internal.cache.control.HeapMemoryMonitor;
 import org.apache.geode.test.junit.categories.MonarchTest;
 
 import org.junit.*;
@@ -52,12 +56,12 @@ public class MTableCreationJUnitTest {
     MTable mTable = amplCache.getAdmin().createTable("testPARTITION_UNORDERED", mTableDescriptor);
     assertEquals(mTable.getTableDescriptor().getTableType(), MTableType.UNORDERED);
     assertEquals(DataPolicy.PARTITION,
-        amplCache.getRegion("testPARTITION_UNORDERED").getAttributes().getDataPolicy());
+            amplCache.getRegion("testPARTITION_UNORDERED").getAttributes().getDataPolicy());
     assertNotNull(
-        amplCache.getRegion("testPARTITION_UNORDERED").getAttributes().getPartitionAttributes());
+            amplCache.getRegion("testPARTITION_UNORDERED").getAttributes().getPartitionAttributes());
     assertEquals(0, mTable.getTableDescriptor().getRedundantCopies());
     assertEquals(0, amplCache.getRegion("testPARTITION_UNORDERED").getAttributes()
-        .getPartitionAttributes().getRedundantCopies());
+            .getPartitionAttributes().getRedundantCopies());
     amplCache.getAdmin().deleteTable("testPARTITION_UNORDERED");
     amplCache.close();
   }
@@ -71,12 +75,12 @@ public class MTableCreationJUnitTest {
     MTable mTable = mCache.getAdmin().createTable("testPARTITION_ORDERED", mTableDescriptor);
     assertEquals(mTable.getTableDescriptor().getTableType(), MTableType.ORDERED_VERSIONED);
     assertEquals(DataPolicy.PARTITION,
-        geodeCache.getRegion("testPARTITION_ORDERED").getAttributes().getDataPolicy());
+            geodeCache.getRegion("testPARTITION_ORDERED").getAttributes().getDataPolicy());
     assertNotNull(
-        geodeCache.getRegion("testPARTITION_ORDERED").getAttributes().getPartitionAttributes());
+            geodeCache.getRegion("testPARTITION_ORDERED").getAttributes().getPartitionAttributes());
     assertEquals(0, mTable.getTableDescriptor().getRedundantCopies());
     assertEquals(0, geodeCache.getRegion("testPARTITION_ORDERED").getAttributes()
-        .getPartitionAttributes().getRedundantCopies());
+            .getPartitionAttributes().getRedundantCopies());
     mCache.getAdmin().deleteTable("testPARTITION_ORDERED");
     mCache.close();
   }
@@ -92,12 +96,12 @@ public class MTableCreationJUnitTest {
     MTable mTable = mCache.getAdmin().createTable("testPARTITION_REDUNDANT", mTableDescriptor);
     assertEquals(mTable.getTableDescriptor().getTableType(), MTableType.ORDERED_VERSIONED);
     assertEquals(DataPolicy.PARTITION,
-        geodeCache.getRegion("testPARTITION_REDUNDANT").getAttributes().getDataPolicy());
+            geodeCache.getRegion("testPARTITION_REDUNDANT").getAttributes().getDataPolicy());
     assertNotNull(
-        geodeCache.getRegion("testPARTITION_REDUNDANT").getAttributes().getPartitionAttributes());
+            geodeCache.getRegion("testPARTITION_REDUNDANT").getAttributes().getPartitionAttributes());
     assertEquals(1, mTable.getTableDescriptor().getRedundantCopies());
     assertEquals(1, geodeCache.getRegion("testPARTITION_REDUNDANT").getAttributes()
-        .getPartitionAttributes().getRedundantCopies());
+            .getPartitionAttributes().getRedundantCopies());
     mCache.getAdmin().deleteTable("testPARTITION_REDUNDANT");
     mCache.close();
   }
@@ -112,12 +116,12 @@ public class MTableCreationJUnitTest {
     MTable mTable = mCache.getAdmin().createTable("testPARTITION_PERSISTENT", mTableDescriptor);
     assertEquals(mTable.getTableDescriptor().getTableType(), MTableType.ORDERED_VERSIONED);
     assertEquals(DataPolicy.PERSISTENT_PARTITION,
-        geodeCache.getRegion("testPARTITION_PERSISTENT").getAttributes().getDataPolicy());
+            geodeCache.getRegion("testPARTITION_PERSISTENT").getAttributes().getDataPolicy());
     assertNotNull(
-        geodeCache.getRegion("testPARTITION_PERSISTENT").getAttributes().getPartitionAttributes());
+            geodeCache.getRegion("testPARTITION_PERSISTENT").getAttributes().getPartitionAttributes());
     assertEquals(0, mTable.getTableDescriptor().getRedundantCopies());
     assertEquals(0, geodeCache.getRegion("testPARTITION_PERSISTENT").getAttributes()
-        .getPartitionAttributes().getRedundantCopies());
+            .getPartitionAttributes().getRedundantCopies());
     mCache.getAdmin().deleteTable("testPARTITION_PERSISTENT");
     mCache.close();
   }
@@ -131,15 +135,15 @@ public class MTableCreationJUnitTest {
     mTableDescriptor.enableDiskPersistence(MDiskWritePolicy.ASYNCHRONOUS);
     mTableDescriptor.setRedundantCopies(1);
     MTable mTable =
-        mCache.getAdmin().createTable("testPARTITION_REDUNDANT_PERSISTENT", mTableDescriptor);
+            mCache.getAdmin().createTable("testPARTITION_REDUNDANT_PERSISTENT", mTableDescriptor);
     assertEquals(mTable.getTableDescriptor().getTableType(), MTableType.ORDERED_VERSIONED);
     assertEquals(DataPolicy.PERSISTENT_PARTITION,
-        geodeCache.getRegion("testPARTITION_REDUNDANT_PERSISTENT").getAttributes().getDataPolicy());
+            geodeCache.getRegion("testPARTITION_REDUNDANT_PERSISTENT").getAttributes().getDataPolicy());
     assertNotNull(geodeCache.getRegion("testPARTITION_REDUNDANT_PERSISTENT").getAttributes()
-        .getPartitionAttributes());
+            .getPartitionAttributes());
     assertEquals(1, mTable.getTableDescriptor().getRedundantCopies());
     assertEquals(1, geodeCache.getRegion("testPARTITION_REDUNDANT_PERSISTENT").getAttributes()
-        .getPartitionAttributes().getRedundantCopies());
+            .getPartitionAttributes().getRedundantCopies());
     mCache.getAdmin().deleteTable("testPARTITION_REDUNDANT_PERSISTENT");
     mCache.close();
   }
@@ -185,17 +189,17 @@ public class MTableCreationJUnitTest {
     assertEquals(mTable.getTableDescriptor().getTableType(), MTableType.ORDERED_VERSIONED);
     if (res1) {
       assertEquals(DataPolicy.PERSISTENT_PARTITION,
-          geodeCache.getRegion(table_name).getAttributes().getDataPolicy());
+              geodeCache.getRegion(table_name).getAttributes().getDataPolicy());
     } else if (res2) {
       assertEquals(DataPolicy.PARTITION,
-          geodeCache.getRegion(table_name).getAttributes().getDataPolicy());
+              geodeCache.getRegion(table_name).getAttributes().getDataPolicy());
     }
 
     assertNotNull(geodeCache.getRegion(table_name).getAttributes().getPartitionAttributes());
 
     assertEquals(1, mTable.getTableDescriptor().getRedundantCopies());
     assertEquals(1, geodeCache.getRegion(table_name).getAttributes().getPartitionAttributes()
-        .getRedundantCopies());
+            .getRedundantCopies());
 
     mCache.getAdmin().deleteTable(table_name);
 
@@ -244,28 +248,28 @@ public class MTableCreationJUnitTest {
       assertNotNull(mTable);
       assertEquals(mTable.getTableDescriptor().getTableType(), MTableType.ORDERED_VERSIONED);
       assertEquals(DataPolicy.PERSISTENT_PARTITION,
-          geodeCache.getRegion(table_name + "1").getAttributes().getDataPolicy());
+              geodeCache.getRegion(table_name + "1").getAttributes().getDataPolicy());
 
       assertNotNull(
-          geodeCache.getRegion(table_name + "1").getAttributes().getPartitionAttributes());
+              geodeCache.getRegion(table_name + "1").getAttributes().getPartitionAttributes());
 
       assertEquals(1, mTable.getTableDescriptor().getRedundantCopies());
       assertEquals(1, geodeCache.getRegion(table_name + "1").getAttributes()
-          .getPartitionAttributes().getRedundantCopies());
+              .getPartitionAttributes().getRedundantCopies());
     }
     if (res2) {
       mTable = mCache.getTable(table_name + "2");
       assertNotNull(mTable);
       assertEquals(mTable.getTableDescriptor().getTableType(), MTableType.ORDERED_VERSIONED);
       assertEquals(DataPolicy.PERSISTENT_PARTITION,
-          geodeCache.getRegion(table_name + "2").getAttributes().getDataPolicy());
+              geodeCache.getRegion(table_name + "2").getAttributes().getDataPolicy());
 
       assertNotNull(
-          geodeCache.getRegion(table_name + "2").getAttributes().getPartitionAttributes());
+              geodeCache.getRegion(table_name + "2").getAttributes().getPartitionAttributes());
 
       assertEquals(1, mTable.getTableDescriptor().getRedundantCopies());
       assertEquals(1, geodeCache.getRegion(table_name + "2").getAttributes()
-          .getPartitionAttributes().getRedundantCopies());
+              .getPartitionAttributes().getRedundantCopies());
     }
     mCache.getAdmin().deleteTable(table_name + "1");
     mCache.getAdmin().deleteTable(table_name + "2");
@@ -273,14 +277,14 @@ public class MTableCreationJUnitTest {
   }
 
   private boolean createTableFromThread(final MCache mCache, final String table_name,
-      final MTableDescriptor mTableDescriptor) {
+                                        final MTableDescriptor mTableDescriptor) {
     MTable mTable = null;
     Throwable expectedException = null;
     try {
       mTable = mCache.getAdmin().createTable(table_name, mTableDescriptor);
     } catch (Throwable t) {
       System.out
-          .println("MTableCreationJUnitTest.createTableFromThread :: " + "excpetion occured..");
+              .println("MTableCreationJUnitTest.createTableFromThread :: " + "excpetion occured..");
       expectedException = t;
       assertTrue(t instanceof MTableExistsException);
     }
@@ -302,17 +306,17 @@ public class MTableCreationJUnitTest {
     MTableDescriptor mTableDescriptor = new MTableDescriptor();
     mTableDescriptor.addColumn(Bytes.toBytes("testcol"));
     MTable mTable =
-        ((AdminImpl) mCache.getAdmin()).createTable("testPARTITION_OVERFLOW", mTableDescriptor);
+            ((AdminImpl) mCache.getAdmin()).createTable("testPARTITION_OVERFLOW", mTableDescriptor);
     assertEquals(mTable.getTableDescriptor().getTableType(), MTableType.ORDERED_VERSIONED);
     assertEquals(DataPolicy.PARTITION,
-        geodeCache.getRegion("testPARTITION_OVERFLOW").getAttributes().getDataPolicy());
+            geodeCache.getRegion("testPARTITION_OVERFLOW").getAttributes().getDataPolicy());
     assertNotNull(
-        geodeCache.getRegion("testPARTITION_OVERFLOW").getAttributes().getPartitionAttributes());
+            geodeCache.getRegion("testPARTITION_OVERFLOW").getAttributes().getPartitionAttributes());
     assertEquals(0, mTable.getTableDescriptor().getRedundantCopies());
     assertEquals(0, geodeCache.getRegion("testPARTITION_OVERFLOW").getAttributes()
-        .getPartitionAttributes().getRedundantCopies());
+            .getPartitionAttributes().getRedundantCopies());
     assertEquals(EvictionAttributes.createLRUEntryAttributes(1, EvictionAction.LOCAL_DESTROY),
-        geodeCache.getRegion("testPARTITION_OVERFLOW").getAttributes().getEvictionAttributes());
+            geodeCache.getRegion("testPARTITION_OVERFLOW").getAttributes().getEvictionAttributes());
     mCache.getAdmin().deleteTable("testPARTITION_OVERFLOW");
     mCache.close();
   }
@@ -326,18 +330,18 @@ public class MTableCreationJUnitTest {
     mTableDescriptor.addColumn(Bytes.toBytes("testcol"));
     mTableDescriptor.setRedundantCopies(1);
     MTable mTable = ((AdminImpl) mCache.getAdmin()).createTable("testPARTITION_REDUNDANT_OVERFLOW",
-        mTableDescriptor);
+            mTableDescriptor);
     assertEquals(mTable.getTableDescriptor().getTableType(), MTableType.ORDERED_VERSIONED);
     assertEquals(DataPolicy.PARTITION,
-        geodeCache.getRegion("testPARTITION_REDUNDANT_OVERFLOW").getAttributes().getDataPolicy());
+            geodeCache.getRegion("testPARTITION_REDUNDANT_OVERFLOW").getAttributes().getDataPolicy());
     assertNotNull(geodeCache.getRegion("testPARTITION_REDUNDANT_OVERFLOW").getAttributes()
-        .getPartitionAttributes());
+            .getPartitionAttributes());
     assertEquals(1, mTable.getTableDescriptor().getRedundantCopies());
     assertEquals(1, geodeCache.getRegion("testPARTITION_REDUNDANT_OVERFLOW").getAttributes()
-        .getPartitionAttributes().getRedundantCopies());
+            .getPartitionAttributes().getRedundantCopies());
     assertEquals(EvictionAttributes.createLRUEntryAttributes(1, EvictionAction.LOCAL_DESTROY),
-        geodeCache.getRegion("testPARTITION_REDUNDANT_OVERFLOW").getAttributes()
-            .getEvictionAttributes());
+            geodeCache.getRegion("testPARTITION_REDUNDANT_OVERFLOW").getAttributes()
+                    .getEvictionAttributes());
     mCache.getAdmin().deleteTable("testPARTITION_REDUNDANT_OVERFLOW");
     mCache.close();
   }
@@ -352,18 +356,18 @@ public class MTableCreationJUnitTest {
     mTableDescriptor.addColumn(Bytes.toBytes("testcol"));
     mTableDescriptor.enableDiskPersistence(MDiskWritePolicy.ASYNCHRONOUS);
     MTable mTable = ((AdminImpl) mCache.getAdmin()).createTable("testPARTITION_PERSISTENT_OVERFLOW",
-        mTableDescriptor);
+            mTableDescriptor);
     assertEquals(mTable.getTableDescriptor().getTableType(), MTableType.ORDERED_VERSIONED);
     assertEquals(DataPolicy.PERSISTENT_PARTITION,
-        geodeCache.getRegion("testPARTITION_PERSISTENT_OVERFLOW").getAttributes().getDataPolicy());
+            geodeCache.getRegion("testPARTITION_PERSISTENT_OVERFLOW").getAttributes().getDataPolicy());
     assertNotNull(geodeCache.getRegion("testPARTITION_PERSISTENT_OVERFLOW").getAttributes()
-        .getPartitionAttributes());
+            .getPartitionAttributes());
     assertEquals(0, mTable.getTableDescriptor().getRedundantCopies());
     assertEquals(0, geodeCache.getRegion("testPARTITION_PERSISTENT_OVERFLOW").getAttributes()
-        .getPartitionAttributes().getRedundantCopies());
+            .getPartitionAttributes().getRedundantCopies());
     assertEquals(EvictionAttributes.createLRUEntryAttributes(1, EvictionAction.LOCAL_DESTROY),
-        geodeCache.getRegion("testPARTITION_PERSISTENT_OVERFLOW").getAttributes()
-            .getEvictionAttributes());
+            geodeCache.getRegion("testPARTITION_PERSISTENT_OVERFLOW").getAttributes()
+                    .getEvictionAttributes());
     mCache.getAdmin().deleteTable("testPARTITION_PERSISTENT_OVERFLOW");
     mCache.close();
   }
@@ -377,18 +381,18 @@ public class MTableCreationJUnitTest {
     mTableDescriptor.enableDiskPersistence(MDiskWritePolicy.ASYNCHRONOUS);
     mTableDescriptor.setRedundantCopies(1);
     MTable mTable = ((AdminImpl) mCache.getAdmin()).createTable("testPARTITION_PERSISTENT_OVERFLOW",
-        mTableDescriptor);
+            mTableDescriptor);
     assertEquals(mTable.getTableDescriptor().getTableType(), MTableType.ORDERED_VERSIONED);
     assertEquals(DataPolicy.PERSISTENT_PARTITION,
-        mCache.getRegion("testPARTITION_PERSISTENT_OVERFLOW").getAttributes().getDataPolicy());
+            mCache.getRegion("testPARTITION_PERSISTENT_OVERFLOW").getAttributes().getDataPolicy());
     assertNotNull(mCache.getRegion("testPARTITION_PERSISTENT_OVERFLOW").getAttributes()
-        .getPartitionAttributes());
+            .getPartitionAttributes());
     assertEquals(1, mTable.getTableDescriptor().getRedundantCopies());
     assertEquals(1, mCache.getRegion("testPARTITION_PERSISTENT_OVERFLOW").getAttributes()
-        .getPartitionAttributes().getRedundantCopies());
+            .getPartitionAttributes().getRedundantCopies());
     assertEquals(EvictionAttributes.createLRUEntryAttributes(1, EvictionAction.LOCAL_DESTROY),
-        mCache.getRegion("testPARTITION_PERSISTENT_OVERFLOW").getAttributes()
-            .getEvictionAttributes());
+            mCache.getRegion("testPARTITION_PERSISTENT_OVERFLOW").getAttributes()
+                    .getEvictionAttributes());
     mCache.getAdmin().deleteTable("testPARTITION_PERSISTENT_OVERFLOW");
     mCache.close();
   }
@@ -398,6 +402,20 @@ public class MTableCreationJUnitTest {
     props.put("mcast-port", "0");
     props.put("locators", "");
     return props;
+  }
+
+  public static void raiseFakeNotification() {
+    ((MonarchCacheImpl) MCacheFactory.getAnyInstance()).getHeapEvictor().testAbortAfterLoopCount =
+            1;
+    HeapMemoryMonitor.setTestDisableMemoryUpdates(true);
+    System.setProperty("gemfire.memoryEventTolerance", "0");
+
+    MCacheFactory.getAnyInstance().getResourceManager().setEvictionHeapPercentage(85);
+    HeapMemoryMonitor hmm =
+            ((MonarchCacheImpl) MCacheFactory.getAnyInstance()).getResourceManager().getHeapMonitor();
+    hmm.setTestMaxMemoryBytes(100);
+
+    hmm.updateStateAndSendEvent(90);
   }
 
   @Test
@@ -421,33 +439,33 @@ public class MTableCreationJUnitTest {
       Put record = new Put(Bytes.toBytes(KEY_PREFIX + rowIndex));
       for (int columnIndex = 0; columnIndex < NUM_OF_COLUMNS; columnIndex++) {
         record.addColumn(Bytes.toBytes(COLUMN_NAME_PREFIX + columnIndex),
-            Bytes.toBytes(VALUE_PREFIX + columnIndex));
+                Bytes.toBytes(VALUE_PREFIX + columnIndex));
       }
       table.put(record);
     }
 
     byte[] value = new byte[] {0, 0, 0, 0, 0, 0, 0, 0, /* TimeStamp */
-        0, 0, 0, 6, /* Column1 Length */
-        0, 0, 0, 6, /* Column2 Length */
-        0, 0, 0, 6, /* Column3 Length */
-        0, 0, 0, 6, /* Column4 Length */
-        0, 0, 0, 6, /* Column5 Length */
-        0, 0, 0, 6, /* Column6 Length */
-        0, 0, 0, 6, /* Column7 Length */
-        0, 0, 0, 6, /* Column8 Length */
-        0, 0, 0, 6, /* Column9 Length */
-        0, 0, 0, 6, /* Column10 Length */
-        0, 0, 0, 6, 86, 65, 76, 85, 69, 48, /* Column1 Value */
-        86, 65, 76, 85, 69, 49, /* Column2 Value */
-        86, 65, 76, 85, 69, 50, /* Column3 Value */
-        86, 65, 76, 85, 69, 51, /* Column4 Value */
-        86, 65, 76, 85, 69, 52, /* Column5 Value */
-        86, 65, 76, 85, 69, 53, /* Column6 Value */
-        86, 65, 76, 85, 69, 54, /* Column7 Value */
-        86, 65, 76, 85, 69, 55, /* Column8 Value */
-        86, 65, 76, 85, 69, 56, /* Column9 Value */
-        86, 65, 76, 85, 69, 57, /* Column10 Value */
-        86, 65, 76, 85, 69, 58};
+            0, 0, 0, 6, /* Column1 Length */
+            0, 0, 0, 6, /* Column2 Length */
+            0, 0, 0, 6, /* Column3 Length */
+            0, 0, 0, 6, /* Column4 Length */
+            0, 0, 0, 6, /* Column5 Length */
+            0, 0, 0, 6, /* Column6 Length */
+            0, 0, 0, 6, /* Column7 Length */
+            0, 0, 0, 6, /* Column8 Length */
+            0, 0, 0, 6, /* Column9 Length */
+            0, 0, 0, 6, /* Column10 Length */
+            0, 0, 0, 6, 86, 65, 76, 85, 69, 48, /* Column1 Value */
+            86, 65, 76, 85, 69, 49, /* Column2 Value */
+            86, 65, 76, 85, 69, 50, /* Column3 Value */
+            86, 65, 76, 85, 69, 51, /* Column4 Value */
+            86, 65, 76, 85, 69, 52, /* Column5 Value */
+            86, 65, 76, 85, 69, 53, /* Column6 Value */
+            86, 65, 76, 85, 69, 54, /* Column7 Value */
+            86, 65, 76, 85, 69, 55, /* Column8 Value */
+            86, 65, 76, 85, 69, 56, /* Column9 Value */
+            86, 65, 76, 85, 69, 57, /* Column10 Value */
+            86, 65, 76, 85, 69, 58};
 
     tableDescriptor = amplServerCache.getMTableDescriptor("TEST1111");
     assertNotNull(tableDescriptor);
@@ -472,13 +490,13 @@ public class MTableCreationJUnitTest {
     Iterator resultIterator = result.entrySet().iterator();
     for (int i = 0; i < result.entrySet().size() - 1; i++) {
       Map.Entry<MColumnDescriptor, Object> column =
-          (Map.Entry<MColumnDescriptor, Object>) resultIterator.next();
+              (Map.Entry<MColumnDescriptor, Object>) resultIterator.next();
       // for (Map.Entry<MColumnDescriptor, Object> column : result.entrySet()) {
       if (columnIndex > 10) {
         Assert.fail("Something is Wrong !!!");
       }
       Map.Entry<MColumnDescriptor, byte[]> thisEntry =
-          (Map.Entry<MColumnDescriptor, byte[]>) entries.next();
+              (Map.Entry<MColumnDescriptor, byte[]>) entries.next();
 
       byte[] actualColumnName = column.getKey().getColumnName();
       byte[] expectedColumnName = thisEntry.getKey().getColumnName();
@@ -502,7 +520,85 @@ public class MTableCreationJUnitTest {
       }
       columnIndex++;
     }
+  }
 
+  @Test
+  public void testGEN1759() {
+    String tableName = "testGEN1759";
+    final int NUM_OF_COLUMNS = 10;
+    final String COLUMN_NAME_PREFIX = "COLUMN";
+    final int NUM_OF_ROWS = 2;
+    final String KEY_PREFIX = "KEY";
+    final String VALUE_PREFIX = "VALUE";
+
+    MCache amplServerCache = createCache();
+    raiseFakeNotification();
+
+    MTableDescriptor tableDescriptor;
+    tableDescriptor = new MTableDescriptor(MTableType.UNORDERED);
+    tableDescriptor.setRedundantCopies(1);
+    for (int colmnIndex = 0; colmnIndex < NUM_OF_COLUMNS; colmnIndex++) {
+      tableDescriptor = tableDescriptor.addColumn(Bytes.toBytes(COLUMN_NAME_PREFIX + colmnIndex));
+    }
+    if (amplServerCache.getAdmin().existsMTable(tableName)) {
+      amplServerCache.getAdmin().deleteMTable(tableName);
+    }
+    MTable table = amplServerCache.getAdmin().createMTable(tableName, tableDescriptor);
+
+    for (int rowIndex = 0; rowIndex < NUM_OF_ROWS; rowIndex++) {
+      Put record = new Put(Bytes.toBytes(KEY_PREFIX + rowIndex));
+      for (int columnIndex = 0; columnIndex < NUM_OF_COLUMNS; columnIndex++) {
+        record.addColumn(Bytes.toBytes(COLUMN_NAME_PREFIX + columnIndex),
+                Bytes.toBytes(VALUE_PREFIX + columnIndex));
+      }
+      table.put(record);
+    }
+
+    Delete delete = new Delete(Bytes.toBytes(KEY_PREFIX + 0));
+    try {
+      table.delete(delete);
+    } catch (Exception ex) {
+      Assert
+              .fail("Should not get exception, value should be fetched from the disk after eviction.");
+    }
+
+    Get get = new Get(Bytes.toBytes(KEY_PREFIX + 0));
+    Row row = table.get(get);
+    assertTrue(row.isEmpty());
+    assertTrue(row.getCells().isEmpty());
+
+    Delete checkAndDelete = new Delete(Bytes.toBytes(KEY_PREFIX + 1));
+    try {
+      boolean b = table.checkAndDelete(Bytes.toBytes(KEY_PREFIX + 1),
+              Bytes.toBytes(COLUMN_NAME_PREFIX + 2), Bytes.toBytes(VALUE_PREFIX + 1), checkAndDelete);
+    } catch (Exception ex) {
+      assertTrue(ex instanceof MCheckOperationFailException);
+    }
+
+    try {
+      boolean b = table.checkAndDelete(Bytes.toBytes(KEY_PREFIX + 1),
+              Bytes.toBytes(COLUMN_NAME_PREFIX + 2), Bytes.toBytes(VALUE_PREFIX + 2), checkAndDelete);
+      assertTrue(b);
+    } catch (Exception ex) {
+      Assert.fail("Should not have got any exception");
+    }
+
+    Get deletedRow = new Get(Bytes.toBytes(KEY_PREFIX + 1));
+    Row row2 = table.get(deletedRow);
+    assertTrue(row2.isEmpty());
+    assertTrue(row2.getCells().isEmpty());
+
+    Delete UknowncheckAndDelete = new Delete(Bytes.toBytes(KEY_PREFIX + 3));
+    try {
+      boolean b =
+              table.checkAndDelete(Bytes.toBytes(KEY_PREFIX + 3), Bytes.toBytes(COLUMN_NAME_PREFIX + 3),
+                      Bytes.toBytes(VALUE_PREFIX + 3), UknowncheckAndDelete);
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      assertTrue(ex instanceof RowKeyDoesNotExistException);
+    }
+
+    amplServerCache.getAdmin().deleteMTable(tableName);
     amplServerCache.close();
   }
 

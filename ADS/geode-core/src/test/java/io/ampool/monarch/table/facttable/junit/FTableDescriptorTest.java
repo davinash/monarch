@@ -23,20 +23,45 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
+import io.ampool.monarch.table.MDiskWritePolicy;
 import io.ampool.monarch.table.MEvictionPolicy;
 import io.ampool.monarch.table.ftable.FTableDescriptor;
 import io.ampool.monarch.table.ftable.TierStoreConfiguration;
+import io.ampool.monarch.table.internal.MTableUtils;
 import org.apache.geode.test.junit.categories.FTableTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category(FTableTest.class)
 public class FTableDescriptorTest {
+
+  private static final String MSG = "Incorrect default value for: ";
+
+  /**
+   * Test defaults for the FTableDescriptor.
+   */
+  @Test
+  public void testDefaults() {
+    final FTableDescriptor td = new FTableDescriptor();
+
+    assertEquals(MSG + "block-size", 1000, td.getBlockSize());
+    assertEquals(MSG + "block-format", FTableDescriptor.BlockFormat.AMP_BYTES, td.getBlockFormat());
+    assertEquals(MSG + "column-statistics-enabled", true, td.isColumnStatisticsEnabled());
+    assertEquals(MSG + "partitioning-column", null, td.getPartitioningColumn());
+    assertEquals(MSG + "disk-persistence", true, td.isDiskPersistenceEnabled());
+    assertEquals(MSG + "eviction-policy", MEvictionPolicy.OVERFLOW_TO_TIER, td.getEvictionPolicy());
+    assertEquals(MSG + "disk-write-policy", MDiskWritePolicy.ASYNCHRONOUS, td.getDiskWritePolicy());
+    assertEquals(MSG + "redundancy", 0, td.getRedundantCopies());
+    assertEquals(MSG + "tier-stores", Collections.emptyMap(), td.getTierStores());
+    assertEquals(MSG + "disk-store", MTableUtils.DEFAULT_FTABLE_DISK_STORE_NAME,
+            td.getRecoveryDiskStore());
+  }
 
   @Test
   public void setEvictionPolicy() throws Exception {
@@ -120,9 +145,9 @@ public class FTableDescriptorTest {
     for (Map.Entry<String, TierStoreConfiguration> entry : tierStores.entrySet()) {
       assertEquals(2, entry.getValue().getTierProperties().size());
       assertEquals(TimeUnit.HOURS.toMillis(5),
-          entry.getValue().getTierProperties().get(TierStoreConfiguration.TIER_PARTITION_INTERVAL));
+              entry.getValue().getTierProperties().get(TierStoreConfiguration.TIER_PARTITION_INTERVAL));
       assertEquals(TimeUnit.HOURS.toMillis(10),
-          entry.getValue().getTierProperties().get(TierStoreConfiguration.TIER_TIME_TO_EXPIRE));
+              entry.getValue().getTierProperties().get(TierStoreConfiguration.TIER_TIME_TO_EXPIRE));
     }
   }
 
@@ -159,9 +184,9 @@ public class FTableDescriptorTest {
     assertEquals("Incorrect block properties.", props, newTd.getBlockProperties());
     String p = "orc.block.size";
     assertEquals("Incorrect block property: " + p, "12345",
-        newTd.getBlockProperties().getProperty(p));
+            newTd.getBlockProperties().getProperty(p));
     p = "orc.row.index.stride";
     assertEquals("Incorrect block property: " + p, "1000",
-        newTd.getBlockProperties().getProperty(p));
+            newTd.getBlockProperties().getProperty(p));
   }
 }

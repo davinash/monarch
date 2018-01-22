@@ -124,11 +124,11 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
   @ResourceOperation(resource = Resource.DATA, operation = Operation.READ)
   public Result backupDiskStore(
 
-      @CliOption(key = CliStrings.BACKUP_DISK_STORE__DISKDIRS,
-          unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
-          help = CliStrings.BACKUP_DISK_STORE__DISKDIRS__HELP, mandatory = true) String targetDir,
-      @CliOption(key = CliStrings.BACKUP_DISK_STORE__BASELINEDIR,
-          help = CliStrings.BACKUP_DISK_STORE__BASELINEDIR__HELP) String baselineDir) {
+          @CliOption(key = CliStrings.BACKUP_DISK_STORE__DISKDIRS,
+                  unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
+                  help = CliStrings.BACKUP_DISK_STORE__DISKDIRS__HELP, mandatory = true) String targetDir,
+          @CliOption(key = CliStrings.BACKUP_DISK_STORE__BASELINEDIR,
+                  help = CliStrings.BACKUP_DISK_STORE__BASELINEDIR__HELP) String baselineDir) {
 
     Result result = null;
     try {
@@ -138,13 +138,13 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
 
       if (baselineDir != null && !baselineDir.isEmpty()) {
         backupStatus = AdminDistributedSystemImpl.backupAllMembers(dm, new File(targetDir),
-            new File(baselineDir));
+                new File(baselineDir));
       } else {
         backupStatus = AdminDistributedSystemImpl.backupAllMembers(dm, new File(targetDir), null);
       }
 
       Map<DistributedMember, Set<PersistentID>> backedupMemberDiskstoreMap =
-          backupStatus.getBackedUpDiskStores();
+              backupStatus.getBackedUpDiskStores();
 
       Set<DistributedMember> backedupMembers = backedupMemberDiskstoreMap.keySet();
       CompositeResultData crd = ResultBuilder.createCompositeResultData();
@@ -173,7 +173,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
 
               if (printMember) {
                 writeToBackupDisktoreTable(backedupDiskStoresTable, memberName, UUID, hostName,
-                    directory);
+                        directory);
                 printMember = false;
               } else {
                 writeToBackupDisktoreTable(backedupDiskStoresTable, "", UUID, hostName, directory);
@@ -195,11 +195,11 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
         offlineDiskStoresSection.setHeader(CliStrings.BACKUP_DISK_STORE_MSG_OFFLINE_DISK_STORES);
         for (PersistentID offlineDiskStore : offlineDiskStores) {
           offlineDiskStoresTable.accumulate(CliStrings.BACKUP_DISK_STORE_MSG_UUID,
-              offlineDiskStore.getUUID().toString());
+                  offlineDiskStore.getUUID().toString());
           offlineDiskStoresTable.accumulate(CliStrings.BACKUP_DISK_STORE_MSG_HOST,
-              offlineDiskStore.getHost().getHostName());
+                  offlineDiskStore.getHost().getHostName());
           offlineDiskStoresTable.accumulate(CliStrings.BACKUP_DISK_STORE_MSG_DIRECTORY,
-              offlineDiskStore.getDirectory());
+                  offlineDiskStore.getDirectory());
         }
       }
       result = ResultBuilder.buildResult(crd);
@@ -211,7 +211,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
   }
 
   private void writeToBackupDisktoreTable(TabularResultData backedupDiskStoreTable, String memberId,
-      String UUID, String host, String directory) {
+                                          String UUID, String host, String directory) {
     backedupDiskStoreTable.accumulate(CliStrings.BACKUP_DISK_STORE_MSG_MEMBER, memberId);
     backedupDiskStoreTable.accumulate(CliStrings.BACKUP_DISK_STORE_MSG_UUID, UUID);
     backedupDiskStoreTable.accumulate(CliStrings.BACKUP_DISK_STORE_MSG_DIRECTORY, directory);
@@ -233,14 +233,14 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       return toTabularResult(getDiskStoreListing(dataMembers));
     } catch (FunctionInvocationTargetException ignore) {
       return ResultBuilder.createGemFireErrorResult(CliStrings
-          .format(CliStrings.COULD_NOT_EXECUTE_COMMAND_TRY_AGAIN, CliStrings.LIST_DISK_STORE));
+              .format(CliStrings.COULD_NOT_EXECUTE_COMMAND_TRY_AGAIN, CliStrings.LIST_DISK_STORE));
     } catch (VirtualMachineError e) {
       SystemFailure.initiateFailure(e);
       throw e;
     } catch (Throwable t) {
       SystemFailure.checkFailure();
       return ResultBuilder.createGemFireErrorResult(
-          String.format(CliStrings.LIST_DISK_STORE__ERROR_MESSAGE, toString(t, isDebugging())));
+              String.format(CliStrings.LIST_DISK_STORE__ERROR_MESSAGE, toString(t, isDebugging())));
     }
   }
 
@@ -252,15 +252,15 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
     }
 
     final ResultCollector<?, ?> resultCollector =
-        membersFunctionExecutor.execute(new ListDiskStoresFunction());
+            membersFunctionExecutor.execute(new ListDiskStoresFunction());
 
     final List<?> results = (List<?>) resultCollector.getResult();
     final List<DiskStoreDetails> distributedSystemMemberDiskStores =
-        new ArrayList<DiskStoreDetails>(results.size());
+            new ArrayList<DiskStoreDetails>(results.size());
 
     for (final Object result : results) {
       if (result instanceof Set) { // ignore FunctionInvocationTargetExceptions and other
-                                   // Exceptions...
+        // Exceptions...
         distributedSystemMemberDiskStores.addAll((Set<DiskStoreDetails>) result);
       }
     }
@@ -271,7 +271,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
   }
 
   protected Result toTabularResult(final List<DiskStoreDetails> diskStoreList)
-      throws ResultDataException {
+          throws ResultDataException {
     if (!diskStoreList.isEmpty()) {
       final TabularResultData diskStoreData = ResultBuilder.createTabularResultData();
 
@@ -285,7 +285,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       return ResultBuilder.buildResult(diskStoreData);
     } else {
       return ResultBuilder
-          .createInfoResult(CliStrings.LIST_DISK_STORE__DISK_STORES_NOT_FOUND_MESSAGE);
+              .createInfoResult(CliStrings.LIST_DISK_STORE__DISK_STORES_NOT_FOUND_MESSAGE);
     }
   }
 
@@ -293,43 +293,46 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
   @CliMetaData(shellOnly = false, relatedTopic = {CliStrings.TOPIC_GEODE_DISKSTORE})
   @ResourceOperation(resource = Resource.DATA, operation = Operation.MANAGE)
   public Result createDiskStore(
-      @CliOption(key = CliStrings.CREATE_DISK_STORE__NAME, mandatory = true,
-          optionContext = ConverterHint.DISKSTORE_ALL,
-          help = CliStrings.CREATE_DISK_STORE__NAME__HELP) String name,
-      @CliOption(key = CliStrings.CREATE_DISK_STORE__ALLOW_FORCE_COMPACTION,
-          specifiedDefaultValue = "true", unspecifiedDefaultValue = "false",
-          help = CliStrings.CREATE_DISK_STORE__ALLOW_FORCE_COMPACTION__HELP) boolean allowForceCompaction,
-      @CliOption(key = CliStrings.CREATE_DISK_STORE__AUTO_COMPACT, specifiedDefaultValue = "true",
-          unspecifiedDefaultValue = "true",
-          help = CliStrings.CREATE_DISK_STORE__AUTO_COMPACT__HELP) boolean autoCompact,
-      @CliOption(key = CliStrings.CREATE_DISK_STORE__COMPACTION_THRESHOLD,
-          unspecifiedDefaultValue = "50",
-          help = CliStrings.CREATE_DISK_STORE__COMPACTION_THRESHOLD__HELP) int compactionThreshold,
-      @CliOption(key = CliStrings.CREATE_DISK_STORE__MAX_OPLOG_SIZE,
-          unspecifiedDefaultValue = "1024",
-          help = CliStrings.CREATE_DISK_STORE__MAX_OPLOG_SIZE__HELP) int maxOplogSize,
-      @CliOption(key = CliStrings.CREATE_DISK_STORE__QUEUE_SIZE, unspecifiedDefaultValue = "0",
-          help = CliStrings.CREATE_DISK_STORE__QUEUE_SIZE__HELP) int queueSize,
-      @CliOption(key = CliStrings.CREATE_DISK_STORE__TIME_INTERVAL,
-          unspecifiedDefaultValue = "1000",
-          help = CliStrings.CREATE_DISK_STORE__TIME_INTERVAL__HELP) long timeInterval,
-      @CliOption(key = CliStrings.CREATE_DISK_STORE__WRITE_BUFFER_SIZE,
-          unspecifiedDefaultValue = "32768",
-          help = CliStrings.CREATE_DISK_STORE__WRITE_BUFFER_SIZE__HELP) int writeBufferSize,
-      @CliOption(key = CliStrings.CREATE_DISK_STORE__DIRECTORY_AND_SIZE, mandatory = true,
-          help = CliStrings.CREATE_DISK_STORE__DIRECTORY_AND_SIZE__HELP,
-          optionContext = ConverterHint.STRING_DISABLER) @CliMetaData(
-              valueSeparator = ",") String[] directoriesAndSizes,
-      @CliOption(key = CliStrings.CREATE_DISK_STORE__GROUP,
-          help = CliStrings.CREATE_DISK_STORE__GROUP__HELP,
-          optionContext = ConverterHint.MEMBERGROUP) @CliMetaData(
-              valueSeparator = ",") String[] groups,
-      @CliOption(key = CliStrings.CREATE_DISK_STORE__DISK_USAGE_WARNING_PCT,
-          unspecifiedDefaultValue = "90",
-          help = CliStrings.CREATE_DISK_STORE__DISK_USAGE_WARNING_PCT__HELP) float diskUsageWarningPercentage,
-      @CliOption(key = CliStrings.CREATE_DISK_STORE__DISK_USAGE_CRITICAL_PCT,
-          unspecifiedDefaultValue = "99",
-          help = CliStrings.CREATE_DISK_STORE__DISK_USAGE_CRITICAL_PCT__HELP) float diskUsageCriticalPercentage) {
+          @CliOption(key = CliStrings.CREATE_DISK_STORE__NAME, mandatory = true,
+                  optionContext = ConverterHint.DISKSTORE_ALL,
+                  help = CliStrings.CREATE_DISK_STORE__NAME__HELP) String name,
+          @CliOption(key = CliStrings.CREATE_DISK_STORE__ALLOW_FORCE_COMPACTION,
+                  specifiedDefaultValue = "true", unspecifiedDefaultValue = "false",
+                  help = CliStrings.CREATE_DISK_STORE__ALLOW_FORCE_COMPACTION__HELP) boolean allowForceCompaction,
+          @CliOption(key = CliStrings.CREATE_DISK_STORE__AUTO_COMPACT, specifiedDefaultValue = "true",
+                  unspecifiedDefaultValue = "true",
+                  help = CliStrings.CREATE_DISK_STORE__AUTO_COMPACT__HELP) boolean autoCompact,
+          @CliOption(key = CliStrings.CREATE_DISK_STORE__COMPACTION_THRESHOLD,
+                  unspecifiedDefaultValue = "50",
+                  help = CliStrings.CREATE_DISK_STORE__COMPACTION_THRESHOLD__HELP) int compactionThreshold,
+          @CliOption(key = CliStrings.CREATE_DISK_STORE__MAX_OPLOG_SIZE,
+                  unspecifiedDefaultValue = "1024",
+                  help = CliStrings.CREATE_DISK_STORE__MAX_OPLOG_SIZE__HELP) int maxOplogSize,
+          @CliOption(key = CliStrings.CREATE_DISK_STORE__QUEUE_SIZE, unspecifiedDefaultValue = "0",
+                  help = CliStrings.CREATE_DISK_STORE__QUEUE_SIZE__HELP) int queueSize,
+          @CliOption(key = CliStrings.CREATE_DISK_STORE__TIME_INTERVAL,
+                  unspecifiedDefaultValue = "1000",
+                  help = CliStrings.CREATE_DISK_STORE__TIME_INTERVAL__HELP) long timeInterval,
+          @CliOption(key = CliStrings.CREATE_DISK_STORE__WRITE_BUFFER_SIZE,
+                  unspecifiedDefaultValue = "32768",
+                  help = CliStrings.CREATE_DISK_STORE__WRITE_BUFFER_SIZE__HELP) int writeBufferSize,
+          @CliOption(key = CliStrings.CREATE_DISK_STORE__DIRECTORY_AND_SIZE, mandatory = true,
+                  help = CliStrings.CREATE_DISK_STORE__DIRECTORY_AND_SIZE__HELP,
+                  optionContext = ConverterHint.STRING_DISABLER) @CliMetaData(
+                  valueSeparator = ",") String[] directoriesAndSizes,
+          @CliOption(key = CliStrings.CREATE_DISK_STORE__GROUP,
+                  help = CliStrings.CREATE_DISK_STORE__GROUP__HELP,
+                  optionContext = ConverterHint.MEMBERGROUP) @CliMetaData(
+                  valueSeparator = ",") String[] groups,
+          @CliOption(key = CliStrings.CREATE_DISK_STORE__DISK_USAGE_WARNING_PCT,
+                  unspecifiedDefaultValue = "90",
+                  help = CliStrings.CREATE_DISK_STORE__DISK_USAGE_WARNING_PCT__HELP) float diskUsageWarningPercentage,
+          @CliOption(key = CliStrings.CREATE_DISK_STORE__DISK_USAGE_CRITICAL_PCT,
+                  unspecifiedDefaultValue = "99",
+                  help = CliStrings.CREATE_DISK_STORE__DISK_USAGE_CRITICAL_PCT__HELP) float diskUsageCriticalPercentage,
+          @CliOption(key = CliStrings.CREATE_DISK_STORE__ENABLE_DELTA_PERSISTENCE,
+                  specifiedDefaultValue = "false", unspecifiedDefaultValue = "false",
+                  help = CliStrings.CREATE_DISK_STORE__ENABLE_DELTA_PERSISTENCE__HELP) boolean enableDeltaPersistence) {
 
     try {
       DiskStoreAttributes diskStoreAttributes = new DiskStoreAttributes();
@@ -340,6 +343,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       diskStoreAttributes.queueSize = queueSize;
       diskStoreAttributes.timeInterval = timeInterval;
       diskStoreAttributes.writeBufferSize = writeBufferSize;
+      diskStoreAttributes.enableDeltaPersistence = enableDeltaPersistence;
 
       File[] directories = new File[directoriesAndSizes.length];
       int[] sizes = new int[directoriesAndSizes.length];
@@ -370,7 +374,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       }
 
       ResultCollector<?, ?> rc = CliUtil.executeFunction(new CreateDiskStoreFunction(),
-          new Object[] {name, diskStoreAttributes}, targetMembers);
+              new Object[] {name, diskStoreAttributes}, targetMembers);
       List<CliFunctionResult> results = CliFunctionResult.cleanResults((List<?>) rc.getResult());
 
       AtomicReference<XmlEntity> xmlEntity = new AtomicReference<>();
@@ -378,7 +382,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
         if (result.getThrowable() != null) {
           tabularData.accumulate("Member", result.getMemberIdOrName());
           tabularData.accumulate("Result", "ERROR: " + result.getThrowable().getClass().getName()
-              + ": " + result.getThrowable().getMessage());
+                  + ": " + result.getThrowable().getMessage());
           accumulatedData = true;
           tabularData.setStatus(Status.ERROR);
         } else if (result.isSuccessful()) {
@@ -400,7 +404,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
 
       if (xmlEntity.get() != null) {
         persistClusterConfiguration(result,
-            () -> getSharedConfiguration().addXmlEntity(xmlEntity.get(), groups));
+                () -> getSharedConfiguration().addXmlEntity(xmlEntity.get(), groups));
       }
 
       return ResultBuilder.buildResult(tabularData);
@@ -410,8 +414,8 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
     } catch (Throwable th) {
       SystemFailure.checkFailure();
       return ResultBuilder.createGemFireErrorResult(
-          CliStrings.format(CliStrings.CREATE_DISK_STORE__ERROR_WHILE_CREATING_REASON_0,
-              new Object[] {th.getMessage()}));
+              CliStrings.format(CliStrings.CREATE_DISK_STORE__ERROR_WHILE_CREATING_REASON_0,
+                      new Object[] {th.getMessage()}));
     }
   }
 
@@ -420,28 +424,28 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
   @CliMetaData(shellOnly = false, relatedTopic = {CliStrings.TOPIC_GEODE_DISKSTORE})
   @ResourceOperation(resource = Resource.DATA, operation = Operation.MANAGE)
   public Result compactDiskStore(
-      @CliOption(key = CliStrings.COMPACT_DISK_STORE__NAME, mandatory = true,
-          optionContext = ConverterHint.DISKSTORE_ALL,
-          help = CliStrings.COMPACT_DISK_STORE__NAME__HELP) String diskStoreName,
-      @CliOption(key = CliStrings.COMPACT_DISK_STORE__GROUP,
-          unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
-          help = CliStrings.COMPACT_DISK_STORE__GROUP__HELP,
-          optionContext = ConverterHint.STRING_DISABLER) @CliMetaData(
-              valueSeparator = ",") String[] groups) {
+          @CliOption(key = CliStrings.COMPACT_DISK_STORE__NAME, mandatory = true,
+                  optionContext = ConverterHint.DISKSTORE_ALL,
+                  help = CliStrings.COMPACT_DISK_STORE__NAME__HELP) String diskStoreName,
+          @CliOption(key = CliStrings.COMPACT_DISK_STORE__GROUP,
+                  unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
+                  help = CliStrings.COMPACT_DISK_STORE__GROUP__HELP,
+                  optionContext = ConverterHint.STRING_DISABLER) @CliMetaData(
+                  valueSeparator = ",") String[] groups) {
     Result result = null;
 
     try {
       // disk store exists validation
       if (!diskStoreExists(diskStoreName)) {
         result = ResultBuilder.createUserErrorResult(
-            CliStrings.format(CliStrings.COMPACT_DISK_STORE__DISKSTORE_0_DOESNOT_EXIST,
-                new Object[] {diskStoreName}));
+                CliStrings.format(CliStrings.COMPACT_DISK_STORE__DISKSTORE_0_DOESNOT_EXIST,
+                        new Object[] {diskStoreName}));
       } else {
         InternalDistributedSystem ds =
-            (InternalDistributedSystem) getCache().getDistributedSystem();
+                (InternalDistributedSystem) getCache().getDistributedSystem();
 
         Map<DistributedMember, PersistentID> overallCompactInfo =
-            new HashMap<DistributedMember, PersistentID>();
+                new HashMap<DistributedMember, PersistentID>();
 
         Set<?> otherMembers = ds.getDistributionManager().getOtherNormalDistributionManagerIds();
         Set<InternalDistributedMember> allMembers = new HashSet<InternalDistributedMember>();
@@ -456,12 +460,12 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
         // if groups are specified, find members in the specified group
         if (groups != null && groups.length > 0) {
           groupInfo = CliStrings.format(CliStrings.COMPACT_DISK_STORE__MSG__FOR_GROUP,
-              new Object[] {Arrays.toString(groups) + "."});
+                  new Object[] {Arrays.toString(groups) + "."});
           final Set<InternalDistributedMember> selectedMembers =
-              new HashSet<InternalDistributedMember>();
+                  new HashSet<InternalDistributedMember>();
           List<String> targetedGroups = Arrays.asList(groups);
           for (Iterator<InternalDistributedMember> iterator = allMembers.iterator(); iterator
-              .hasNext();) {
+                  .hasNext();) {
             InternalDistributedMember member = iterator.next();
             List<String> memberGroups = member.getGroups();
             if (!Collections.disjoint(targetedGroups, memberGroups)) {
@@ -476,8 +480,8 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
         // have at least one member
         if (allMembers.isEmpty()) {
           result = ResultBuilder.createUserErrorResult(
-              CliStrings.format(CliStrings.COMPACT_DISK_STORE__NO_MEMBERS_FOUND_IN_SPECIFED_GROUP,
-                  new Object[] {Arrays.toString(groups)}));
+                  CliStrings.format(CliStrings.COMPACT_DISK_STORE__NO_MEMBERS_FOUND_IN_SPECIFED_GROUP,
+                          new Object[] {Arrays.toString(groups)}));
         } else {
           // first invoke on local member if it exists in the targeted set
           if (allMembers.remove(ds.getDistributedMember())) {
@@ -492,16 +496,16 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
           if (!allMembers.isEmpty()) {
             // Invoke compact on all 'other' members
             Map<DistributedMember, PersistentID> memberCompactInfo =
-                CompactRequest.send(ds.getDistributionManager(), diskStoreName, allMembers);
+                    CompactRequest.send(ds.getDistributionManager(), diskStoreName, allMembers);
             if (memberCompactInfo != null && !memberCompactInfo.isEmpty()) {
               overallCompactInfo.putAll(memberCompactInfo);
               memberCompactInfo.clear();
             }
             String notExecutedMembers = CompactRequest.getNotExecutedMembers();
             LogWrapper.getInstance()
-                .info("compact disk-store \"" + diskStoreName
-                    + "\" message was scheduled to be sent to but was not send to "
-                    + notExecutedMembers);
+                    .info("compact disk-store \"" + diskStoreName
+                            + "\" message was scheduled to be sent to but was not send to "
+                            + notExecutedMembers);
           }
 
           // If compaction happened at all, then prepare the summary
@@ -528,15 +532,15 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
             result = ResultBuilder.buildResult(compositeResultData);
           } else {
             result = ResultBuilder.createInfoResult(
-                CliStrings.COMPACT_DISK_STORE__COMPACTION_ATTEMPTED_BUT_NOTHING_TO_COMPACT);
+                    CliStrings.COMPACT_DISK_STORE__COMPACTION_ATTEMPTED_BUT_NOTHING_TO_COMPACT);
           }
         } // all members' if
       } // disk store exists' if
     } catch (RuntimeException e) {
       LogWrapper.getInstance().info(e.getMessage(), e);
       result = ResultBuilder.createGemFireErrorResult(
-          CliStrings.format(CliStrings.COMPACT_DISK_STORE__ERROR_WHILE_COMPACTING_REASON_0,
-              new Object[] {e.getMessage()}));
+              CliStrings.format(CliStrings.COMPACT_DISK_STORE__ERROR_WHILE_COMPACTING_REASON_0,
+                      new Object[] {e.getMessage()}));
     }
 
     return result;
@@ -561,23 +565,23 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
   }
 
   @CliCommand(value = CliStrings.COMPACT_OFFLINE_DISK_STORE,
-      help = CliStrings.COMPACT_OFFLINE_DISK_STORE__HELP)
+          help = CliStrings.COMPACT_OFFLINE_DISK_STORE__HELP)
   @CliMetaData(shellOnly = true, relatedTopic = {CliStrings.TOPIC_GEODE_DISKSTORE})
   public Result compactOfflineDiskStore(
-      @CliOption(key = CliStrings.COMPACT_OFFLINE_DISK_STORE__NAME, mandatory = true,
-          help = CliStrings.COMPACT_OFFLINE_DISK_STORE__NAME__HELP) String diskStoreName,
-      @CliOption(key = CliStrings.COMPACT_OFFLINE_DISK_STORE__DISKDIRS, mandatory = true,
-          unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
-          help = CliStrings.COMPACT_OFFLINE_DISK_STORE__DISKDIRS__HELP,
-          optionContext = ConverterHint.DIRS + ":" + ConverterHint.STRING_DISABLER) @CliMetaData(
-              valueSeparator = ",") String[] diskDirs,
-      @CliOption(key = CliStrings.COMPACT_OFFLINE_DISK_STORE__MAXOPLOGSIZE,
-          unspecifiedDefaultValue = "-1",
-          help = CliStrings.COMPACT_OFFLINE_DISK_STORE__MAXOPLOGSIZE__HELP) long maxOplogSize,
-      @CliOption(key = CliStrings.COMPACT_OFFLINE_DISK_STORE__J,
-          unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
-          help = CliStrings.COMPACT_OFFLINE_DISK_STORE__J__HELP) @CliMetaData(
-              valueSeparator = ",") String[] jvmProps) {
+          @CliOption(key = CliStrings.COMPACT_OFFLINE_DISK_STORE__NAME, mandatory = true,
+                  help = CliStrings.COMPACT_OFFLINE_DISK_STORE__NAME__HELP) String diskStoreName,
+          @CliOption(key = CliStrings.COMPACT_OFFLINE_DISK_STORE__DISKDIRS, mandatory = true,
+                  unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
+                  help = CliStrings.COMPACT_OFFLINE_DISK_STORE__DISKDIRS__HELP,
+                  optionContext = ConverterHint.DIRS + ":" + ConverterHint.STRING_DISABLER) @CliMetaData(
+                  valueSeparator = ",") String[] diskDirs,
+          @CliOption(key = CliStrings.COMPACT_OFFLINE_DISK_STORE__MAXOPLOGSIZE,
+                  unspecifiedDefaultValue = "-1",
+                  help = CliStrings.COMPACT_OFFLINE_DISK_STORE__MAXOPLOGSIZE__HELP) long maxOplogSize,
+          @CliOption(key = CliStrings.COMPACT_OFFLINE_DISK_STORE__J,
+                  unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
+                  help = CliStrings.COMPACT_OFFLINE_DISK_STORE__J__HELP) @CliMetaData(
+                  valueSeparator = ",") String[] jvmProps) {
     Result result = null;
     LogWrapper logWrapper = LogWrapper.getInstance();
 
@@ -590,13 +594,13 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       String validatedDirectories = validatedDirectories(diskDirs);
       if (validatedDirectories != null) {
         throw new IllegalArgumentException(
-            "Could not find " + CliStrings.COMPACT_OFFLINE_DISK_STORE__DISKDIRS + ": \""
-                + validatedDirectories + "\"");
+                "Could not find " + CliStrings.COMPACT_OFFLINE_DISK_STORE__DISKDIRS + ": \""
+                        + validatedDirectories + "\"");
       }
 
       List<String> commandList = new ArrayList<String>();
       commandList.add(System.getProperty("java.home") + File.separatorChar + "bin"
-          + File.separatorChar + "java");
+              + File.separatorChar + "java");
 
       configureLogging(commandList);
 
@@ -665,11 +669,11 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
         Gfsh.println(output.toString());
       }
       String fieldsMessage = (maxOplogSize != -1
-          ? CliStrings.COMPACT_OFFLINE_DISK_STORE__MAXOPLOGSIZE + "=" + maxOplogSize + "," : "");
+              ? CliStrings.COMPACT_OFFLINE_DISK_STORE__MAXOPLOGSIZE + "=" + maxOplogSize + "," : "");
       fieldsMessage += CliUtil.arrayToString(diskDirs);
       String errorString = CliStrings.format(
-          CliStrings.COMPACT_OFFLINE_DISK_STORE__MSG__ERROR_WHILE_COMPACTING_DISKSTORE_0_WITH_1_REASON_2,
-          new Object[] {diskStoreName, fieldsMessage});
+              CliStrings.COMPACT_OFFLINE_DISK_STORE__MSG__ERROR_WHILE_COMPACTING_DISKSTORE_0_WITH_1_REASON_2,
+              new Object[] {diskStoreName, fieldsMessage});
       result = ResultBuilder.createUserErrorResult(errorString);
       if (logWrapper.fineEnabled()) {
         logWrapper.fine(e.getMessage(), e);
@@ -705,24 +709,24 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
 
 
   @CliCommand(value = CliStrings.UPGRADE_OFFLINE_DISK_STORE,
-      help = CliStrings.UPGRADE_OFFLINE_DISK_STORE__HELP)
+          help = CliStrings.UPGRADE_OFFLINE_DISK_STORE__HELP)
   @CliMetaData(shellOnly = true, relatedTopic = {CliStrings.TOPIC_GEODE_DISKSTORE})
   public Result upgradeOfflineDiskStore(
-      @CliOption(key = CliStrings.UPGRADE_OFFLINE_DISK_STORE__NAME, mandatory = true,
-          help = CliStrings.UPGRADE_OFFLINE_DISK_STORE__NAME__HELP) String diskStoreName,
-      @CliOption(key = CliStrings.UPGRADE_OFFLINE_DISK_STORE__DISKDIRS, mandatory = true,
-          unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
-          help = CliStrings.UPGRADE_OFFLINE_DISK_STORE__DISKDIRS__HELP,
-          optionContext = ConverterHint.DIRS + ":" + ConverterHint.STRING_DISABLER) @CliMetaData(
-              valueSeparator = ",") String[] diskDirs,
-      @CliOption(key = CliStrings.UPGRADE_OFFLINE_DISK_STORE__MAXOPLOGSIZE,
-          unspecifiedDefaultValue = "-1",
-          help = CliStrings.UPGRADE_OFFLINE_DISK_STORE__MAXOPLOGSIZE__HELP) long maxOplogSize,
-      @CliOption(key = CliStrings.UPGRADE_OFFLINE_DISK_STORE__J,
-          unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
-          help = CliStrings.UPGRADE_OFFLINE_DISK_STORE__J__HELP) @CliMetaData(
-              valueSeparator = ",") String[] jvmProps)
-      throws InterruptedException {
+          @CliOption(key = CliStrings.UPGRADE_OFFLINE_DISK_STORE__NAME, mandatory = true,
+                  help = CliStrings.UPGRADE_OFFLINE_DISK_STORE__NAME__HELP) String diskStoreName,
+          @CliOption(key = CliStrings.UPGRADE_OFFLINE_DISK_STORE__DISKDIRS, mandatory = true,
+                  unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
+                  help = CliStrings.UPGRADE_OFFLINE_DISK_STORE__DISKDIRS__HELP,
+                  optionContext = ConverterHint.DIRS + ":" + ConverterHint.STRING_DISABLER) @CliMetaData(
+                  valueSeparator = ",") String[] diskDirs,
+          @CliOption(key = CliStrings.UPGRADE_OFFLINE_DISK_STORE__MAXOPLOGSIZE,
+                  unspecifiedDefaultValue = "-1",
+                  help = CliStrings.UPGRADE_OFFLINE_DISK_STORE__MAXOPLOGSIZE__HELP) long maxOplogSize,
+          @CliOption(key = CliStrings.UPGRADE_OFFLINE_DISK_STORE__J,
+                  unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
+                  help = CliStrings.UPGRADE_OFFLINE_DISK_STORE__J__HELP) @CliMetaData(
+                  valueSeparator = ",") String[] jvmProps)
+          throws InterruptedException {
 
 
     Result result = null;
@@ -737,13 +741,13 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       String validatedDirectories = validatedDirectories(diskDirs);
       if (validatedDirectories != null) {
         throw new IllegalArgumentException(
-            "Could not find " + CliStrings.UPGRADE_OFFLINE_DISK_STORE__DISKDIRS + ": \""
-                + validatedDirectories + "\"");
+                "Could not find " + CliStrings.UPGRADE_OFFLINE_DISK_STORE__DISKDIRS + ": \""
+                        + validatedDirectories + "\"");
       }
 
       List<String> commandList = new ArrayList<String>();
       commandList.add(System.getProperty("java.home") + File.separatorChar + "bin"
-          + File.separatorChar + "java");
+              + File.separatorChar + "java");
 
       configureLogging(commandList);
 
@@ -814,11 +818,11 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
         Gfsh.println(output.toString());
       }
       String fieldsMessage = (maxOplogSize != -1
-          ? CliStrings.UPGRADE_OFFLINE_DISK_STORE__MAXOPLOGSIZE + "=" + maxOplogSize + "," : "");
+              ? CliStrings.UPGRADE_OFFLINE_DISK_STORE__MAXOPLOGSIZE + "=" + maxOplogSize + "," : "");
       fieldsMessage += CliUtil.arrayToString(diskDirs);
       String errorString = CliStrings.format(
-          CliStrings.UPGRADE_OFFLINE_DISK_STORE__MSG__ERROR_WHILE_COMPACTING_DISKSTORE_0_WITH_1_REASON_2,
-          new Object[] {diskStoreName, fieldsMessage});
+              CliStrings.UPGRADE_OFFLINE_DISK_STORE__MSG__ERROR_WHILE_COMPACTING_DISKSTORE_0_WITH_1_REASON_2,
+              new Object[] {diskStoreName, fieldsMessage});
       result = ResultBuilder.createUserErrorResult(errorString);
       if (logWrapper.fineEnabled()) {
         logWrapper.fine(e.getMessage(), e);
@@ -879,12 +883,12 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
   @CliMetaData(shellOnly = false, relatedTopic = {CliStrings.TOPIC_GEODE_DISKSTORE})
   @ResourceOperation(resource = Resource.CLUSTER, operation = Operation.READ)
   public Result describeDiskStore(
-      @CliOption(key = CliStrings.DESCRIBE_DISK_STORE__MEMBER, mandatory = true,
-          optionContext = ConverterHint.MEMBERIDNAME,
-          help = CliStrings.DESCRIBE_DISK_STORE__MEMBER__HELP) final String memberName,
-      @CliOption(key = CliStrings.DESCRIBE_DISK_STORE__NAME, mandatory = true,
-          optionContext = ConverterHint.DISKSTORE_ALL,
-          help = CliStrings.DESCRIBE_DISK_STORE__NAME__HELP) final String diskStoreName) {
+          @CliOption(key = CliStrings.DESCRIBE_DISK_STORE__MEMBER, mandatory = true,
+                  optionContext = ConverterHint.MEMBERIDNAME,
+                  help = CliStrings.DESCRIBE_DISK_STORE__MEMBER__HELP) final String memberName,
+          @CliOption(key = CliStrings.DESCRIBE_DISK_STORE__NAME, mandatory = true,
+                  optionContext = ConverterHint.DISKSTORE_ALL,
+                  help = CliStrings.DESCRIBE_DISK_STORE__NAME__HELP) final String diskStoreName) {
     try {
       return toCompositeResult(getDiskStoreDescription(memberName, diskStoreName));
     } catch (DiskStoreNotFoundException e) {
@@ -893,26 +897,26 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       return ResultBuilder.createShellClientErrorResult(e.getMessage());
     } catch (FunctionInvocationTargetException ignore) {
       return ResultBuilder.createGemFireErrorResult(CliStrings
-          .format(CliStrings.COULD_NOT_EXECUTE_COMMAND_TRY_AGAIN, CliStrings.DESCRIBE_DISK_STORE));
+              .format(CliStrings.COULD_NOT_EXECUTE_COMMAND_TRY_AGAIN, CliStrings.DESCRIBE_DISK_STORE));
     } catch (VirtualMachineError e) {
       SystemFailure.initiateFailure(e);
       throw e;
     } catch (Throwable t) {
       SystemFailure.checkFailure();
       return ResultBuilder
-          .createGemFireErrorResult(String.format(CliStrings.DESCRIBE_DISK_STORE__ERROR_MESSAGE,
-              memberName, diskStoreName, toString(t, isDebugging())));
+              .createGemFireErrorResult(String.format(CliStrings.DESCRIBE_DISK_STORE__ERROR_MESSAGE,
+                      memberName, diskStoreName, toString(t, isDebugging())));
     }
   }
 
   protected DiskStoreDetails getDiskStoreDescription(final String memberName,
-      final String diskStoreName) {
+                                                     final String diskStoreName) {
     final DistributedMember member = getMember(getCache(), memberName); // may throw a
-                                                                        // MemberNotFoundException
+    // MemberNotFoundException
 
     final ResultCollector<?, ?> resultCollector =
-        getMembersFunctionExecutor(Collections.singleton(member)).withArgs(diskStoreName)
-            .execute(new DescribeDiskStoreFunction());
+            getMembersFunctionExecutor(Collections.singleton(member)).withArgs(diskStoreName)
+                    .execute(new DescribeDiskStoreFunction());
 
     final Object result = ((List<?>) resultCollector.getResult()).get(0);
 
@@ -926,21 +930,21 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       if (isLogging()) {
         if (cause != null) {
           getGfsh().logSevere(String.format(
-              "Exception (%1$s) occurred while executing '%2$s' on member (%3$s) with disk store (%4$s).",
-              ClassUtils.getClassName(cause), CliStrings.DESCRIBE_DISK_STORE, memberName,
-              diskStoreName), cause);
+                  "Exception (%1$s) occurred while executing '%2$s' on member (%3$s) with disk store (%4$s).",
+                  ClassUtils.getClassName(cause), CliStrings.DESCRIBE_DISK_STORE, memberName,
+                  diskStoreName), cause);
         } else {
           getGfsh().logSevere(String.format(
-              "Received an unexpected result of type (%1$s) while executing '%2$s' on member (%3$s) with disk store (%4$s).",
-              ClassUtils.getClassName(result), CliStrings.DESCRIBE_DISK_STORE, memberName,
-              diskStoreName), null);
+                  "Received an unexpected result of type (%1$s) while executing '%2$s' on member (%3$s) with disk store (%4$s).",
+                  ClassUtils.getClassName(result), CliStrings.DESCRIBE_DISK_STORE, memberName,
+                  diskStoreName), null);
         }
       }
 
       throw new RuntimeException(
-          CliStrings.format(CliStrings.UNEXPECTED_RETURN_TYPE_EXECUTING_COMMAND_ERROR_MESSAGE,
-              ClassUtils.getClassName(result), CliStrings.DESCRIBE_DISK_STORE),
-          cause);
+              CliStrings.format(CliStrings.UNEXPECTED_RETURN_TYPE_EXECUTING_COMMAND_ERROR_MESSAGE,
+                      ClassUtils.getClassName(result), CliStrings.DESCRIBE_DISK_STORE),
+              cause);
     }
   }
 
@@ -954,20 +958,22 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
     diskStoreSection.addData("Member ID", diskStoreDetails.getMemberId());
     diskStoreSection.addData("Member Name", diskStoreDetails.getMemberName());
     diskStoreSection.addData("Allow Force Compaction",
-        toString(diskStoreDetails.isAllowForceCompaction(), "Yes", "No"));
+            toString(diskStoreDetails.isAllowForceCompaction(), "Yes", "No"));
     diskStoreSection.addData("Auto Compaction",
-        toString(diskStoreDetails.isAutoCompact(), "Yes", "No"));
+            toString(diskStoreDetails.isAutoCompact(), "Yes", "No"));
+    diskStoreSection.addData("Delta Persistence",
+            toString(diskStoreDetails.isEnableDeltaPersistence(), "Yes", "No"));
     diskStoreSection.addData("Compaction Threshold", diskStoreDetails.getCompactionThreshold());
     diskStoreSection.addData("Max Oplog Size", diskStoreDetails.getMaxOplogSize());
     diskStoreSection.addData("Queue Size", diskStoreDetails.getQueueSize());
     diskStoreSection.addData("Time Interval", diskStoreDetails.getTimeInterval());
     diskStoreSection.addData("Write Buffer Size", diskStoreDetails.getWriteBufferSize());
     diskStoreSection.addData("Disk Usage Warning Percentage",
-        diskStoreDetails.getDiskUsageWarningPercentage());
+            diskStoreDetails.getDiskUsageWarningPercentage());
     diskStoreSection.addData("Disk Usage Critical Percentage",
-        diskStoreDetails.getDiskUsageCriticalPercentage());
+            diskStoreDetails.getDiskUsageCriticalPercentage());
     diskStoreSection.addData("PDX Serialization Meta-Data Stored",
-        toString(diskStoreDetails.isPdxSerializationMetaDataStored(), "Yes", "No"));
+            toString(diskStoreDetails.isPdxSerializationMetaDataStored(), "Yes", "No"));
 
     final TabularResultData diskDirTable = diskStoreData.addSection().addTable();
 
@@ -983,13 +989,13 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       regionTable.accumulate("Region Name", regionDetails.getName());
       regionTable.accumulate("Persistent", toString(regionDetails.isPersistent(), "Yes", "No"));
       regionTable.accumulate("Overflow To Disk",
-          toString(regionDetails.isOverflowToDisk(), "Yes", "No"));
+              toString(regionDetails.isOverflowToDisk(), "Yes", "No"));
     }
 
     final TabularResultData cacheServerTable = diskStoreData.addSection().addTable();
 
     for (DiskStoreDetails.CacheServerDetails cacheServerDetails : diskStoreDetails
-        .iterateCacheServers()) {
+            .iterateCacheServers()) {
       cacheServerTable.accumulate("Bind Address", cacheServerDetails.getBindAddress());
       cacheServerTable.accumulate("Hostname for Clients", cacheServerDetails.getHostName());
       cacheServerTable.accumulate("Port", cacheServerDetails.getPort());
@@ -1005,7 +1011,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
     final TabularResultData asyncEventQueueTable = diskStoreData.addSection().addTable();
 
     for (DiskStoreDetails.AsyncEventQueueDetails asyncEventQueueDetails : diskStoreDetails
-        .iterateAsyncEventQueues()) {
+            .iterateAsyncEventQueues()) {
       asyncEventQueueTable.accumulate("Async Event Queue ID", asyncEventQueueDetails.getId());
     }
 
@@ -1013,15 +1019,15 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
   }
 
   @CliCommand(value = CliStrings.REVOKE_MISSING_DISK_STORE,
-      help = CliStrings.REVOKE_MISSING_DISK_STORE__HELP)
+          help = CliStrings.REVOKE_MISSING_DISK_STORE__HELP)
   @CliMetaData(relatedTopic = {CliStrings.TOPIC_GEODE_DISKSTORE})
   @ResourceOperation(resource = Resource.DATA, operation = Operation.MANAGE)
   public Result revokeMissingDiskStore(@CliOption(key = CliStrings.REVOKE_MISSING_DISK_STORE__ID,
-      mandatory = true, help = CliStrings.REVOKE_MISSING_DISK_STORE__ID__HELP) String id) {
+          mandatory = true, help = CliStrings.REVOKE_MISSING_DISK_STORE__ID__HELP) String id) {
 
     try {
       DistributedSystemMXBean dsMXBean = ManagementService
-          .getManagementService(CacheFactory.getAnyInstance()).getDistributedSystemMXBean();
+              .getManagementService(CacheFactory.getAnyInstance()).getDistributedSystemMXBean();
       if (dsMXBean.revokeMissingDiskStores(id)) {
         return ResultBuilder.createInfoResult("Missing disk store successfully revoked");
       }
@@ -1034,15 +1040,15 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       SystemFailure.checkFailure();
       if (th.getMessage() == null) {
         return ResultBuilder.createGemFireErrorResult(
-            "An error occurred while revoking missing disk stores: " + th);
+                "An error occurred while revoking missing disk stores: " + th);
       }
       return ResultBuilder.createGemFireErrorResult(
-          "An error occurred while revoking missing disk stores: " + th.getMessage());
+              "An error occurred while revoking missing disk stores: " + th.getMessage());
     }
   }
 
   @CliCommand(value = CliStrings.SHOW_MISSING_DISK_STORE,
-      help = CliStrings.SHOW_MISSING_DISK_STORE__HELP)
+          help = CliStrings.SHOW_MISSING_DISK_STORE__HELP)
   @CliMetaData(relatedTopic = {CliStrings.TOPIC_GEODE_DISKSTORE})
   @ResourceOperation(resource = Resource.CLUSTER, operation = Operation.READ)
   public Result showMissingDiskStore() {
@@ -1057,7 +1063,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       return toMissingDiskStoresTabularResult(results);
     } catch (FunctionInvocationTargetException ignore) {
       return ResultBuilder.createGemFireErrorResult(CliStrings.format(
-          CliStrings.COULD_NOT_EXECUTE_COMMAND_TRY_AGAIN, CliStrings.SHOW_MISSING_DISK_STORE));
+              CliStrings.COULD_NOT_EXECUTE_COMMAND_TRY_AGAIN, CliStrings.SHOW_MISSING_DISK_STORE));
     } catch (VirtualMachineError e) {
       SystemFailure.initiateFailure(e);
       throw e;
@@ -1065,10 +1071,10 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       SystemFailure.checkFailure();
       if (t.getMessage() == null) {
         return ResultBuilder.createGemFireErrorResult(
-            String.format(CliStrings.SHOW_MISSING_DISK_STORE__ERROR_MESSAGE, t));
+                String.format(CliStrings.SHOW_MISSING_DISK_STORE__ERROR_MESSAGE, t));
       }
       return ResultBuilder.createGemFireErrorResult(
-          String.format(CliStrings.SHOW_MISSING_DISK_STORE__ERROR_MESSAGE, t.getMessage()));
+              String.format(CliStrings.SHOW_MISSING_DISK_STORE__ERROR_MESSAGE, t.getMessage()));
     }
   }
 
@@ -1079,13 +1085,13 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
     }
 
     final ResultCollector<?, ?> resultCollector =
-        membersFunctionExecutor.execute(new ShowMissingDiskStoresFunction());
+            membersFunctionExecutor.execute(new ShowMissingDiskStoresFunction());
 
     final List<?> results = (List<?>) resultCollector.getResult();
     final List<Object> distributedPersistentRecoveryDetails = new ArrayList<Object>(results.size());
     for (final Object result : results) {
       if (result instanceof Set) { // ignore FunctionInvocationTargetExceptions and other
-                                   // Exceptions...
+        // Exceptions...
         distributedPersistentRecoveryDetails.addAll((Set<Object>) result);
       }
     }
@@ -1093,7 +1099,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
   }
 
   protected Result toMissingDiskStoresTabularResult(final List<Object> resultDetails)
-      throws ResultDataException {
+          throws ResultDataException {
     CompositeResultData crd = ResultBuilder.createCompositeResultData();
     List<PersistentMemberPattern> missingDiskStores = new ArrayList<PersistentMemberPattern>();
     List<ColocatedRegionDetails> missingColocatedRegions = new ArrayList<ColocatedRegionDetails>();
@@ -1149,20 +1155,20 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
   }
 
   @CliCommand(value = CliStrings.DESCRIBE_OFFLINE_DISK_STORE,
-      help = CliStrings.DESCRIBE_OFFLINE_DISK_STORE__HELP)
+          help = CliStrings.DESCRIBE_OFFLINE_DISK_STORE__HELP)
   @CliMetaData(shellOnly = true, relatedTopic = {CliStrings.TOPIC_GEODE_DISKSTORE})
   public Result describeOfflineDiskStore(
-      @CliOption(key = CliStrings.DESCRIBE_OFFLINE_DISK_STORE__DISKSTORENAME, mandatory = true,
-          help = CliStrings.DESCRIBE_OFFLINE_DISK_STORE__DISKSTORENAME__HELP) String diskStoreName,
-      @CliOption(key = CliStrings.DESCRIBE_OFFLINE_DISK_STORE__DISKDIRS, mandatory = true,
-          help = CliStrings.DESCRIBE_OFFLINE_DISK_STORE__DISKDIRS__HELP) @CliMetaData(
-              valueSeparator = ",") String[] diskDirs,
-      @CliOption(key = CliStrings.DESCRIBE_OFFLINE_DISK_STORE__PDX_TYPES,
-          unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
-          help = CliStrings.DESCRIBE_OFFLINE_DISK_STORE__PDX_TYPES__HELP) Boolean listPdxTypes,
-      @CliOption(key = CliStrings.DESCRIBE_OFFLINE_DISK_STORE__REGIONNAME,
-          help = CliStrings.DESCRIBE_OFFLINE_DISK_STORE__REGIONNAME__HELP,
-          unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE) String regionName) {
+          @CliOption(key = CliStrings.DESCRIBE_OFFLINE_DISK_STORE__DISKSTORENAME, mandatory = true,
+                  help = CliStrings.DESCRIBE_OFFLINE_DISK_STORE__DISKSTORENAME__HELP) String diskStoreName,
+          @CliOption(key = CliStrings.DESCRIBE_OFFLINE_DISK_STORE__DISKDIRS, mandatory = true,
+                  help = CliStrings.DESCRIBE_OFFLINE_DISK_STORE__DISKDIRS__HELP) @CliMetaData(
+                  valueSeparator = ",") String[] diskDirs,
+          @CliOption(key = CliStrings.DESCRIBE_OFFLINE_DISK_STORE__PDX_TYPES,
+                  unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
+                  help = CliStrings.DESCRIBE_OFFLINE_DISK_STORE__PDX_TYPES__HELP) Boolean listPdxTypes,
+          @CliOption(key = CliStrings.DESCRIBE_OFFLINE_DISK_STORE__REGIONNAME,
+                  help = CliStrings.DESCRIBE_OFFLINE_DISK_STORE__REGIONNAME__HELP,
+                  unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE) String regionName) {
 
     try {
       final File[] dirs = new File[diskDirs.length];
@@ -1186,24 +1192,24 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       SystemFailure.checkFailure();
       if (th.getMessage() == null) {
         return ResultBuilder.createGemFireErrorResult(
-            "An error occurred while describing offline disk stores: " + th);
+                "An error occurred while describing offline disk stores: " + th);
       }
       return ResultBuilder.createGemFireErrorResult(
-          "An error occurred while describing offline disk stores: " + th.getMessage());
+              "An error occurred while describing offline disk stores: " + th.getMessage());
     }
   }
 
   @CliCommand(value = CliStrings.EXPORT_OFFLINE_DISK_STORE,
-      help = CliStrings.EXPORT_OFFLINE_DISK_STORE__HELP)
+          help = CliStrings.EXPORT_OFFLINE_DISK_STORE__HELP)
   @CliMetaData(shellOnly = true, relatedTopic = {CliStrings.TOPIC_GEODE_DISKSTORE})
   public Result exportOfflineDiskStore(
-      @CliOption(key = CliStrings.EXPORT_OFFLINE_DISK_STORE__DISKSTORENAME, mandatory = true,
-          help = CliStrings.EXPORT_OFFLINE_DISK_STORE__DISKSTORENAME__HELP) String diskStoreName,
-      @CliOption(key = CliStrings.EXPORT_OFFLINE_DISK_STORE__DISKDIRS, mandatory = true,
-          help = CliStrings.EXPORT_OFFLINE_DISK_STORE__DISKDIRS__HELP) @CliMetaData(
-              valueSeparator = ",") String[] diskDirs,
-      @CliOption(key = CliStrings.EXPORT_OFFLINE_DISK_STORE__DIR, mandatory = true,
-          help = CliStrings.EXPORT_OFFLINE_DISK_STORE__DIR__HELP) String dir) {
+          @CliOption(key = CliStrings.EXPORT_OFFLINE_DISK_STORE__DISKSTORENAME, mandatory = true,
+                  help = CliStrings.EXPORT_OFFLINE_DISK_STORE__DISKSTORENAME__HELP) String diskStoreName,
+          @CliOption(key = CliStrings.EXPORT_OFFLINE_DISK_STORE__DISKDIRS, mandatory = true,
+                  help = CliStrings.EXPORT_OFFLINE_DISK_STORE__DISKDIRS__HELP) @CliMetaData(
+                  valueSeparator = ",") String[] diskDirs,
+          @CliOption(key = CliStrings.EXPORT_OFFLINE_DISK_STORE__DIR, mandatory = true,
+                  help = CliStrings.EXPORT_OFFLINE_DISK_STORE__DIR__HELP) String dir) {
 
     try {
       final File[] dirs = new File[diskDirs.length];
@@ -1218,7 +1224,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       // to configure the size of that process.
       DiskStoreImpl.exportOfflineSnapshot(diskStoreName, dirs, output);
       String resultString =
-          CliStrings.format(CliStrings.EXPORT_OFFLINE_DISK_STORE__SUCCESS, diskStoreName, dir);
+              CliStrings.format(CliStrings.EXPORT_OFFLINE_DISK_STORE__SUCCESS, diskStoreName, dir);
       return ResultBuilder.createInfoResult(resultString.toString());
     } catch (VirtualMachineError e) {
       SystemFailure.initiateFailure(e);
@@ -1227,7 +1233,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       SystemFailure.checkFailure();
       LogWrapper.getInstance().warning(th.getMessage(), th);
       return ResultBuilder.createGemFireErrorResult(CliStrings
-          .format(CliStrings.EXPORT_OFFLINE_DISK_STORE__ERROR, diskStoreName, th.toString()));
+              .format(CliStrings.EXPORT_OFFLINE_DISK_STORE__ERROR, diskStoreName, th.toString()));
     }
   }
 
@@ -1239,18 +1245,18 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
 
   @CliCommand(value = CliStrings.VALIDATE_DISK_STORE, help = CliStrings.VALIDATE_DISK_STORE__HELP)
   @CliMetaData(shellOnly = true, relatedTopic = {CliStrings.TOPIC_GEODE_DISKSTORE}) // offline
-                                                                                    // command
+  // command
   public Result validateDiskStore(
-      @CliOption(key = CliStrings.VALIDATE_DISK_STORE__NAME, mandatory = true,
-          help = CliStrings.VALIDATE_DISK_STORE__NAME__HELP) String diskStoreName,
-      @CliOption(key = CliStrings.VALIDATE_DISK_STORE__DISKDIRS, mandatory = true,
-          unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
-          help = CliStrings.VALIDATE_DISK_STORE__DISKDIRS__HELP) @CliMetaData(
-              valueSeparator = ",") String[] diskDirs,
-      @CliOption(key = CliStrings.VALIDATE_DISK_STORE__J,
-          unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
-          help = CliStrings.VALIDATE_DISK_STORE__J__HELP) @CliMetaData(
-              valueSeparator = ",") String[] jvmProps) {
+          @CliOption(key = CliStrings.VALIDATE_DISK_STORE__NAME, mandatory = true,
+                  help = CliStrings.VALIDATE_DISK_STORE__NAME__HELP) String diskStoreName,
+          @CliOption(key = CliStrings.VALIDATE_DISK_STORE__DISKDIRS, mandatory = true,
+                  unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
+                  help = CliStrings.VALIDATE_DISK_STORE__DISKDIRS__HELP) @CliMetaData(
+                  valueSeparator = ",") String[] diskDirs,
+          @CliOption(key = CliStrings.VALIDATE_DISK_STORE__J,
+                  unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
+                  help = CliStrings.VALIDATE_DISK_STORE__J__HELP) @CliMetaData(
+                  valueSeparator = ",") String[] jvmProps) {
     try {
       String resultString = new String();
 
@@ -1263,7 +1269,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
 
       List<String> commandList = new ArrayList<String>();
       commandList.add(System.getProperty("java.home") + File.separatorChar + "bin"
-          + File.separatorChar + "java");
+              + File.separatorChar + "java");
 
       configureLogging(commandList);
 
@@ -1305,12 +1311,12 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       return ResultBuilder.createInfoResult(resultString.toString());
     } catch (IOException ex) {
       return ResultBuilder.createGemFireErrorResult(CliStrings
-          .format(CliStrings.VALIDATE_DISK_STORE__MSG__IO_ERROR, diskStoreName, ex.getMessage()));
+              .format(CliStrings.VALIDATE_DISK_STORE__MSG__IO_ERROR, diskStoreName, ex.getMessage()));
     } catch (Exception ex) {
       // StringPrintWriter s = new StringPrintWriter();
       // ex.printStackTrace(s);
       return ResultBuilder.createGemFireErrorResult(CliStrings
-          .format(CliStrings.VALIDATE_DISK_STORE__MSG__ERROR, diskStoreName, ex.getMessage()));
+              .format(CliStrings.VALIDATE_DISK_STORE__MSG__ERROR, diskStoreName, ex.getMessage()));
     }
 
   }
@@ -1319,43 +1325,43 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
   @CliCommand(value = CliStrings.ALTER_DISK_STORE, help = CliStrings.ALTER_DISK_STORE__HELP)
   @CliMetaData(shellOnly = true, relatedTopic = {CliStrings.TOPIC_GEODE_DISKSTORE})
   public Result alterOfflineDiskStore(
-      @CliOption(key = CliStrings.ALTER_DISK_STORE__DISKSTORENAME, mandatory = true,
-          help = CliStrings.ALTER_DISK_STORE__DISKSTORENAME__HELP) String diskStoreName,
-      @CliOption(key = CliStrings.ALTER_DISK_STORE__REGIONNAME, mandatory = true,
-          help = CliStrings.ALTER_DISK_STORE__REGIONNAME__HELP) String regionName,
-      @CliOption(key = CliStrings.ALTER_DISK_STORE__DISKDIRS,
-          unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
-          help = CliStrings.ALTER_DISK_STORE__DISKDIRS__HELP,
-          mandatory = true) @CliMetaData(valueSeparator = ",") String[] diskDirs,
-      @CliOption(key = CliStrings.ALTER_DISK_STORE__COMPRESSOR,
-          unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
-          specifiedDefaultValue = "none",
-          help = CliStrings.ALTER_DISK_STORE__COMPRESSOR__HELP) String compressorClassName,
-      @CliOption(key = CliStrings.ALTER_DISK_STORE__CONCURRENCY__LEVEL,
-          unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
-          help = CliStrings.ALTER_DISK_STORE__CONCURRENCY__LEVEL__HELP) Integer concurrencyLevel,
-      @CliOption(key = CliStrings.ALTER_DISK_STORE__STATISTICS__ENABLED,
-          unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
-          help = CliStrings.ALTER_DISK_STORE__STATISTICS__ENABLED__HELP) Boolean statisticsEnabled,
-      @CliOption(key = CliStrings.ALTER_DISK_STORE__INITIAL__CAPACITY,
-          unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
-          help = CliStrings.ALTER_DISK_STORE__INITIAL__CAPACITY__HELP) Integer initialCapacity,
-      @CliOption(key = CliStrings.ALTER_DISK_STORE__LOAD__FACTOR,
-          unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
-          help = CliStrings.ALTER_DISK_STORE__LOAD__FACTOR__HELP) Float loadFactor,
-      @CliOption(key = CliStrings.ALTER_DISK_STORE__LRU__EVICTION__ACTION,
-          help = CliStrings.ALTER_DISK_STORE__LRU__EVICTION__ACTION__HELP) String lruEvictionAction,
-      @CliOption(key = CliStrings.ALTER_DISK_STORE__LRU__EVICTION__ALGORITHM,
-          help = CliStrings.ALTER_DISK_STORE__LRU__EVICTION__ALGORITHM__HELP) String lruEvictionAlgo,
-      @CliOption(key = CliStrings.ALTER_DISK_STORE__LRU__EVICTION__LIMIT,
-          unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
-          help = CliStrings.ALTER_DISK_STORE__LRU__EVICTION__LIMIT__HELP) Integer lruEvictionLimit,
-      @CliOption(key = CliStrings.ALTER_DISK_STORE__OFF_HEAP,
-          unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
-          help = CliStrings.ALTER_DISK_STORE__OFF_HEAP__HELP) Boolean offHeap,
-      @CliOption(key = CliStrings.ALTER_DISK_STORE__REMOVE,
-          help = CliStrings.ALTER_DISK_STORE__REMOVE__HELP, mandatory = false,
-          specifiedDefaultValue = "true", unspecifiedDefaultValue = "false") boolean remove) {
+          @CliOption(key = CliStrings.ALTER_DISK_STORE__DISKSTORENAME, mandatory = true,
+                  help = CliStrings.ALTER_DISK_STORE__DISKSTORENAME__HELP) String diskStoreName,
+          @CliOption(key = CliStrings.ALTER_DISK_STORE__REGIONNAME, mandatory = true,
+                  help = CliStrings.ALTER_DISK_STORE__REGIONNAME__HELP) String regionName,
+          @CliOption(key = CliStrings.ALTER_DISK_STORE__DISKDIRS,
+                  unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
+                  help = CliStrings.ALTER_DISK_STORE__DISKDIRS__HELP,
+                  mandatory = true) @CliMetaData(valueSeparator = ",") String[] diskDirs,
+          @CliOption(key = CliStrings.ALTER_DISK_STORE__COMPRESSOR,
+                  unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
+                  specifiedDefaultValue = "none",
+                  help = CliStrings.ALTER_DISK_STORE__COMPRESSOR__HELP) String compressorClassName,
+          @CliOption(key = CliStrings.ALTER_DISK_STORE__CONCURRENCY__LEVEL,
+                  unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
+                  help = CliStrings.ALTER_DISK_STORE__CONCURRENCY__LEVEL__HELP) Integer concurrencyLevel,
+          @CliOption(key = CliStrings.ALTER_DISK_STORE__STATISTICS__ENABLED,
+                  unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
+                  help = CliStrings.ALTER_DISK_STORE__STATISTICS__ENABLED__HELP) Boolean statisticsEnabled,
+          @CliOption(key = CliStrings.ALTER_DISK_STORE__INITIAL__CAPACITY,
+                  unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
+                  help = CliStrings.ALTER_DISK_STORE__INITIAL__CAPACITY__HELP) Integer initialCapacity,
+          @CliOption(key = CliStrings.ALTER_DISK_STORE__LOAD__FACTOR,
+                  unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
+                  help = CliStrings.ALTER_DISK_STORE__LOAD__FACTOR__HELP) Float loadFactor,
+          @CliOption(key = CliStrings.ALTER_DISK_STORE__LRU__EVICTION__ACTION,
+                  help = CliStrings.ALTER_DISK_STORE__LRU__EVICTION__ACTION__HELP) String lruEvictionAction,
+          @CliOption(key = CliStrings.ALTER_DISK_STORE__LRU__EVICTION__ALGORITHM,
+                  help = CliStrings.ALTER_DISK_STORE__LRU__EVICTION__ALGORITHM__HELP) String lruEvictionAlgo,
+          @CliOption(key = CliStrings.ALTER_DISK_STORE__LRU__EVICTION__LIMIT,
+                  unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
+                  help = CliStrings.ALTER_DISK_STORE__LRU__EVICTION__LIMIT__HELP) Integer lruEvictionLimit,
+          @CliOption(key = CliStrings.ALTER_DISK_STORE__OFF_HEAP,
+                  unspecifiedDefaultValue = CliMetaData.ANNOTATION_NULL_VALUE,
+                  help = CliStrings.ALTER_DISK_STORE__OFF_HEAP__HELP) Boolean offHeap,
+          @CliOption(key = CliStrings.ALTER_DISK_STORE__REMOVE,
+                  help = CliStrings.ALTER_DISK_STORE__REMOVE__HELP, mandatory = false,
+                  specifiedDefaultValue = "true", unspecifiedDefaultValue = "false") boolean remove) {
 
     Result result = null;
 
@@ -1374,18 +1380,18 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       }
 
       if ((lruEvictionAlgo != null) || (lruEvictionAction != null) || (lruEvictionLimit != null)
-          || (concurrencyLevel != null) || (initialCapacity != null) || (loadFactor != null)
-          || (compressorClassName != null) || (offHeap != null) || (statisticsEnabled != null)) {
+              || (concurrencyLevel != null) || (initialCapacity != null) || (loadFactor != null)
+              || (compressorClassName != null) || (offHeap != null) || (statisticsEnabled != null)) {
         if (!remove) {
           String lruEvictionLimitString =
-              lruEvictionLimit == null ? null : lruEvictionLimit.toString();
+                  lruEvictionLimit == null ? null : lruEvictionLimit.toString();
           String concurrencyLevelString =
-              concurrencyLevel == null ? null : concurrencyLevel.toString();
+                  concurrencyLevel == null ? null : concurrencyLevel.toString();
           String initialCapacityString =
-              initialCapacity == null ? null : initialCapacity.toString();
+                  initialCapacity == null ? null : initialCapacity.toString();
           String loadFactorString = loadFactor == null ? null : loadFactor.toString();
           String statisticsEnabledString =
-              statisticsEnabled == null ? null : statisticsEnabled.toString();
+                  statisticsEnabled == null ? null : statisticsEnabled.toString();
           String offHeapString = offHeap == null ? null : offHeap.toString();
 
           if ("none".equals(compressorClassName)) {
@@ -1393,20 +1399,20 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
           }
 
           String resultMessage = DiskStoreImpl.modifyRegion(diskStoreName, dirs, "/" + regionName,
-              lruEvictionAlgo, lruEvictionAction, lruEvictionLimitString, concurrencyLevelString,
-              initialCapacityString, loadFactorString, compressorClassName, statisticsEnabledString,
-              offHeapString, false);
+                  lruEvictionAlgo, lruEvictionAction, lruEvictionLimitString, concurrencyLevelString,
+                  initialCapacityString, loadFactorString, compressorClassName, statisticsEnabledString,
+                  offHeapString, false);
 
           result = ResultBuilder.createInfoResult(resultMessage);
         } else {
           result = ResultBuilder.createParsingErrorResult(
-              "Cannot use the --remove=true parameter with any other parameters");
+                  "Cannot use the --remove=true parameter with any other parameters");
         }
       } else {
         if (remove) {
           DiskStoreImpl.destroyRegion(diskStoreName, dirs, "/" + regionName);
           result = ResultBuilder.createInfoResult("The region " + regionName
-              + " was successfully removed from the disk store " + diskStoreName);
+                  + " was successfully removed from the disk store " + diskStoreName);
         } else {
           // Please provide an option
           result = ResultBuilder.createParsingErrorResult("Please provide a relevant parameter");
@@ -1422,7 +1428,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
     } catch (CacheExistsException e) {
       // Indicates that the command is being used when a cache is open
       result = ResultBuilder.createGemFireErrorResult("Cannot execute "
-          + CliStrings.ALTER_DISK_STORE + " when a cache exists (Offline command)");
+              + CliStrings.ALTER_DISK_STORE + " when a cache exists (Offline command)");
     } catch (Exception e) {
       result = createErrorResult(e.getMessage());
     }
@@ -1433,12 +1439,12 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
   @CliMetaData(shellOnly = false, relatedTopic = {CliStrings.TOPIC_GEODE_DISKSTORE})
   @ResourceOperation(resource = Resource.DATA, operation = Operation.MANAGE)
   public Result destroyDiskStore(
-      @CliOption(key = CliStrings.DESTROY_DISK_STORE__NAME, mandatory = true,
-          help = CliStrings.DESTROY_DISK_STORE__NAME__HELP) String name,
-      @CliOption(key = CliStrings.DESTROY_DISK_STORE__GROUP,
-          help = CliStrings.DESTROY_DISK_STORE__GROUP__HELP,
-          optionContext = ConverterHint.MEMBERGROUP) @CliMetaData(
-              valueSeparator = ",") String[] groups) {
+          @CliOption(key = CliStrings.DESTROY_DISK_STORE__NAME, mandatory = true,
+                  help = CliStrings.DESTROY_DISK_STORE__NAME__HELP) String name,
+          @CliOption(key = CliStrings.DESTROY_DISK_STORE__GROUP,
+                  help = CliStrings.DESTROY_DISK_STORE__GROUP__HELP,
+                  optionContext = ConverterHint.MEMBERGROUP) @CliMetaData(
+                  valueSeparator = ",") String[] groups) {
     try {
       TabularResultData tabularData = ResultBuilder.createTabularResultData();
       boolean accumulatedData = false;
@@ -1451,7 +1457,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       }
 
       ResultCollector<?, ?> rc = CliUtil.executeFunction(new DestroyDiskStoreFunction(),
-          new Object[] {name}, targetMembers);
+              new Object[] {name}, targetMembers);
       List<CliFunctionResult> results = CliFunctionResult.cleanResults((List<?>) rc.getResult());
 
       AtomicReference<XmlEntity> xmlEntity = new AtomicReference<>();
@@ -1459,7 +1465,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
         if (result.getThrowable() != null) {
           tabularData.accumulate("Member", result.getMemberIdOrName());
           tabularData.accumulate("Result", "ERROR: " + result.getThrowable().getClass().getName()
-              + ": " + result.getThrowable().getMessage());
+                  + ": " + result.getThrowable().getMessage());
           accumulatedData = true;
           tabularData.setStatus(Status.ERROR);
         } else if (result.getMessage() != null) {
@@ -1481,7 +1487,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       Result result = ResultBuilder.buildResult(tabularData);
       if (xmlEntity.get() != null) {
         persistClusterConfiguration(result,
-            () -> getSharedConfiguration().deleteXmlEntity(xmlEntity.get(), groups));
+                () -> getSharedConfiguration().deleteXmlEntity(xmlEntity.get(), groups));
       }
 
       return result;
@@ -1491,8 +1497,8 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
     } catch (Throwable th) {
       SystemFailure.checkFailure();
       return ResultBuilder.createGemFireErrorResult(
-          CliStrings.format(CliStrings.DESTROY_DISK_STORE__ERROR_WHILE_DESTROYING_REASON_0,
-              new Object[] {th.getMessage()}));
+              CliStrings.format(CliStrings.DESTROY_DISK_STORE__ERROR_WHILE_DESTROYING_REASON_0,
+                      new Object[] {th.getMessage()}));
     }
   }
 
@@ -1503,9 +1509,9 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
   }
 
   @CliAvailabilityIndicator({CliStrings.BACKUP_DISK_STORE, CliStrings.COMPACT_DISK_STORE,
-      CliStrings.DESCRIBE_DISK_STORE, CliStrings.LIST_DISK_STORE,
-      CliStrings.REVOKE_MISSING_DISK_STORE, CliStrings.SHOW_MISSING_DISK_STORE,
-      CliStrings.CREATE_DISK_STORE, CliStrings.DESTROY_DISK_STORE})
+          CliStrings.DESCRIBE_DISK_STORE, CliStrings.LIST_DISK_STORE,
+          CliStrings.REVOKE_MISSING_DISK_STORE, CliStrings.SHOW_MISSING_DISK_STORE,
+          CliStrings.CREATE_DISK_STORE, CliStrings.DESTROY_DISK_STORE})
   public boolean diskStoreCommandsAvailable() {
     // these disk store commands are always available in GemFire
     return (!CliUtil.isGfshVM() || (getGfsh() != null && getGfsh().isConnectedAndReady()));
