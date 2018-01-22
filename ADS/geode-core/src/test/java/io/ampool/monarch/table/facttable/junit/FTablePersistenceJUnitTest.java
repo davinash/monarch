@@ -85,13 +85,13 @@ public class FTablePersistenceJUnitTest {
   }
 
   public static FTableDescriptor getFTableDescriptor(final int numSplits, int redundancy,
-                                                     String diskStoreName) {
+      String diskStoreName) {
 
     return getFTableDescriptor(numSplits, redundancy, diskStoreName, 1000);
   }
 
   public static FTableDescriptor getFTableDescriptor(final int numSplits, int redundancy,
-                                                     String diskStoreName, int blockSize) {
+      String diskStoreName, int blockSize) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < 10; i++) {
       tableDescriptor.addColumn("COL_" + i);

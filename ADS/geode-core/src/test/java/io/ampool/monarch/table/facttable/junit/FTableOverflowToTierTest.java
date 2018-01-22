@@ -125,7 +125,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
     @Override
     public void run() throws Exception {
       final InternalResourceManager irm =
-              ((MonarchCacheImpl) MCacheFactory.getAnyInstance()).getResourceManager();
+          ((MonarchCacheImpl) MCacheFactory.getAnyInstance()).getResourceManager();
       irm.getHeapMonitor().setTestMaxMemoryBytes(Runtime.getRuntime().maxMemory());
     }
   };
@@ -150,7 +150,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
           MCacheFactory.getAnyInstance().getResourceManager().setEvictionHeapPercentage(0);
           MCacheFactory.getAnyInstance().getResourceManager().setCriticalHeapPercentage(0);
           HeapMemoryMonitor hmm = ((MonarchCacheImpl) MCacheFactory.getAnyInstance())
-                  .getResourceManager().getHeapMonitor();
+              .getResourceManager().getHeapMonitor();
           hmm.setTestMaxMemoryBytes(Long.MAX_VALUE);
           hmm.updateStateAndSendEvent(0L);
         }
@@ -200,7 +200,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
    */
   private static int getTotalEntryCount(final PartitionedRegion pr) {
     final int count =
-            pr.getDataStore().getAllLocalBucketRegions().stream().mapToInt(BucketRegion::size).sum();
+        pr.getDataStore().getAllLocalBucketRegions().stream().mapToInt(BucketRegion::size).sum();
     System.out.println("getTotalEntryCount::: count = " + count);
     FTableTestHelper.raiseFakeNotification();
     return count;
@@ -208,7 +208,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
 
 
   private static void forceEvictiononServer(final VM vm, final String regionName)
-          throws RMIException {
+      throws RMIException {
 
     vm.invoke(new SerializableRunnable() {
       @Override
@@ -216,17 +216,17 @@ public abstract class FTableOverflowToTierTest extends Thread {
         try {
           System.gc();
           MCacheFactory.getAnyInstance().getResourceManager()
-                  .setEvictionHeapPercentage(getEVICT_HEAP_PCT());
+              .setEvictionHeapPercentage(getEVICT_HEAP_PCT());
           final PartitionedRegion pr =
-                  (PartitionedRegion) MCacheFactory.getAnyInstance().getRegion(regionName);
+              (PartitionedRegion) MCacheFactory.getAnyInstance().getRegion(regionName);
           assertNotNull(pr);
           FTableTestHelper.raiseFakeNotification();
 
           /** wait for 60 seconds till all entries are evicted.. **/
           Awaitility.await().with().pollInterval(5, TimeUnit.SECONDS).atMost(220, TimeUnit.SECONDS)
-                  .until(() -> getTotalEntryCount(pr) == 0);
+              .until(() -> getTotalEntryCount(pr) == 0);
           System.out.println(
-                  "FTableOverflowToTierTest.run :: " + "Total Entry Count: " + getTotalEntryCount(pr));
+              "FTableOverflowToTierTest.run :: " + "Total Entry Count: " + getTotalEntryCount(pr));
           assertEquals("Expected no entries.", 0, getTotalEntryCount(pr));
         } finally {
           FTableTestHelper.revokeFakeNotification();
@@ -238,12 +238,12 @@ public abstract class FTableOverflowToTierTest extends Thread {
 
 
   private static int getRegionCountOnServer(final VM vm, final String regionName)
-          throws RMIException {
+      throws RMIException {
     return (int) vm.invoke(new SerializableCallable() {
       @Override
       public Object call() throws Exception {
         final PartitionedRegion pr =
-                (PartitionedRegion) MCacheFactory.getAnyInstance().getRegion(regionName);
+            (PartitionedRegion) MCacheFactory.getAnyInstance().getRegion(regionName);
         assertNotNull(pr);
         return (getTotalEntryCount(pr));
       }
@@ -281,9 +281,9 @@ public abstract class FTableOverflowToTierTest extends Thread {
   public void createParquetStore() {
     final String STORE_CLASS = "io.ampool.tierstore.stores.LocalTierStore";
     final String PARQUET_READER_CLASS =
-            "io.ampool.tierstore.readers.parquet.TierStoreParquetReader";
+        "io.ampool.tierstore.readers.parquet.TierStoreParquetReader";
     final String PARQUET_WRITER_CLASS =
-            "io.ampool.tierstore.writers.parquet.TierStoreParquetWriter";
+        "io.ampool.tierstore.writers.parquet.TierStoreParquetWriter";
 
     // on each server create local tier-store with parquet file format
     for (final VM vm : testBase.getServers()) {
@@ -297,10 +297,10 @@ public abstract class FTableOverflowToTierTest extends Thread {
           props.setProperty("base.dir.path", "parquet");
 
           TierStore store = new TierStoreFactory().create(STORE_CLASS,
-                  FTableOverflowToParquetTierDUnit.STORE_NAME, props, writer, reader,
-                  (MonarchCacheImpl) MCacheFactory.getAnyInstance());
+              FTableOverflowToParquetTierDUnit.STORE_NAME, props, writer, reader,
+              (MonarchCacheImpl) MCacheFactory.getAnyInstance());
           StoreHandler.getInstance().registerStore(FTableOverflowToParquetTierDUnit.STORE_NAME,
-                  store);
+              store);
         }
       });
       vm.invoke(GC_TASK);
@@ -338,12 +338,12 @@ public abstract class FTableOverflowToTierTest extends Thread {
    */
   public static void raiseFakeNotification() {
     ((MonarchCacheImpl) MCacheFactory.getAnyInstance()).getHeapEvictor().testAbortAfterLoopCount =
-            1;
+        1;
     HeapMemoryMonitor.setTestDisableMemoryUpdates(true);
     System.setProperty("gemfire.memoryEventTolerance", "0");
     MCacheFactory.getAnyInstance().getResourceManager().setEvictionHeapPercentage(85);
     HeapMemoryMonitor hmm =
-            ((MonarchCacheImpl) MCacheFactory.getAnyInstance()).getResourceManager().getHeapMonitor();
+        ((MonarchCacheImpl) MCacheFactory.getAnyInstance()).getResourceManager().getHeapMonitor();
     hmm.setTestMaxMemoryBytes(100);
     hmm.updateStateAndSendEvent(90);
   }
@@ -379,7 +379,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
     appendFTableData();
     /** Get the count of records from in memory ftable Tier0 by region get */
     assertEquals("Expected no entries in memory prior to Eviction.", 452,
-            getinMemoryCount(getTableName()));
+        getinMemoryCount(getTableName()));
     /** Get the count of records from in memory ftable Tier0 via scan */
     assertEquals("Scan expected the number of entries", 452, getCountFromScan(getTableName()));
     /* Force eviction task */
@@ -388,7 +388,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
     assertEquals("Scan expected the number of entries", 452, getCountFromScan(getTableName()));
     /** Get the count of records from in memory ftable Tier0 by region get */
     assertEquals("Expected no entries in memory post Eviction.", 0,
-            getinMemoryCount(getTableName()));
+        getinMemoryCount(getTableName()));
   }
 
 
@@ -402,7 +402,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
     appendOneRecordinFTable();
     /** Get the count of records from in memory ftable Tier0 by region get */
     assertEquals("Expected no entries in memory prior to Eviction.", 1,
-            getinMemoryCount(getTableName()));
+        getinMemoryCount(getTableName()));
     /** Get the count of records from in memory ftable Tier0 via scan */
     assertEquals("Scan expected the number of entries", 1, getCountFromScan(getTableName()));
     /* Force eviction task */
@@ -411,7 +411,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
     assertEquals("Scan expected the number of entries", 1, getCountFromScan(getTableName()));
     /** Get the count of records from in memory ftable Tier0 by region get */
     assertEquals("Expected no entries in memory post Eviction.", 0,
-            getinMemoryCount(getTableName()));
+        getinMemoryCount(getTableName()));
   }
 
   /**
@@ -435,7 +435,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
     assertEquals("Scan expected the number of entries", 452000, getCountFromScan(getTableName()));
     /** Get the count of records from in memory ftable Tier0 by region get */
     assertEquals("Expected no entries in memory post Eviction.", 0,
-            getinMemoryCount(getTableName()));
+        getinMemoryCount(getTableName()));
     /* make sure that nothing is in ORC dir */
     assertEmptyORCDIR();
 
@@ -539,15 +539,15 @@ public abstract class FTableOverflowToTierTest extends Thread {
           try {
             System.gc();
             final PartitionedRegion pr =
-                    (PartitionedRegion) MCacheFactory.getAnyInstance().getRegion(table);
+                (PartitionedRegion) MCacheFactory.getAnyInstance().getRegion(table);
             assertNotNull(pr);
             FTableTestHelper.raiseFakeNotification();
 
             /** wait for 60 seconds till all entries are evicted.. **/
             Awaitility.await().with().pollInterval(5, TimeUnit.SECONDS)
-                    .atMost(220, TimeUnit.SECONDS).until(() -> getTotalEntryCount(pr) == 0);
+                .atMost(220, TimeUnit.SECONDS).until(() -> getTotalEntryCount(pr) == 0);
             System.out.println("FTableOverflowToTierTest.run :: " + "Total Entry Count: "
-                    + getTotalEntryCount(pr));
+                + getTotalEntryCount(pr));
             assertEquals("Expected no entries.", 0, getTotalEntryCount(pr));
           } finally {
             FTableTestHelper.revokeFakeNotification();
@@ -573,7 +573,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
     // }
 
     final Iterator<Row> mResultIterator =
-            clientCache.getFTable(getTableName()).getScanner(new Scan()).iterator();
+        clientCache.getFTable(getTableName()).getScanner(new Scan()).iterator();
     while (mResultIterator.hasNext()) {
       final Row row = mResultIterator.next();
       scanCount++;
@@ -584,7 +584,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
 
   public int getCountFromWalScan(String ftable) {
     return (getCountFromWal(testBase.getVm(0), ftable) + getCountFromWal(testBase.getVm(2), ftable)
-            + getCountFromWal(testBase.getVm(3), ftable));
+        + getCountFromWal(testBase.getVm(3), ftable));
   }
 
 
@@ -599,15 +599,15 @@ public abstract class FTableOverflowToTierTest extends Thread {
     appendFTableData();
     /** Get the count now from region scan **/
     assertEquals("Expected no entries in memory prior to Eviction.", 452,
-            getCountFromScan(getTableName()));
+        getCountFromScan(getTableName()));
     testBase.restart();
 
     TableDescriptor tableDescriptor = MTableUtils
-            .getTableDescriptor((MonarchCacheImpl) testBase.getClientCache(), getTableName());
+        .getTableDescriptor((MonarchCacheImpl) testBase.getClientCache(), getTableName());
     /** Get the count now from region get **/
     assertEquals("Incorrect count after restart.",
-            ((AbstractTableDescriptor) tableDescriptor).isDiskPersistenceEnabled() ? 452 : 0,
-            getCountFromScan(getTableName()));
+        ((AbstractTableDescriptor) tableDescriptor).isDiskPersistenceEnabled() ? 452 : 0,
+        getCountFromScan(getTableName()));
   }
 
 
@@ -622,7 +622,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
     appendFTableData();
     /** Get the count now from region get **/
     assertEquals("Expected no entries in memory prior to Eviction.", 452,
-            getCountFromScan(getTableName()));
+        getCountFromScan(getTableName()));
     /** Evict the entries **/
     forceEvictionTask(getTableName());
     /**
@@ -631,10 +631,10 @@ public abstract class FTableOverflowToTierTest extends Thread {
      */
 
     assertEquals("Expected no entries in memory prior to Eviction.", 0,
-            getinMemoryCount(getTableName()));
+        getinMemoryCount(getTableName()));
 
     assertEquals("Expected no entries in memory prior to Eviction.", 0,
-            getinMemoryCount(getTableName()));
+        getinMemoryCount(getTableName()));
 
     /* Now restart the servers */
     testBase.restart();
@@ -649,22 +649,22 @@ public abstract class FTableOverflowToTierTest extends Thread {
      */
 
     TableDescriptor tableDescriptor = MTableUtils
-            .getTableDescriptor((MonarchCacheImpl) testBase.getClientCache(), getTableName());
+        .getTableDescriptor((MonarchCacheImpl) testBase.getClientCache(), getTableName());
 
     assertEquals("Expected no entries in memory prior to Eviction.", 0,
-            getinMemoryCount(getTableName()));
+        getinMemoryCount(getTableName()));
 
     /* Now run a scan and get the total entries */
     assertEquals("Expected no entries in memory prior to Eviction.",
-            ((AbstractTableDescriptor) tableDescriptor).isDiskPersistenceEnabled() ? 452 : 0,
-            getCountFromScan(getTableName()));
+        ((AbstractTableDescriptor) tableDescriptor).isDiskPersistenceEnabled() ? 452 : 0,
+        getCountFromScan(getTableName()));
 
     assertEquals("Expected no entries in memory prior to Eviction.", 0,
-            getinMemoryCount(getTableName()));
+        getinMemoryCount(getTableName()));
     /* Now run a scan and get the total entries */
     assertEquals("Expected no entries in memory prior to Eviction.",
-            ((AbstractTableDescriptor) tableDescriptor).isDiskPersistenceEnabled() ? 452 : 0,
-            getCountFromScan(getTableName()));
+        ((AbstractTableDescriptor) tableDescriptor).isDiskPersistenceEnabled() ? 452 : 0,
+        getCountFromScan(getTableName()));
   }
 
 
@@ -675,7 +675,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
    */
   @Test
   public void testFTableAppendOnORCStore() throws StoreCreateException,
-          DefaultConstructorMissingException, ClassNotFoundException, InterruptedException {
+      DefaultConstructorMissingException, ClassNotFoundException, InterruptedException {
     createFTable();
     // testBase.getVm(0).invoke(CREATE_ORC_STORE);
     // testBase.getVm(2).invoke(CREATE_ORC_STORE);
@@ -683,15 +683,15 @@ public abstract class FTableOverflowToTierTest extends Thread {
     appendFTableDataforORCStore();
     /** Get the count now from in memory through region get **/
     assertEquals("Expected all entries in memory prior to Eviction.", 452000,
-            getinMemoryCount(getTableName()));
+        getinMemoryCount(getTableName()));
     /** Get the count now from in memory through Scan **/
     assertEquals("Number of records in scan are  not same as expected.", 452000,
-            getCountFromScan(getTableName()));
+        getCountFromScan(getTableName()));
     /** Evict the entries **/
     forceEvictionTask(getTableName());
     /** Get the count now from in memory through region get **/
     assertEquals("Expected no entries in memory after Eviction.", 0,
-            getinMemoryCount(getTableName()));
+        getinMemoryCount(getTableName()));
     /** Get the count now from in memory through Scan **/
 
     /**
@@ -718,7 +718,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
    */
   @Test
   public void testOverflowOnORCStorewithRestart() throws StoreCreateException,
-          DefaultConstructorMissingException, ClassNotFoundException, InterruptedException {
+      DefaultConstructorMissingException, ClassNotFoundException, InterruptedException {
     getServers().forEach(vm -> vm.invoke(REST_HEAP_MAX_BYTES));
     getServers().forEach(vm -> vm.invoke(GC_TASK));
     createFTable();
@@ -745,7 +745,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
      * have been evicted
      */
     assertEquals("Expected no entries in memory prior to Eviction.", 0,
-            getinMemoryCount(getTableName()));
+        getinMemoryCount(getTableName()));
 
     /** wait for 60 seconds till all entries are evicted.. **/
     try {
@@ -768,11 +768,11 @@ public abstract class FTableOverflowToTierTest extends Thread {
     testBase.restart();
     Thread.sleep(10_000);
     TableDescriptor tableDescriptor = MTableUtils
-            .getTableDescriptor((MonarchCacheImpl) testBase.getClientCache(), getTableName());
+        .getTableDescriptor((MonarchCacheImpl) testBase.getClientCache(), getTableName());
     /* Now run a scan and get the total entries */
     assertEquals("Incorrect scan count after restart.",
-            ((AbstractTableDescriptor) tableDescriptor).isDiskPersistenceEnabled() ? 452000 : 0,
-            getScanCount(getTableName(), 452000));
+        ((AbstractTableDescriptor) tableDescriptor).isDiskPersistenceEnabled() ? 452000 : 0,
+        getScanCount(getTableName(), 452000));
   }
 
 
@@ -809,7 +809,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
 
   @Test
   public void testOverflowOneServerWithRestart() throws StoreCreateException,
-          DefaultConstructorMissingException, ClassNotFoundException, InterruptedException {
+      DefaultConstructorMissingException, ClassNotFoundException, InterruptedException {
     getServers().forEach(vm -> vm.invoke(REST_HEAP_MAX_BYTES));
     getServers().forEach(vm -> vm.invoke(GC_TASK));
     FTableDescriptor ftd = new FTableDescriptor();
@@ -838,10 +838,10 @@ public abstract class FTableOverflowToTierTest extends Thread {
     assertEquals("2) Incorrect scan count.", totalCount, getScanCount(tableName, totalCount));
 
     System.out
-            .println("2) testOverflowOneServerWithRestart -- Ingesting again: count= " + totalCount);
+        .println("2) testOverflowOneServerWithRestart -- Ingesting again: count= " + totalCount);
     ingest(totalCount, table);
     assertEquals("3) Incorrect scan count.", totalCount * 2,
-            getScanCount(tableName, totalCount * 2));
+        getScanCount(tableName, totalCount * 2));
 
     Thread.sleep(5_000);
     System.out.println("testOverflowOneServerWithRestart -- Moving data to tier on vm0.");
@@ -849,16 +849,16 @@ public abstract class FTableOverflowToTierTest extends Thread {
     assertEquals("4) Incorrect scan count.", totalCount * 2, getScanCount(tableName, totalCount));
 
     System.out
-            .println("3) testOverflowOneServerWithRestart -- Ingesting again: count= " + totalCount);
+        .println("3) testOverflowOneServerWithRestart -- Ingesting again: count= " + totalCount);
     ingest(totalCount, table);
     assertEquals("Before restart: Incorrect scan count.", totalCount * 3,
-            getScanCount(tableName, totalCount));
+        getScanCount(tableName, totalCount));
 
     final VM[] vms = testBase.getServers().toArray(new VM[0]);
     assertEquals("Before restart: Incorrect primary count.", totalCount * 3,
-            getCount(tableName, vms, true));
+        getCount(tableName, vms, true));
     assertEquals("Before restart: Incorrect secondary count.", totalCount * 3 * 2,
-            getCount(tableName, vms, false));
+        getCount(tableName, vms, false));
 
     /** Now restart the servers **/
     testBase.restart();
@@ -867,11 +867,11 @@ public abstract class FTableOverflowToTierTest extends Thread {
 
     if (td.isDiskPersistenceEnabled()) {
       assertEquals("After restart: Incorrect scan count.", totalCount * 3,
-              getScanCount(tableName, totalCount * 3));
+          getScanCount(tableName, totalCount * 3));
       assertEquals("After restart: Incorrect primary count.", totalCount * 3,
-              getCount(tableName, vms, true));
+          getCount(tableName, vms, true));
       assertEquals("After restart: Incorrect secondary count.", totalCount * 3 * 2,
-              getCount(tableName, vms, false));
+          getCount(tableName, vms, false));
     } else {
       assertEquals("Incorrect scan count after restart.", 0, getScanCount(getTableName(), 0));
     }
@@ -888,7 +888,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
         Scan scan = new Scan();
         scan.setMessageChunkSize(100);
         final ScanContext sc =
-                new ScanContext(null, region, scan, region.getDescriptor(), null, null);
+            new ScanContext(null, region, scan, region.getDescriptor(), null, null);
         for (final BucketRegion br : region.getDataStore().getAllLocalBucketRegions()) {
           if (isPrimary != br.getBucketAdvisor().isPrimary()) {
             continue;
@@ -896,7 +896,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
           scan.setBucketId(br.getId());
           long c = 0;
           final Iterator itr = new FTableScanner(sc,
-                  (RowTupleConcurrentSkipListMap) br.getRegionMap().getInternalMap());
+              (RowTupleConcurrentSkipListMap) br.getRegionMap().getInternalMap());
           while (itr.hasNext()) {
             final Object next = itr.next();
             c++;
@@ -916,12 +916,12 @@ public abstract class FTableOverflowToTierTest extends Thread {
    */
   @Test
   public void testEvictToWal()
-          throws StoreCreateException, DefaultConstructorMissingException, ClassNotFoundException {
+      throws StoreCreateException, DefaultConstructorMissingException, ClassNotFoundException {
     createFTable();
     appendFTableData();
     /** Get the count now from scan **/
     assertEquals("Expected no entries in memory prior to Eviction.", 452,
-            getCountFromScan(getTableName()));
+        getCountFromScan(getTableName()));
     /** Evict the entries **/
     forceEvictionTask(getTableName());
     /**
@@ -929,12 +929,12 @@ public abstract class FTableOverflowToTierTest extends Thread {
      * have been evicted
      */
     assertEquals("Expected no entries in memory prior to Eviction.", 0,
-            getinMemoryCount(getTableName()));
+        getinMemoryCount(getTableName()));
     /** Get the count now from scan **/
     assertEquals("Expected no entries in memory prior to Eviction.", 452,
-            getCountFromScan(getTableName()));
+        getCountFromScan(getTableName()));
     assertEquals("EvictionCount should match number of evicted entries.", 452,
-            getTotalEvictedCount(getTableName()));
+        getTotalEvictedCount(getTableName()));
   }
 
   private long getTotalEvictedCount(final String tableName) {
@@ -945,7 +945,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
         assertNotNull(region);
         long count = 0;
         for (BucketRegion br : ((PartitionedRegion) region).getDataStore()
-                .getAllLocalBucketRegions()) {
+            .getAllLocalBucketRegions()) {
           count += br.getEvictions();
         }
         return count;
@@ -988,7 +988,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
    */
   @Test
   public void testWAL4520Eviction()
-          throws StoreCreateException, DefaultConstructorMissingException, ClassNotFoundException {
+      throws StoreCreateException, DefaultConstructorMissingException, ClassNotFoundException {
     // disableORCStore();
     this.setEVICT_HEAP_PCT(1);
     appendFTableforWAL();
@@ -1001,9 +1001,9 @@ public abstract class FTableOverflowToTierTest extends Thread {
       public Object call() throws IOException {
         TierStore store = StoreHandler.getInstance().getTierStore(tableName, 1);
         final TableDescriptor tableDescriptor =
-                MCacheFactory.getAnyInstance().getTableDescriptor(tableName);
+            MCacheFactory.getAnyInstance().getTableDescriptor(tableName);
         final StoreRecord storeRecord =
-                new StoreRecord(tableDescriptor.getAllColumnDescriptors().size());
+            new StoreRecord(tableDescriptor.getAllColumnDescriptors().size());
         tableDescriptor.getAllColumnDescriptors().forEach((MCD) -> {
           if (MCD.getColumnNameAsString().equals(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME)) {
             storeRecord.addValue(1l);
@@ -1135,7 +1135,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
 
     /* assert that total scan count is fine and all data is in tier-1 */
     assertScanCount("AfterEviction: Data In Tier-1", tierArgs, tierArgs.expectedCount,
-            tierArgs.expectedCount, 0);
+        tierArgs.expectedCount, 0);
 
     /* force expiration/eviction from tier-1 to tier-2 */
     setupTierEviction(new long[] {0L, 3_000L}, tierArgs);
@@ -1143,7 +1143,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
 
     /* assert that all data is in tier-2 */
     assertScanCount("AfterEviction: Data In Tier-2", tierArgs, tierArgs.expectedCount, 0,
-            tierArgs.expectedCount);
+        tierArgs.expectedCount);
 
     /* force expiration on tier-2 so that it deletes the data from that tier */
     setupTierEviction(new long[] {0L, 0L}, tierArgs);
@@ -1187,7 +1187,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
           final Properties p = new Properties();
           p.setProperty("base.dir.path", tierArgs1.locations[i] + "/" + this.getName());
           TierStore ts = new TierStoreFactory().create(STORE_CLASS, tierArgs1.names[i], p, writer,
-                  reader, (MonarchCacheImpl) MCacheFactory.getAnyInstance());
+              reader, (MonarchCacheImpl) MCacheFactory.getAnyInstance());
           StoreHandler.getInstance().registerStore(tierArgs1.names[i], ts);
         }
 
@@ -1197,13 +1197,13 @@ public abstract class FTableOverflowToTierTest extends Thread {
         }
 
         ReflectionUtils.setStaticFieldValue(
-                Class.forName("io.ampool.tierstore.internal.TierEvictorThread"), "fixedWaitTimeSecs",
-                1);
+            Class.forName("io.ampool.tierstore.internal.TierEvictorThread"), "fixedWaitTimeSecs",
+            1);
         ReflectionUtils.setStaticFieldValue(
-                Class.forName("io.ampool.tierstore.internal.TierEvictorThread"),
-                "TEST_TIER_EVICT_INTERVAL", TIER_EVICT_INTERVAL);
+            Class.forName("io.ampool.tierstore.internal.TierEvictorThread"),
+            "TEST_TIER_EVICT_INTERVAL", TIER_EVICT_INTERVAL);
         ReflectionUtils.setStaticFieldValue(
-                Class.forName("io.ampool.tierstore.internal.TierEvictorThread"), "TEST_EVICT", true);
+            Class.forName("io.ampool.tierstore.internal.TierEvictorThread"), "TEST_EVICT", true);
       }
     }));
 
@@ -1251,7 +1251,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
 
     /* assert that total scan count is fine and all data is in tier-1 */
     assertScanCount("AfterEviction: Data In Tier-1", tierArgs1, tierArgs1.expectedCount,
-            tierArgs1.expectedCount, 0);
+        tierArgs1.expectedCount, 0);
 
     /* force expiration/eviction from tier-1 to tier-2 */
     setupTierEviction(new long[] {0L, 3_000L}, tierArgs1);
@@ -1259,7 +1259,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
 
     /* assert that all data is in tier-2 */
     assertScanCount("AfterEviction: Data In Tier-2", tierArgs1, tierArgs1.expectedCount, 0,
-            tierArgs1.expectedCount);
+        tierArgs1.expectedCount);
 
     /* force expiration on tier-2 so that it deletes the data from that tier */
     setupTierEviction(new long[] {0L, 0L}, tierArgs1);
@@ -1311,14 +1311,14 @@ public abstract class FTableOverflowToTierTest extends Thread {
     this.tierArgs = new TierArgs(tierNames);
     final int ec = this.tierArgs.expectedCount;
     final long[][] tierCounts = new long[][] {new long[] {0L, 0L, 0L, 0L, 0L},
-            new long[] {ec, 0L, 0L, 0L, 0L}, new long[] {0L, ec, 0L, 0L, 0L},
-            new long[] {0L, 0L, ec, 0L, 0L}, new long[] {0L, 0L, 0L, ec, 0L},
-            new long[] {0L, 0L, 0L, 0L, ec}, new long[] {0L, 0L, 0L, 0L, 0},};
+        new long[] {ec, 0L, 0L, 0L, 0L}, new long[] {0L, ec, 0L, 0L, 0L},
+        new long[] {0L, 0L, ec, 0L, 0L}, new long[] {0L, 0L, 0L, ec, 0L},
+        new long[] {0L, 0L, 0L, 0L, ec}, new long[] {0L, 0L, 0L, 0L, 0},};
 
     final long et = 3_000L;
     final long[][] expiryTime = new long[][] {new long[] {0L, et, 0L, 0L, 0L},
-            new long[] {0L, 0L, et, 0L, 0L}, new long[] {0L, 0L, 0L, et, 0L},
-            new long[] {0L, 0L, 0L, 0L, et}, new long[] {0L, 0L, 0L, 0L, 0L},};
+        new long[] {0L, 0L, et, 0L, 0L}, new long[] {0L, 0L, 0L, et, 0L},
+        new long[] {0L, 0L, 0L, 0L, et}, new long[] {0L, 0L, 0L, 0L, 0L},};
 
     /* create the required stores on all servers and also setup the respective evictor threads */
     initializeTierStores(tierArgs);
@@ -1338,7 +1338,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
     /* assert that total scan count is fine and all data is in respective tier */
     for (int i = 0; i < tierArgs.names.length; i++) {
       assertScanCount("AfterEviction: Data In Tier: " + tierArgs.names[i], tierArgs,
-              tierCounts[i + 1]);
+          tierCounts[i + 1]);
       /* evict data from this tier to next tier, if any, and then wait for some time */
       setupTierEviction(expiryTime[i], tierArgs);
       Thread.sleep(10_000);
@@ -1347,7 +1347,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
     tierArgs.expectedCount = 0;
     /* since data is deleted.. neither full table scan nor any tier should have any data */
     assertScanCount("AfterExpiration: Data Deleted From Last Tier.", tierArgs,
-            tierCounts[tierCounts.length - 1]);
+        tierCounts[tierCounts.length - 1]);
   }
 
   private void deRegisterStores(final TierArgs tierArgs) {
@@ -1410,36 +1410,36 @@ public abstract class FTableOverflowToTierTest extends Thread {
       @Override
       public void run() throws Exception {
         ReflectionUtils.setStaticFieldValue(
-                Class.forName("io.ampool.tierstore.internal.TierEvictorThread"),
-                "TEST_TIER_EVICT_INTERVAL", TIER_EVICT_INTERVAL);
+            Class.forName("io.ampool.tierstore.internal.TierEvictorThread"),
+            "TEST_TIER_EVICT_INTERVAL", TIER_EVICT_INTERVAL);
       }
     }));
   }
 
   private void assertScanCount(final String msg, final TierArgs tierArgs,
-                               final int expectedTotalScanCount, final int expectedTier1Count, final int expectedTier2Count)
-          throws IOException {
+      final int expectedTotalScanCount, final int expectedTier1Count, final int expectedTier2Count)
+      throws IOException {
     int scanCount = getScanCount(getTableName(), expectedTotalScanCount);
     assertEquals(msg + ": Incorrect scan count across all tiers.", expectedTotalScanCount,
-            scanCount);
+        scanCount);
     long tier1Count =
-            getCountInTier(tierArgs.locations[0], getTableName(), tierArgs.totalDataCopies);
+        getCountInTier(tierArgs.locations[0], getTableName(), tierArgs.totalDataCopies);
     assertEquals(msg + ": Incorrect scan count from tier-1.", expectedTier1Count, tier1Count);
     long tier2Count =
-            getCountInTier(tierArgs.locations[1], getTableName(), tierArgs.totalDataCopies);
+        getCountInTier(tierArgs.locations[1], getTableName(), tierArgs.totalDataCopies);
     assertEquals(msg + ": Incorrect scan count from tier-2.", expectedTier2Count, tier2Count);
   }
 
   private void assertScanCount(final String msg, final TierArgs tierArgs,
-                               final long[] expectedTierCount) throws IOException {
+      final long[] expectedTierCount) throws IOException {
     int scanCount = getScanCount(getTableName(), tierArgs.expectedCount);
     assertEquals(msg + ": Incorrect scan count across all tiers.", tierArgs.expectedCount,
-            scanCount);
+        scanCount);
     for (int i = 0; i < tierArgs.names.length; i++) {
       long tierCount =
-              getCountInTier(tierArgs.locations[i], getTableName(), tierArgs.totalDataCopies);
+          getCountInTier(tierArgs.locations[i], getTableName(), tierArgs.totalDataCopies);
       assertEquals(msg + ": Incorrect scan count from " + tierArgs.names[i], expectedTierCount[i],
-              tierCount);
+          tierCount);
     }
   }
 
@@ -1508,19 +1508,19 @@ public abstract class FTableOverflowToTierTest extends Thread {
           final Properties p = new Properties();
           p.setProperty("base.dir.path", tierArgs.locations[i] + "/" + this.getName());
           TierStore ts = new TierStoreFactory().create(STORE_CLASS, tierArgs.names[i], p, writer,
-                  reader, (MonarchCacheImpl) MCacheFactory.getAnyInstance());
+              reader, (MonarchCacheImpl) MCacheFactory.getAnyInstance());
           StoreHandler.getInstance().registerStore(tierArgs.names[i], ts);
         }
 
         /* enable TEST_EVICT testing hook */
         ReflectionUtils.setStaticFieldValue(
-                Class.forName("io.ampool.tierstore.internal.TierEvictorThread"), "fixedWaitTimeSecs",
-                1);
+            Class.forName("io.ampool.tierstore.internal.TierEvictorThread"), "fixedWaitTimeSecs",
+            1);
         ReflectionUtils.setStaticFieldValue(
-                Class.forName("io.ampool.tierstore.internal.TierEvictorThread"),
-                "TEST_TIER_EVICT_INTERVAL", TIER_EVICT_INTERVAL);
+            Class.forName("io.ampool.tierstore.internal.TierEvictorThread"),
+            "TEST_TIER_EVICT_INTERVAL", TIER_EVICT_INTERVAL);
         ReflectionUtils.setStaticFieldValue(
-                Class.forName("io.ampool.tierstore.internal.TierEvictorThread"), "TEST_EVICT", true);
+            Class.forName("io.ampool.tierstore.internal.TierEvictorThread"), "TEST_EVICT", true);
       }
     }));
   }
@@ -1538,7 +1538,7 @@ public abstract class FTableOverflowToTierTest extends Thread {
    * @throws IOException in case there were errors reading data
    */
   private long getCountInTier(final String location, final String tableName,
-                              final int totalDataCopies) throws IOException {
+      final int totalDataCopies) throws IOException {
     long totalCount = 0;
     for (VM vm : getServers()) {
       Properties props = new Properties();
@@ -1551,12 +1551,12 @@ public abstract class FTableOverflowToTierTest extends Thread {
       TierStoreWriter writer = null;
       try {
         final Constructor<?> c = StoreUtils
-                .getTierStoreConstructor(Class.forName("io.ampool.tierstore.stores.LocalTierStore"));
+            .getTierStoreConstructor(Class.forName("io.ampool.tierstore.stores.LocalTierStore"));
         lts = (TierStore) c.newInstance("local-disk-tier");
         reader = (TierStoreReader) Class.forName(ORC_READER_CLASS).newInstance();
         writer = (TierStoreWriter) Class.forName(ORC_WRITER_CLASS).newInstance();
       } catch (ClassNotFoundException | IllegalAccessException | InstantiationException
-              | DefaultConstructorMissingException | InvocationTargetException e) {
+          | DefaultConstructorMissingException | InvocationTargetException e) {
         e.printStackTrace();
         throw new IOException("Error.." + e.getMessage());
       }

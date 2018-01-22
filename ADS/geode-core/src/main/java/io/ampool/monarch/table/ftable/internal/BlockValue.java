@@ -118,7 +118,7 @@ public class BlockValue implements DataSerializableFixedID, Delta, PersistenceDe
       final MColumnDescriptor cd = columnsByName.get(entry.getKey());
       if (cd.getColumnType() instanceof BasicTypes) {
         this.stats.updateColumnStatistics((BasicTypes) cd.getColumnType(),
-                record.getValueMap().get(entry.getKey()), cd.getIndex());
+            record.getValueMap().get(entry.getKey()), cd.getIndex());
       }
     }
     return checkAndAddRecord(td.getEncoding().serializeValue(td, record));
@@ -356,7 +356,7 @@ public class BlockValue implements DataSerializableFixedID, Delta, PersistenceDe
       /* skip/remove the matching records */
       if (!ScanUtils.executeSimpleFilter(r, filter, td)) {
         final byte[] bytes = record instanceof StoreRecord ? (byte[]) enc.serializeValue(td, record)
-                : (byte[]) record;
+            : (byte[]) record;
         newList.add(updateStatistics(bytes, (FTableDescriptor) td));
       }
     }
@@ -373,7 +373,7 @@ public class BlockValue implements DataSerializableFixedID, Delta, PersistenceDe
    * @param newList the new list of serialized records
    */
   private void reset(final BlockKey lastKey, final FTableDescriptor td,
-                     final ArrayList<byte[]> newList) {
+      final ArrayList<byte[]> newList) {
     this.currentIndex.set(newList.size());
     if (newList.size() == 0) {
       this.value = this.records = null;
@@ -397,7 +397,7 @@ public class BlockValue implements DataSerializableFixedID, Delta, PersistenceDe
    * @return true if the block has been updated; false otherwise
    */
   public boolean updateBlock(BlockKey lastKey, Filter filter, Map<Integer, Object> colValues,
-                             TableDescriptor td) {
+      TableDescriptor td) {
     final ThinRow row = ThinRow.create(td, ThinRow.RowFormat.F_FULL_ROW);
     ArrayList<byte[]> newList = new ArrayList<>(size());
     final Encoding enc = Encoding.getEncoding(this.rowHeader.getEncoding());
@@ -421,7 +421,7 @@ public class BlockValue implements DataSerializableFixedID, Delta, PersistenceDe
       if (ScanUtils.executeSimpleFilter(row, filter, td)) {
         if (record instanceof StoreRecord) {
           System.arraycopy(((StoreRecord) record).getValues(), 0, newRec.getValues(), 0,
-                  td.getNumOfColumns());
+              td.getNumOfColumns());
         } else {
           for (int i = 0; i < td.getNumOfColumns(); i++) {
             newRec.updateValue(i, row.getCells().get(i).getColumnValue());
@@ -455,7 +455,7 @@ public class BlockValue implements DataSerializableFixedID, Delta, PersistenceDe
   }
 
   private synchronized void toDeltaInternal(DataOutput out, final int deltaIndex)
-          throws IOException {
+      throws IOException {
     int deltaCount = records.size() - deltaIndex;
     DataSerializer.writeInteger(deltaCount, out);
     for (int i = 0; i < deltaCount; i++) {
@@ -465,7 +465,7 @@ public class BlockValue implements DataSerializableFixedID, Delta, PersistenceDe
   }
 
   private synchronized void fromDeltaInternal(DataInput in)
-          throws IOException, InvalidDeltaException {
+      throws IOException, InvalidDeltaException {
     int deltaCount = DataSerializer.readInteger(in);
     for (int i = 0; i < deltaCount; i++) {
       final byte[] bytes = DataSerializer.readByteArray(in);
@@ -538,7 +538,7 @@ public class BlockValue implements DataSerializableFixedID, Delta, PersistenceDe
   @Override
   public String toString() {
     return "BlockValue{" + "currentIndex=" + currentIndex + ", valueSize=" + valueSize
-            + ", lastPersistenceDelta=" + lastPersistenceDelta + '}';
+        + ", lastPersistenceDelta=" + lastPersistenceDelta + '}';
   }
 
   /**

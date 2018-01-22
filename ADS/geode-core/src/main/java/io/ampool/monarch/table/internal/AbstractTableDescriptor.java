@@ -243,7 +243,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
    * @return Object of this class, used for chained calling.
    */
   public TableDescriptor addColumn(final String colName, BasicTypes type)
-          throws TableColumnAlreadyExists {
+      throws TableColumnAlreadyExists {
     MColumnDescriptor columnDescriptor = new MColumnDescriptor(colName, new MTableColumnType(type));
     return this.addColumn(Bytes.toBytes(colName), columnDescriptor);
   }
@@ -256,7 +256,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
    * @return Object of this class, used for chained calling.
    */
   public TableDescriptor addColumn(final byte[] colName, BasicTypes type)
-          throws TableColumnAlreadyExists {
+      throws TableColumnAlreadyExists {
     MColumnDescriptor columnDescriptor = new MColumnDescriptor(colName, new MTableColumnType(type));
     return this.addColumn(colName, columnDescriptor);
   }
@@ -276,7 +276,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
    * @return Object of this class, used for chained calling.
    */
   public TableDescriptor addColumn(final String colName, MTableColumnType columnType)
-          throws TableColumnAlreadyExists {
+      throws TableColumnAlreadyExists {
     MColumnDescriptor columnDescriptor = new MColumnDescriptor(colName, columnType);
     return this.addColumn(Bytes.toBytes(colName), columnDescriptor);
   }
@@ -297,7 +297,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
    * @return Object of this class, used for chained calling.
    */
   public TableDescriptor addColumn(final byte[] colName, MTableColumnType columnType)
-          throws TableColumnAlreadyExists {
+      throws TableColumnAlreadyExists {
     MColumnDescriptor columnDescriptor = new MColumnDescriptor(colName, columnType);
     return this.addColumn(colName, columnDescriptor);
   }
@@ -311,7 +311,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
    *             {@link TableDescriptor#addColumn(String, MTableColumnType)} instead.
    */
   public TableDescriptor addColumn(final String colName, String columnTypeId)
-          throws TableColumnAlreadyExists {
+      throws TableColumnAlreadyExists {
     MColumnDescriptor columnDescriptor = new MColumnDescriptor(colName, columnTypeId);
     return this.addColumn(Bytes.toBytes(colName), columnDescriptor);
   }
@@ -331,7 +331,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
       this.columnPosition++;
     } else {
       throw new TableColumnAlreadyExists(
-              "Column " + Arrays.toString(colName) + " Already Exists in Schema. ");
+          "Column " + Arrays.toString(colName) + " Already Exists in Schema. ");
     }
     return this;
   }
@@ -386,7 +386,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
   public TableDescriptor setLocalMaxMemoryPct(int memoryPct) {
     if (memoryPct <= 0 || memoryPct > 90) {
       throw new IllegalArgumentException(
-              "Value of total-max=memory should be greater than 0 and smaller than or equal to 90");
+          "Value of total-max=memory should be greater than 0 and smaller than or equal to 90");
     }
     localMaxMemory = DEFAULT_LOCAL_MAX_MEMORY;
     localMaxMemoryPct = memoryPct;
@@ -402,7 +402,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
    * @throws TableInvalidConfiguration if the specified number of splits are < 0 or >= 512
    */
   public TableDescriptor setTotalNumOfSplits(int totalNumOfSplits)
-          throws TableInvalidConfiguration {
+      throws TableInvalidConfiguration {
 
     if (totalNumOfSplits <= 0) {
       throw new IllegalArgumentException("TotalNumOfSplits cannot be negative or zero");
@@ -725,7 +725,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
 
   public List<Integer> getVaribleLengthColumns() {
     return isOldWay() ? varibleLengthColumnIndices
-            : this.tableSchema.getVaribleLengthColumnIndices();
+        : this.tableSchema.getVaribleLengthColumnIndices();
   }
 
   public int getBitMapLength() {
@@ -755,11 +755,11 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
       if (this instanceof FTableDescriptor) {
         /* add insertion-time as last column in the schema.. */
         sb.column(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-                FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE);
+            FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE);
         // also add old way
         // TODO improve this way
         this.addColumn(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-                FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE);
+            FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE);
       }
       this.setSchema(sb.build());
     } else {
@@ -769,7 +769,7 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
           sb.column(cd.getColumnNameAsString(), cd.getColumnType());
         }
         sb.column(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-                FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE);
+            FTableDescriptor.INSERTION_TIMESTAMP_COL_TYPE);
         this.setSchema(sb.build());
       }
     }
@@ -794,8 +794,8 @@ public abstract class AbstractTableDescriptor implements TableDescriptor {
   @Override
   public MColumnDescriptor getColumnByName(final String columnName) {
     return this.tableSchema == null
-            ? this.columnsByName.get(new ByteArrayKey(columnName.getBytes()))
-            : this.tableSchema.getColumnDescriptorByName(columnName);
+        ? this.columnsByName.get(new ByteArrayKey(columnName.getBytes()))
+        : this.tableSchema.getColumnDescriptorByName(columnName);
   }
 
   @Override

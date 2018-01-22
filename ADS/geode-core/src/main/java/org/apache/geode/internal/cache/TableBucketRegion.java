@@ -14,6 +14,7 @@
 package org.apache.geode.internal.cache;
 
 import io.ampool.monarch.table.Pair;
+import io.ampool.monarch.table.TableDescriptor;
 import io.ampool.monarch.table.ftable.internal.BlockValue;
 import org.apache.geode.InvalidDeltaException;
 import org.apache.geode.cache.CacheWriterException;
@@ -40,7 +41,16 @@ public class TableBucketRegion extends BucketRegion {
     super(regionName, attrs, parentRegion, cache, internalRegionArgs);
   }
 
+  /**
+   * Get the descriptor identifying this table-region.
+   *
+   * @return the descriptor
+   */
+  public TableDescriptor getDescriptor() {
+    return ((TablePartitionedRegion) getPartitionedRegion()).getDescriptor();
+  }
 
+  // AMPOOL SPECIFIC CODE CHANGES START HERE
   /* TODO: need to update actual count and size for delete/update on FTable */
   private final AtomicLong actualCount = new AtomicLong(0L);
   private final AtomicLong lastSize = new AtomicLong(0L);
@@ -70,6 +80,7 @@ public class TableBucketRegion extends BucketRegion {
       throws RegionExistsException, TimeoutException, IOException, ClassNotFoundException {
     return null;
   }
+  // AMPOOL SPECIFIC CODE CHANGES END HERE
 
   // @Override
   // public void fillInProfile(DistributionAdvisor.Profile profile) {
@@ -77,57 +88,8 @@ public class TableBucketRegion extends BucketRegion {
   // ((CacheDistributionAdvisor.CacheProfile)profile).customRegionAttributes =
   // getCustomAttributes();
   //
+  // // AMPOOL SPECIFIC CHANGES ENDS HERE
   // }
-
-  // Entry (Put/Create) rules
-  // If this is a primary for the bucket
-  // 1) apply op locally, aka update or create entry
-  // 2) distribute op to bucket secondaries and bridge servers with synchrony on local entry
-  // 3) cache listener with synchrony on entry
-  // Else not a primary
-  // 1) apply op locally
-  // 2) update local bs, gateway
-  // This is a copy of BucketRegion::virtualPut + ampool changes.
-  @Override
-  protected boolean virtualPut(EntryEventImpl event, boolean ifNew, boolean ifOld,
-      Object expectedOldValue, boolean requireOldValue, long lastModified,
-      boolean overwriteDestroyed) throws TimeoutException, CacheWriterException {
-
-    beginLocalWrite(event);
-
-    try {
-      if (super.getPartitionedRegion().isParallelWanEnabled()) {
-        handleWANEvent(event);
-      }
-      if (!hasSeenEvent(event)) {
-        forceSerialized(event);
-        RegionEntry oldEntry = this.entries.basicPut(event, lastModified, ifNew, ifOld,
-            expectedOldValue, requireOldValue, overwriteDestroyed);
-        return oldEntry != null;
-      }
-      if (event.getDeltaBytes() != null && event.getRawNewValue() == null) {
-        // This means that this event has delta bytes but no full value.
-        // Request the full value of this event.
-        // The value in this vm may not be same as this event's value.
-        throw new InvalidDeltaException(
-            "Cache encountered replay of event containing delta bytes for key " + event.getKey());
-      }
-      // Forward the operation and event messages
-      // to members with bucket copies that may not have seen the event. Their
-      // EventTrackers will keep them from applying the event a second time if
-      // they've already seen it.
-      if (logger.isTraceEnabled(LogMarker.DM)) {
-        logger.trace(LogMarker.DM, "BR.virtualPut: this cache has already seen this event {}",
-            event);
-      }
-      if (!getConcurrencyChecksEnabled() || event.hasValidVersionTag()) {
-        distributeUpdateOperation(event, lastModified);
-      }
-      return true;
-    } finally {
-      endLocalWrite(event);
-    }
-  }
 
   /**
    * Return serialized form of an entry

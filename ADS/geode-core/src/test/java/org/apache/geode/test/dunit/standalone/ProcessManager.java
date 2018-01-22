@@ -65,7 +65,7 @@ public class ProcessManager {
   }
 
   public synchronized void launchVM(String version, int vmNum, boolean bouncedVM)
-          throws IOException {
+      throws IOException {
     if (processes.containsKey(vmNum)) {
       throw new IllegalStateException("VM " + vmNum + " is already running.");
     }
@@ -82,7 +82,7 @@ public class ProcessManager {
         // This delete is occasionally failing on some platforms, maybe due to a lingering
         // process. Allow the process to be launched anyway.
         System.err.println("Unable to delete " + workingDir + ". Currently contains "
-                + Arrays.asList(workingDir.list()));
+            + Arrays.asList(workingDir.list()));
       }
       workingDir.mkdirs();
     }
@@ -141,7 +141,7 @@ public class ProcessManager {
   }
 
   private void linkStreams(final String version, final int vmNum, final ProcessHolder holder,
-                           final InputStream in, final PrintStream out) {
+      final InputStream in, final PrintStream out) {
     Thread ioTransport = new Thread() {
       public void run() {
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
@@ -208,7 +208,7 @@ public class ProcessManager {
       // detection is disabled, so we turn it off in the locator. Tests for network partition
       // detection should create a separate locator that has it enabled
       cmds.add(
-              "-D" + DistributionConfig.GEMFIRE_PREFIX + ENABLE_NETWORK_PARTITION_DETECTION + "=false");
+          "-D" + DistributionConfig.GEMFIRE_PREFIX + ENABLE_NETWORK_PARTITION_DETECTION + "=false");
     }
     cmds.add("-D" + LOG_LEVEL + "=" + DUnitLauncher.logLevel);
     if (DUnitLauncher.LOG4J != null) {
@@ -229,7 +229,7 @@ public class ProcessManager {
     cmds.add("-XX:HeapDumpPath=/tmp");
 
     cmds.add("-D" + MTableUtils.AMPL_DELTA_PERS_PROP_NAME + "="
-            + System.getProperty(MTableUtils.AMPL_DELTA_PERS_PROP_NAME, "true"));
+        + System.getProperty(MTableUtils.AMPL_DELTA_PERS_PROP_NAME, "true"));
 
     cmds.add(agent);
     cmds.add(ChildVM.class.getName());
@@ -269,9 +269,9 @@ public class ProcessManager {
           // That won't work when we pass this to dunit VMs in a different
           // directory
           arg = arg.replace("-javaagent:..",
-                  "-javaagent:" + System.getProperty("user.dir") + File.separator + "..");
+              "-javaagent:" + System.getProperty("user.dir") + File.separator + "..");
           arg = arg.replace("destfile=..",
-                  "destfile=" + System.getProperty("user.dir") + File.separator + "..");
+              "destfile=" + System.getProperty("user.dir") + File.separator + "..");
           return arg;
         }
       }
@@ -326,12 +326,12 @@ public class ProcessManager {
   }
 
   public RemoteDUnitVMIF getStub(int i)
-          throws AccessException, RemoteException, NotBoundException, InterruptedException {
+      throws AccessException, RemoteException, NotBoundException, InterruptedException {
     return getStub(VersionManager.CURRENT_VERSION, i);
   }
 
   public RemoteDUnitVMIF getStub(String version, int i)
-          throws AccessException, RemoteException, NotBoundException, InterruptedException {
+      throws AccessException, RemoteException, NotBoundException, InterruptedException {
     waitForVMs(DUnitLauncher.STARTUP_TIMEOUT);
     return (RemoteDUnitVMIF) registry.lookup("vm" + i);
   }

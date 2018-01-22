@@ -144,7 +144,7 @@ public abstract class Token {
     public boolean isSerializedValue(byte[] value) {
       ByteBuffer buf = ByteBuffer.wrap(value);
       return buf.capacity() == 3 && buf.get() == DSCODE.DS_FIXED_ID_SHORT
-              && buf.getShort() == getDSFID();
+          && buf.getShort() == getDSFID();
     }
 
     @Override

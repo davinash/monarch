@@ -145,7 +145,7 @@ public class ScannerServerImpl extends Scanner {
       bucketIdSet.add(bucketId);
     } else {
       bucketIdSet = new TreeSet<>((scan.getBucketIds().size() > 0) ? scan.getBucketIds()
-              : getApplicableLocalBucketIds(scan, td, prDataStore));
+          : getApplicableLocalBucketIds(scan, td, prDataStore));
     }
     if (this.scan.isReversed()) {
       this.bucketIdIterator = bucketIdSet.descendingIterator();
@@ -160,9 +160,9 @@ public class ScannerServerImpl extends Scanner {
   }
 
   private Set<Integer> getApplicableLocalBucketIds(Scan scan, TableDescriptor tableDescriptor,
-                                                   PartitionedRegionDataStore prDataStore) {
+      PartitionedRegionDataStore prDataStore) {
     Set<Integer> bucketIdSet =
-            MTableUtils.getBucketIdSet(scan.getStartRow(), scan.getStopRow(), tableDescriptor);
+        MTableUtils.getBucketIdSet(scan.getStartRow(), scan.getStopRow(), tableDescriptor);
     Set<Integer> allLocalPrimaryBucketIds = prDataStore.getAllLocalPrimaryBucketIds();
 
     bucketIdSet.retainAll(allLocalPrimaryBucketIds);
@@ -180,9 +180,9 @@ public class ScannerServerImpl extends Scanner {
     this.scan.setBucketId(bucketId);
     BucketRegion localBucketById = prDataStore.getLocalBucketById(bucketId);
     if (localBucketById != null && localBucketById.getBucketAdvisor().isPrimary()
-            && this.scanContext != null) {
+        && this.scanContext != null) {
       this.currentIterator =
-              this.scanContext.getBucketIterator(bucket.getRegionMap().getInternalMap());
+          this.scanContext.getBucketIterator(bucket.getRegionMap().getInternalMap());
     }
   }
 
@@ -191,7 +191,7 @@ public class ScannerServerImpl extends Scanner {
       ScanEntryHandler.Status status;
       Map.Entry entry;
       Function<Map.Entry, Object> VALUE_PROCESSOR = scanContext.td instanceof FTableDescriptor
-              ? Map.Entry::getValue : (e) -> readValueFromMap(e, scanContext);
+          ? Map.Entry::getValue : (e) -> readValueFromMap(e, scanContext);
       while (currentIterator.hasNext()) {
         entry = currentIterator.next();
         if (entry == null || !(entry.getKey() instanceof IMKey)) {
@@ -212,7 +212,7 @@ public class ScannerServerImpl extends Scanner {
               break;
             case DES_ROW:
               td.getEncoding().writeDesRow(hdos, td, (DeSerializedRow) values[2],
-                      this.scan.getColumns());
+                  this.scan.getColumns());
               value = readValue(hdos.toByteArray());
               break;
             default:

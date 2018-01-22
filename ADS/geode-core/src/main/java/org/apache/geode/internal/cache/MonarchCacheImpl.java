@@ -126,7 +126,7 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
    * @param typeRegistry : currently only unit tests set this parameter to a non-null value
    */
   private MonarchCacheImpl(boolean isClient, PoolFactory pf, DistributedSystem system,
-                           CacheConfig cacheConfig, boolean asyncEventListeners, TypeRegistry typeRegistry) {
+      CacheConfig cacheConfig, boolean asyncEventListeners, TypeRegistry typeRegistry) {
     super(isClient, pf, system, cacheConfig, asyncEventListeners, typeRegistry);
     // TODO: super and this are initialized in separate sync blocks
     synchronized (MonarchCacheImpl.class) {
@@ -218,15 +218,15 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
           try {
             // TODO: Change this to create ServerTableRegionProxy.
             ClientRegionFactory<Object, Object> crf =
-                    createClientRegionFactory(ClientRegionShortcut.PROXY);
+                createClientRegionFactory(ClientRegionShortcut.PROXY);
             AmpoolTableRegionAttributes ampoolTableRegionAttributes =
-                    new AmpoolTableRegionAttributes();
+                new AmpoolTableRegionAttributes();
             if (tableDescriptor.getType() == TableType.UNORDERED) {
               ampoolTableRegionAttributes.setRegionDataOrder(RegionDataOrder.ROW_TUPLE_UNORDERED);
               crf.setCustomRegionAttributes(ampoolTableRegionAttributes);
             } else if (tableDescriptor.getType() == TableType.ORDERED_VERSIONED) {
               ampoolTableRegionAttributes
-                      .setRegionDataOrder(RegionDataOrder.ROW_TUPLE_ORDERED_VERSIONED);
+                  .setRegionDataOrder(RegionDataOrder.ROW_TUPLE_ORDERED_VERSIONED);
               crf.setCustomRegionAttributes(ampoolTableRegionAttributes);
             } else if (tableDescriptor.getType() == TableType.IMMUTABLE) {
               ampoolTableRegionAttributes.setRegionDataOrder(RegionDataOrder.IMMUTABLE);
@@ -310,11 +310,11 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
 
   @Override
   public <K, V> Region<K, V> createVMRegion(String name, RegionAttributes<K, V> p_attrs,
-                                            InternalRegionArguments internalRegionArgs)
-          throws RegionExistsException, TimeoutException, IOException, ClassNotFoundException {
+      InternalRegionArguments internalRegionArgs)
+      throws RegionExistsException, TimeoutException, IOException, ClassNotFoundException {
     if (getMyId().getVmKind() == DistributionManager.LOCATOR_DM_TYPE) {
       if (!internalRegionArgs.isUsedForMetaRegion()
-              && internalRegionArgs.getInternalMetaRegion() == null) {
+          && internalRegionArgs.getInternalMetaRegion() == null) {
         throw new IllegalStateException("Regions can not be created in a locator.");
       }
     }
@@ -324,7 +324,7 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
     attrs = invokeRegionBefore(null, name, attrs, internalRegionArgs);
     if (attrs == null) {
       throw new IllegalArgumentException(
-              LocalizedStrings.GemFireCache_ATTRIBUTES_MUST_NOT_BE_NULL.toLocalizedString());
+          LocalizedStrings.GemFireCache_ATTRIBUTES_MUST_NOT_BE_NULL.toLocalizedString());
     }
 
     LocalRegion rgn = null;
@@ -336,7 +336,7 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
     final boolean isPartitionedRegion = attrs.getPartitionAttributes() != null;
     final boolean isReinitCreate = snapshotInputStream != null || imageTarget != null || recreate;
     final boolean isAmpoolTable =
-            AmpoolTableRegionAttributes.isAmpoolTable(attrs.getCustomAttributes());
+        AmpoolTableRegionAttributes.isAmpoolTable(attrs.getCustomAttributes());
 
 
 
@@ -399,7 +399,7 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
           interrupted = true;
         } catch (ExecutionException e) {
           throw new Error(LocalizedStrings.GemFireCache_UNEXPECTED_EXCEPTION.toLocalizedString(),
-                  e);
+              e);
         } catch (CancellationException e) {
           // future was cancelled
         } finally {
@@ -421,8 +421,8 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
         throw e;
       } catch (final RuntimeException validationException) {
         logger.warn(LocalizedMessage.create(
-                LocalizedStrings.GemFireCache_INITIALIZATION_FAILED_FOR_REGION_0, rgn.getFullPath()),
-                validationException);
+            LocalizedStrings.GemFireCache_INITIALIZATION_FAILED_FOR_REGION_0, rgn.getFullPath()),
+            validationException);
         throw validationException;
       } finally {
         if (!success) {
@@ -439,8 +439,8 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
 
             // bug #44672 - log the failure but don't override the original exception
             logger.warn(LocalizedMessage.create(
-                    LocalizedStrings.GemFireCache_INIT_CLEANUP_FAILED_FOR_REGION_0, rgn.getFullPath()),
-                    t);
+                LocalizedStrings.GemFireCache_INIT_CLEANUP_FAILED_FOR_REGION_0, rgn.getFullPath()),
+                t);
 
           } finally {
             // clean up if initialize fails for any reason
@@ -477,14 +477,14 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
   }
 
   private static void createTierStores(Region storeMetaRegion, MonarchCacheImpl monarchCacheImpl)
-          throws IllegalAccessException, InstantiationException, DefaultConstructorMissingException,
-          StoreCreateException, InvocationTargetException, ClassNotFoundException {
+      throws IllegalAccessException, InstantiationException, DefaultConstructorMissingException,
+      StoreCreateException, InvocationTargetException, ClassNotFoundException {
     boolean isDefaultStoreAva = false;
 
     Iterator iterator = storeMetaRegion.entrySet().iterator();
     while (iterator.hasNext()) {
       Map.Entry<String, Map<String, Object>> record =
-              (Map.Entry<String, Map<String, Object>>) iterator.next();
+          (Map.Entry<String, Map<String, Object>>) iterator.next();
       String storeName = record.getKey();
       if (storeName.equals(DefaultStore.STORE_NAME)) {
         isDefaultStoreAva = true;
@@ -492,18 +492,18 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
       Map<String, Object> properties = record.getValue();
       try {
         TierStore tierStore = new TierStoreFactory().create(
-                (String) properties.get(TierStoreFactory.STORE_HANDLER_PROP), storeName,
-                (Properties) properties.get(TierStoreFactory.STORE_OPTS_PROP),
-                new TierStoreWriterFactory().create(
-                        (String) properties.get(TierStoreFactory.STORE_WRITER_PROP),
-                        (Properties) properties.get(TierStoreFactory.STORE_WRITER_PROPS_PROP)),
-                new TierStoreReaderFactory().create(
-                        (String) properties.get(TierStoreFactory.STORE_READER_PROP),
-                        (Properties) properties.get(TierStoreFactory.STORE_READER_PROPS_PROP)),
-                monarchCacheImpl);
+            (String) properties.get(TierStoreFactory.STORE_HANDLER_PROP), storeName,
+            (Properties) properties.get(TierStoreFactory.STORE_OPTS_PROP),
+            new TierStoreWriterFactory().create(
+                (String) properties.get(TierStoreFactory.STORE_WRITER_PROP),
+                (Properties) properties.get(TierStoreFactory.STORE_WRITER_PROPS_PROP)),
+            new TierStoreReaderFactory().create(
+                (String) properties.get(TierStoreFactory.STORE_READER_PROP),
+                (Properties) properties.get(TierStoreFactory.STORE_READER_PROPS_PROP)),
+            monarchCacheImpl);
         StoreHandler.getInstance().registerStore(storeName, tierStore);
       } catch (ClassNotFoundException | DefaultConstructorMissingException | StoreCreateException
-              | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+          | IllegalAccessException | InvocationTargetException | InstantiationException e) {
         logger.error("Failed to create store: " + storeName, e);
         throw e;
       } catch (Throwable t) {
@@ -516,74 +516,74 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
       boolean tierStore = false;
       try {
         TierStoreReader reader = new TierStoreReaderFactory().create(DefaultStore.ORC_READER_CLASS,
-                DefaultStore.getDefaultStoreORCReaderProperties());
+            DefaultStore.getDefaultStoreORCReaderProperties());
         TierStoreWriter writer = new TierStoreWriterFactory().create(DefaultStore.ORC_WRITER_CLASS,
-                DefaultStore.getDefaultStoreORCWriterProperties());
+            DefaultStore.getDefaultStoreORCWriterProperties());
         TierStore store =
-                new TierStoreFactory().create(DefaultStore.STORE_CLASS, DefaultStore.STORE_NAME,
-                        DefaultStore.getDefaultStoreProperties(), writer, reader, monarchCacheImpl);
+            new TierStoreFactory().create(DefaultStore.STORE_CLASS, DefaultStore.STORE_NAME,
+                DefaultStore.getDefaultStoreProperties(), writer, reader, monarchCacheImpl);
         StoreHandler.getInstance().registerStore(DefaultStore.STORE_NAME, store);
         Map<String, Object> storePropsMap = new HashMap<>();
         storePropsMap.put(TierStoreFactory.STORE_NAME_PROP, DefaultStore.STORE_NAME);
         storePropsMap.put(TierStoreFactory.STORE_HANDLER_PROP, DefaultStore.STORE_CLASS);
         storePropsMap.put(TierStoreFactory.STORE_OPTS_PROP,
-                DefaultStore.getDefaultStoreProperties());
+            DefaultStore.getDefaultStoreProperties());
         storePropsMap.put(TierStoreFactory.STORE_WRITER_PROP, DefaultStore.ORC_WRITER_CLASS);
         storePropsMap.put(TierStoreFactory.STORE_WRITER_PROPS_PROP,
-                DefaultStore.getDefaultStoreORCWriterProperties());
+            DefaultStore.getDefaultStoreORCWriterProperties());
         storePropsMap.put(TierStoreFactory.STORE_READER_PROP, DefaultStore.ORC_READER_CLASS);
         storePropsMap.put(TierStoreFactory.STORE_READER_PROPS_PROP,
-                DefaultStore.getDefaultStoreORCReaderProperties());
+            DefaultStore.getDefaultStoreORCReaderProperties());
         storeMetaRegion.put(DefaultStore.STORE_NAME, storePropsMap);
 
 
       } catch (ClassNotFoundException | DefaultConstructorMissingException | StoreCreateException
-              | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+          | IllegalAccessException | InvocationTargetException | InstantiationException e) {
         String successMsg = "Failed to create default tier store {0}. " + "Store class: {1}"
-                + "Store Properties: {2} " + "Reader class: {3} " + "Reader properties: {4} "
-                + "Writer class: {5} " + "Writer properties: {6} ";
+            + "Store Properties: {2} " + "Reader class: {3} " + "Reader properties: {4} "
+            + "Writer class: {5} " + "Writer properties: {6} ";
         logger
-                .error(CliStrings.format(successMsg, DefaultStore.STORE_NAME, DefaultStore.STORE_CLASS,
-                        DefaultStore.getDefaultStoreProperties().toString(), DefaultStore.ORC_READER_CLASS,
-                        DefaultStore.getDefaultStoreORCReaderProperties().toString(),
-                        DefaultStore.ORC_WRITER_CLASS,
-                        DefaultStore.getDefaultStoreORCWriterProperties().toString()));
+            .error(CliStrings.format(successMsg, DefaultStore.STORE_NAME, DefaultStore.STORE_CLASS,
+                DefaultStore.getDefaultStoreProperties().toString(), DefaultStore.ORC_READER_CLASS,
+                DefaultStore.getDefaultStoreORCReaderProperties().toString(),
+                DefaultStore.ORC_WRITER_CLASS,
+                DefaultStore.getDefaultStoreORCWriterProperties().toString()));
         logger.error(e);
         throw new StoreCreateException(e);
       } catch (Throwable e) {
         String successMsg = "Failed to create default tier store {0}. " + "Store class: {1}"
-                + "Store Properties: {2} " + "Reader class: {3} " + "Reader properties: {4} "
-                + "Writer class: {5} " + "Writer properties: {6} ";
+            + "Store Properties: {2} " + "Reader class: {3} " + "Reader properties: {4} "
+            + "Writer class: {5} " + "Writer properties: {6} ";
         logger
-                .error(CliStrings.format(successMsg, DefaultStore.STORE_NAME, DefaultStore.STORE_CLASS,
-                        DefaultStore.getDefaultStoreProperties().toString(), DefaultStore.ORC_READER_CLASS,
-                        DefaultStore.getDefaultStoreORCReaderProperties().toString(),
-                        DefaultStore.ORC_WRITER_CLASS,
-                        DefaultStore.getDefaultStoreORCWriterProperties().toString()));
+            .error(CliStrings.format(successMsg, DefaultStore.STORE_NAME, DefaultStore.STORE_CLASS,
+                DefaultStore.getDefaultStoreProperties().toString(), DefaultStore.ORC_READER_CLASS,
+                DefaultStore.getDefaultStoreORCReaderProperties().toString(),
+                DefaultStore.ORC_WRITER_CLASS,
+                DefaultStore.getDefaultStoreORCWriterProperties().toString()));
         logger.error(e);
         throw new StoreCreateException(e);
       }
 
       if (tierStore) {
         String successMsg = "Tier store {0} created successfully. " + "Store class: {1}"
-                + "Store Properties: {2} " + "Reader class: {3} " + "Reader properties: {4} "
-                + "Writer class: {5} " + "Writer properties: {6} ";
+            + "Store Properties: {2} " + "Reader class: {3} " + "Reader properties: {4} "
+            + "Writer class: {5} " + "Writer properties: {6} ";
         logger.info(CliStrings.format(successMsg, DefaultStore.STORE_NAME, DefaultStore.STORE_CLASS,
-                DefaultStore.getDefaultStoreProperties().toString(), DefaultStore.ORC_READER_CLASS,
-                DefaultStore.getDefaultStoreORCReaderProperties().toString(),
-                DefaultStore.ORC_WRITER_CLASS,
-                DefaultStore.getDefaultStoreORCWriterProperties().toString()));
+            DefaultStore.getDefaultStoreProperties().toString(), DefaultStore.ORC_READER_CLASS,
+            DefaultStore.getDefaultStoreORCReaderProperties().toString(),
+            DefaultStore.ORC_WRITER_CLASS,
+            DefaultStore.getDefaultStoreORCWriterProperties().toString()));
       }
     }
 
   }
 
   private static void createAmpoolTables(Region metaRegion,
-                                         final MonarchCacheImpl monarchCacheImpl) {
+      final MonarchCacheImpl monarchCacheImpl) {
     Iterator iterator = metaRegion.entrySet().iterator();
     while (iterator.hasNext()) {
       Map.Entry<String, MTableDescriptor> record =
-              (Map.Entry<String, MTableDescriptor>) iterator.next();
+          (Map.Entry<String, MTableDescriptor>) iterator.next();
       if (record == null) {
         continue;
       }
@@ -619,21 +619,21 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
   }
 
   public static MonarchCacheImpl createClient(DistributedSystem system, PoolFactory pf,
-                                              CacheConfig cacheConfig, boolean isMetaRgnCached) {
+      CacheConfig cacheConfig, boolean isMetaRgnCached) {
     isMetaRegionCached = isMetaRgnCached;
     return basicCreate(system, true, cacheConfig, pf, true, ASYNC_EVENT_LISTENERS, null);
   }
 
   private static MonarchCacheImpl basicCreate(DistributedSystem system, boolean existingOk,
-                                              CacheConfig cacheConfig, PoolFactory pf, boolean isClient, boolean asyncEventListeners,
-                                              TypeRegistry typeRegistry) throws CacheExistsException, TimeoutException,
-          CacheWriterException, GatewayException, RegionExistsException {
+      CacheConfig cacheConfig, PoolFactory pf, boolean isClient, boolean asyncEventListeners,
+      TypeRegistry typeRegistry) throws CacheExistsException, TimeoutException,
+      CacheWriterException, GatewayException, RegionExistsException {
     try {
       synchronized (MonarchCacheImpl.class) {
         MonarchCacheImpl instance = checkExistingCache(existingOk, cacheConfig);
         if (instance == null) {
           instance = new MonarchCacheImpl(isClient, pf, system, cacheConfig, asyncEventListeners,
-                  typeRegistry);
+              typeRegistry);
           instance.initialize();
           instance.amplInitialize();
         }
@@ -646,7 +646,7 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
       logger.error(e);
       throw e;
     } catch (InstantiationException | InvocationTargetException | IllegalAccessException
-            | DefaultConstructorMissingException | StoreCreateException | ClassNotFoundException e) {
+        | DefaultConstructorMissingException | StoreCreateException | ClassNotFoundException e) {
       e.printStackTrace();
     }
     return null;
@@ -654,8 +654,8 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
 
 
   private void amplInitialize()
-          throws IllegalAccessException, InstantiationException, DefaultConstructorMissingException,
-          StoreCreateException, InvocationTargetException, ClassNotFoundException {
+      throws IllegalAccessException, InstantiationException, DefaultConstructorMissingException,
+      StoreCreateException, InvocationTargetException, ClassNotFoundException {
     setAmpoolSystem();
     initializeAmpoolCommands();
     MonarchCacheImpl.instance = this;
@@ -671,7 +671,7 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
     }
 
     if (vmKind == DistributionManager.NORMAL_DM_TYPE
-            || vmKind == DistributionManager.LONER_DM_TYPE && !isClient()) {
+        || vmKind == DistributionManager.LONER_DM_TYPE && !isClient()) {
 
       if (findDiskStore(MTableUtils.DEFAULT_MTABLE_DISK_STORE_NAME) == null) {
         // Create the default disk store for all the MTables
@@ -682,7 +682,7 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
 
       if (findDiskStore(MTableUtils.DEFAULT_FTABLE_DISK_STORE_NAME) == null) {
         Boolean enableDeltaPersistence =
-                Boolean.valueOf(System.getProperty(MTableUtils.AMPL_DELTA_PERS_PROP_NAME, "true"));
+            Boolean.valueOf(System.getProperty(MTableUtils.AMPL_DELTA_PERS_PROP_NAME, "true"));
         // Create the default disk store for all the FTables
         // This will be used only when use did not specify the disk store name.
         DiskStoreFactory diskStoreFactory = createDiskStoreFactory();
@@ -709,7 +709,7 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
     // initialize ampool commands
     // Scan message
     CommandInitializer.registerCommand(MessageType.SCAN,
-            Collections.singletonMap(Version.GFE_91, ScanCommand.getCommand()));
+        Collections.singletonMap(Version.GFE_91, ScanCommand.getCommand()));
     // Message to get partition resolver attribute
     // CommandInitializer.registerCommand(MessageType.GET_CLIENT_PARTITION_ATTRIBUTES, Collections
     // .singletonMap(Version.GFE_91, GetClientPartitionAttributesCommand91.getCommand()));
@@ -726,16 +726,16 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
       } else {
         // instance.creationStack argument is for debugging...
         throw new CacheExistsException(instance,
-                LocalizedStrings.CacheFactory_0_AN_OPEN_CACHE_ALREADY_EXISTS
-                        .toLocalizedString(instance),
-                instance.creationStack);
+            LocalizedStrings.CacheFactory_0_AN_OPEN_CACHE_ALREADY_EXISTS
+                .toLocalizedString(instance),
+            instance.creationStack);
       }
     }
     return null;
   }
 
   public Region createMemoryTable(final String tableName,
-                                  final TableDescriptor inputTableDescriptor) throws MTableExistsException {
+      final TableDescriptor inputTableDescriptor) throws MTableExistsException {
     // From here go to
     // One server and start transaction
     // As part of transaction, create region on every server
@@ -749,7 +749,7 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
 
     if (getDistributedSystem().isLoner() && !isClient()) {
       final Region<String, TableDescriptor> metaRegion =
-              getRegion(MTableUtils.AMPL_META_REGION_NAME);
+          getRegion(MTableUtils.AMPL_META_REGION_NAME);
       final Lock dLock = metaRegion.getDistributedLock(tableName);
       dLock.lock();
       try {
@@ -774,7 +774,7 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
         members = FunctionService.onServer(getDefaultPool()).withArgs(inputList);
       } else {
         final Iterator<DistributedMember> memberSetItr =
-                MTableUtils.getAllDataMembers(this).iterator();
+            MTableUtils.getAllDataMembers(this).iterator();
         DistributedMember member = null;
         if (memberSetItr.hasNext()) {
           member = memberSetItr.next();
@@ -787,7 +787,7 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
       Exception ex = null;
       try {
         createTableResult =
-                (ArrayList) members.execute(createMTableControllerFunction.getId()).getResult();
+            (ArrayList) members.execute(createMTableControllerFunction.getId()).getResult();
       } catch (Exception e) {
         // If function execution is failed due to member failure
         // then handle it by rollbacking...
@@ -839,15 +839,15 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
       if (isClient() && tableRegion == null) {
         try {
           ClientRegionFactory<MTableKey, byte[]> crf =
-                  createClientRegionFactory(ClientRegionShortcut.PROXY);
+              createClientRegionFactory(ClientRegionShortcut.PROXY);
           AmpoolTableRegionAttributes ampoolTableRegionAttributes =
-                  new AmpoolTableRegionAttributes();
+              new AmpoolTableRegionAttributes();
           if (tableDescriptor.getType() == TableType.UNORDERED) {
             ampoolTableRegionAttributes.setRegionDataOrder(RegionDataOrder.ROW_TUPLE_UNORDERED);
             crf.setCustomRegionAttributes(ampoolTableRegionAttributes);
           } else if (tableDescriptor.getType() == TableType.ORDERED_VERSIONED) {
             ampoolTableRegionAttributes
-                    .setRegionDataOrder(RegionDataOrder.ROW_TUPLE_ORDERED_VERSIONED);
+                .setRegionDataOrder(RegionDataOrder.ROW_TUPLE_ORDERED_VERSIONED);
             crf.setCustomRegionAttributes(ampoolTableRegionAttributes);
           } else if (tableDescriptor.getType() == TableType.IMMUTABLE) {
             ampoolTableRegionAttributes.setRegionDataOrder(RegionDataOrder.IMMUTABLE);
@@ -881,12 +881,12 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
     }
     // write RowHeader + TS + BitMap + Value Size * NumofCols + INT size * NumofCols
     int size = RowHeader.getHeaderLength() + Bytes.SIZEOF_LONG + map.sizeOfByteArray()
-            + value.length * numOfColumns + Bytes.SIZEOF_INT * numOfColumns;
+        + value.length * numOfColumns + Bytes.SIZEOF_INT * numOfColumns;
     byte[] dummyArr = new byte[size];
     int dataPos = 0;
 
     System.arraycopy(tableDescriptor.getRowHeaderBytes(), 0, dummyArr, dataPos,
-            RowHeader.getHeaderLength());
+        RowHeader.getHeaderLength());
     dataPos += RowHeader.getHeaderLength();
 
     // TS
@@ -912,7 +912,7 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
   }
 
   public static MCache create(DistributedSystem system, boolean existingOk,
-                              CacheConfig cacheConfig) {
+      CacheConfig cacheConfig) {
     return basicCreate(system, existingOk, cacheConfig, null, false, ASYNC_EVENT_LISTENERS, null);
   }
 
@@ -941,10 +941,10 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
     }
     if (result != null) {
       throw result.getCacheClosedException(
-              LocalizedStrings.CacheFactory_THE_CACHE_HAS_BEEN_CLOSED.toLocalizedString(), null);
+          LocalizedStrings.CacheFactory_THE_CACHE_HAS_BEEN_CLOSED.toLocalizedString(), null);
     }
     throw new CacheClosedException(
-            LocalizedStrings.CacheFactory_A_CACHE_HAS_NOT_YET_BEEN_CREATED.toLocalizedString());
+        LocalizedStrings.CacheFactory_A_CACHE_HAS_NOT_YET_BEEN_CREATED.toLocalizedString());
   }
 
   @Deprecated

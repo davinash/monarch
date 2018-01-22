@@ -41,7 +41,7 @@ import io.ampool.monarch.table.client.MClientCache;
 import io.ampool.monarch.table.ftable.FTable;
 import io.ampool.monarch.table.ftable.FTableDescriptor;
 import io.ampool.monarch.table.ftable.Record;
-import io.ampool.monarch.table.internal.ProxyMTableRegion;
+import io.ampool.monarch.table.internal.MTableImpl;
 import io.ampool.monarch.table.internal.MTableUtils;
 import io.ampool.monarch.types.BasicTypes;
 import io.ampool.monarch.types.interfaces.DataType;
@@ -356,7 +356,7 @@ public class GetMetadataFunctionTest {
     final String tableName = "dummy_table";
     final MTable mTable = createDummyTable(tableName);
     try {
-      FunctionService.onServers(((ProxyMTableRegion) mTable).getTableRegion().getRegionService())
+      FunctionService.onServers(((MTableImpl) mTable).getTableRegion().getRegionService())
           .execute(MGetMetadataFunction.GET_METADATA_FUNCTION).getResult();
       fail("Expected IllegalArgumentException.");
     } catch (FunctionException fe) {
@@ -368,7 +368,7 @@ public class GetMetadataFunctionTest {
 
   /**
    * Try to get metadata with `null` region-name and assert IllegalArgumentException.
-   * 
+   *
    * @throws Exception
    */
   @Test
@@ -377,7 +377,7 @@ public class GetMetadataFunctionTest {
     MGetMetadataFunction.Args args = new MGetMetadataFunction.Args(null);
     final MTable mTable = createDummyTable(tableName);
     try {
-      FunctionService.onServers(((ProxyMTableRegion) mTable).getTableRegion().getRegionService())
+      FunctionService.onServers(((MTableImpl) mTable).getTableRegion().getRegionService())
           .withArgs(args).execute(MGetMetadataFunction.GET_METADATA_FUNCTION).getResult();
       fail("Expected IllegalArgumentException.");
     } catch (FunctionException fe) {

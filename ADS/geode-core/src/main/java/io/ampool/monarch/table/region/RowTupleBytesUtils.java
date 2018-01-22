@@ -121,7 +121,7 @@ public class RowTupleBytesUtils {
     final int timeStampLength = Bytes.SIZEOF_LONG;
     byte[] valueWithoutTimeStamp = new byte[value.length - timeStampLength];
     System.arraycopy(value, timeStampLength, valueWithoutTimeStamp, 0,
-            value.length - timeStampLength);
+        value.length - timeStampLength);
     return valueWithoutTimeStamp;
   }
 
@@ -173,7 +173,7 @@ public class RowTupleBytesUtils {
    * @return null if the operation is successful; the appropriate exception otherwise
    */
   public static Object getNewValue_1(final EntryEventImpl event, final MTableDescriptor td)
-          throws MException {
+      throws MException {
     /** partial changes only for ordered tables **/
     Object key = event.getKey();
     Object newValue = event.getValue();
@@ -211,7 +211,7 @@ public class RowTupleBytesUtils {
    * @return null if successful; the respective exception otherwise
    */
   private static Object updateValue(final EntryEventImpl event,
-                                    final MTableDescriptor tableDescriptor) throws MException {
+      final MTableDescriptor tableDescriptor) throws MException {
 
     StorageFormatter storageFormatter = MTableUtils.getStorageFormatter(tableDescriptor);
 
@@ -266,11 +266,11 @@ public class RowTupleBytesUtils {
       } else {
         if (op == MOperation.CHECK_AND_DELETE) {
           return storageFormatter.performCheckAndDeleteOperation(tableDescriptor, opInfo,
-                  oldValueBytes);
+              oldValueBytes);
         }
         if (op == MOperation.CHECK_AND_PUT) {
           return storageFormatter.performCheckAndPutOperation(tableDescriptor, mValue, opInfo,
-                  oldValueBytes);
+              oldValueBytes);
         }
       }
     }
@@ -283,7 +283,7 @@ public class RowTupleBytesUtils {
         Object changedValue = oldValueBytes;
         for (int i = 0; i < mValues.size(); i++) {
           changedValue = storageFormatter.performPutOperation(tableDescriptor, mValues.get(i),
-                  opInfo, changedValue);
+              opInfo, changedValue);
         }
         return changedValue;
       } else {
@@ -320,7 +320,7 @@ public class RowTupleBytesUtils {
   public static void destroy_0(final LocalRegion region, EntryEventImpl event) {
     MOpInfo opInfo = event.getOpInfo();
     MTableDescriptor td =
-            MCacheFactory.getAnyInstance().getMTableDescriptor(region.getDisplayName());
+        MCacheFactory.getAnyInstance().getMTableDescriptor(region.getDisplayName());
     Object getVal = event.getOldValue();
     if (getVal == null) {
       try {
@@ -344,7 +344,7 @@ public class RowTupleBytesUtils {
         throw new MCheckOperationFailException("No check-condition specified.");
       }
       boolean checkPassed = ((MTableStorageFormatter) storageFormatter).checkValue(td, getVal,
-              (byte[]) condition.getColumnValue(), condition.getColumnId());
+          (byte[]) condition.getColumnValue(), condition.getColumnId());
       if (!checkPassed) {
         throw new MCheckOperationFailException("delete check failed");
       }
@@ -356,12 +356,12 @@ public class RowTupleBytesUtils {
         if (opInfo.getTimestamp() != 0) {
           // In case of single version table we should only delete if timestamp matches.
           boolean matches = ((MTableStorageFormatter) storageFormatter)
-                  .matchesTimestamp(CompareOp.EQUAL, (byte[]) getVal, opInfo.getTimestamp());
+              .matchesTimestamp(CompareOp.EQUAL, (byte[]) getVal, opInfo.getTimestamp());
 
           if (!matches) {
             // we should not delete
             throw new MCheckOperationFailException("Record with given timestamp "
-                    + opInfo.getTimestamp() + " not found. Delete operation failed");
+                + opInfo.getTimestamp() + " not found. Delete operation failed");
           }
         }
       }
@@ -376,7 +376,7 @@ public class RowTupleBytesUtils {
       if (!mTableDescriptor.getUserTable()) {
         return getNewValue_0(event);
       } else if (mTableDescriptor.getTableType() == MTableType.UNORDERED
-              || mTableDescriptor.getTableType() == MTableType.ORDERED_VERSIONED) {
+          || mTableDescriptor.getTableType() == MTableType.ORDERED_VERSIONED) {
         return RowTupleBytesUtils.getNewValue_1(event, mTableDescriptor);
       }
     }
@@ -386,7 +386,7 @@ public class RowTupleBytesUtils {
   public static Object prepareValueForAmpoolCache(final EntryEventImpl event) {
     Object val = null;
     if (event != null
-            && AmpoolTableRegionAttributes.isAmpoolMTable(event.getRegion().getCustomAttributes())) {
+        && AmpoolTableRegionAttributes.isAmpoolMTable(event.getRegion().getCustomAttributes())) {
       val = RowTupleBytesUtils.adjustValueForAmpool(event);
     }
     return val;

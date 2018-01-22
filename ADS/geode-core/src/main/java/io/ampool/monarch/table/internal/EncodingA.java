@@ -17,7 +17,7 @@ public class EncodingA implements Encoding {
 
   @Override
   public int initFullRow(final Object k, final Object v, final ThinRowShared trs, final int offset,
-                         final int length) {
+      final int length) {
     final byte[] key = (byte[]) k;
     final byte[] buf = (byte[]) v;
     final List<Cell> cells = trs.getCells();
@@ -70,7 +70,7 @@ public class EncodingA implements Encoding {
     }
     /* row-key-column */
     if (Bytes.equals(MTableUtils.KEY_COLUMN_NAME_BYTES,
-            cells.get(cells.size() - 1).getColumnName())) {
+        cells.get(cells.size() - 1).getColumnName())) {
       ((CellRef) cells.get(cells.size() - 1)).init(key, 0, key == null ? -1 : key.length);
     }
 
@@ -79,7 +79,7 @@ public class EncodingA implements Encoding {
 
   @Override
   public void writeSelectedColumns(final DataOutput out, final InternalRow row,
-                                   final List<Integer> columns) throws IOException {
+      final List<Integer> columns) throws IOException {
     byte[] value = (byte[]) row.getRawValue();
     if (value == null) {
       MPartList.writeLength(-1, out);
@@ -149,7 +149,7 @@ public class EncodingA implements Encoding {
 
     /* row-key-column */
     if (Bytes.equals(MTableUtils.KEY_COLUMN_NAME_BYTES,
-            cells.get(cells.size() - 1).getColumnName())) {
+        cells.get(cells.size() - 1).getColumnName())) {
       ((CellRef) cells.get(cells.size() - 1)).init(key, 0, key == null ? -1 : key.length);
     }
 

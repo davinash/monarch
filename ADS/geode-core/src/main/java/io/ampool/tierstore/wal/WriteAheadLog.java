@@ -99,7 +99,7 @@ public class WriteAheadLog {
   }
 
   synchronized public void init(Path directory, int recordLimit, final long fileExpirationTimeMins)
-          throws IOException {
+      throws IOException {
     if (initialized) {
       throw new RuntimeException("WriteAheadLog can not be initialized multiple times");
     }
@@ -225,7 +225,7 @@ public class WriteAheadLog {
         File newFile = new File(dirName + "/" + newBaseName);
         if (!oldFile.renameTo(newFile)) {
           throw new IOException("Error while renaming file " + oldFile.getAbsolutePath() + " to "
-                  + newFile.getAbsolutePath());
+              + newFile.getAbsolutePath());
         }
         return newFile.getAbsolutePath();
       } else {
@@ -266,7 +266,7 @@ public class WriteAheadLog {
   }
 
   public int append(final String tableName, final int partitionId, final IMKey blockKey,
-                    final BlockValue blockValue) throws IOException {
+      final BlockValue blockValue) throws IOException {
     if (!initialized) {
       return 0;
     }
@@ -294,7 +294,7 @@ public class WriteAheadLog {
    */
   public Path getAbsolutePath(final String fileName) {
     return fileName.charAt(0) == '/' ? Paths.get(fileName)
-            : Paths.get(walDirectory + "/" + fileName);
+        : Paths.get(walDirectory + "/" + fileName);
   }
 
   /**
@@ -314,7 +314,7 @@ public class WriteAheadLog {
    * @return WALWriter
    */
   public WALWriter getWriter(String tableName, int partitionId, String fileName, int recordLimit)
-          throws IOException {
+      throws IOException {
     return new WALWriter(tableName, partitionId, getAbsolutePath(fileName), recordLimit);
   }
 
@@ -449,7 +449,7 @@ public class WriteAheadLog {
     fileFilterList.add(new AgeFileFilter(new Date(epochDifference)));
     fileFilterList.add(new RegexFileFilter(".*" + WAL_INPROGRESS_SUFFIX));
     final String[] fileArr =
-            walDirectory.toFile().getAbsoluteFile().list(new AndFileFilter(fileFilterList));
+        walDirectory.toFile().getAbsoluteFile().list(new AndFileFilter(fileFilterList));
     if (fileArr == null) {
       return EMPTY_ARRAY;
     }
@@ -490,7 +490,7 @@ public class WriteAheadLog {
     }
     if (nameComponents.length >= 3) {
       String tableName =
-              String.join("_", Arrays.copyOfRange(nameComponents, 0, nameComponents.length - 2));
+          String.join("_", Arrays.copyOfRange(nameComponents, 0, nameComponents.length - 2));
       return tableName;
     }
     return null;
@@ -543,9 +543,9 @@ public class WriteAheadLog {
       return null;
     }
     final Pattern doneFileRegEx =
-            Pattern.compile("^" + tableName + "_" + "\\d+" + "_" + "\\d+" + WAL_DONE_SUFFIX + "\\z");
+        Pattern.compile("^" + tableName + "_" + "\\d+" + "_" + "\\d+" + WAL_DONE_SUFFIX + "\\z");
     final Pattern inProgressFileRegex = Pattern
-            .compile("^" + tableName + "_" + "\\d+" + "_" + "\\d+" + WAL_INPROGRESS_SUFFIX + "\\z$");
+        .compile("^" + tableName + "_" + "\\d+" + "_" + "\\d+" + WAL_INPROGRESS_SUFFIX + "\\z$");
     return walDirectory.toFile().list(new FilenameFilter() {
       @Override
       public boolean accept(File dir, String name) {
@@ -607,9 +607,9 @@ public class WriteAheadLog {
 
     public AllFilesForBucketFilter(final String tableName, final int bucketId) {
       doneFileRegEx = Pattern
-              .compile("^" + tableName + "_" + bucketId + "_" + "\\d+" + WAL_DONE_SUFFIX + "\\z");
+          .compile("^" + tableName + "_" + bucketId + "_" + "\\d+" + WAL_DONE_SUFFIX + "\\z");
       inProgressFileRegex = Pattern.compile(
-              "^" + tableName + "_" + bucketId + "_" + "\\d+" + WAL_INPROGRESS_SUFFIX + "\\z$");
+          "^" + tableName + "_" + bucketId + "_" + "\\d+" + WAL_INPROGRESS_SUFFIX + "\\z$");
     }
 
     @Override
@@ -629,7 +629,7 @@ public class WriteAheadLog {
       return null;
     }
     final String[] list =
-            walDirectory.toFile().list(new AllFilesForBucketFilter(tableName, bucketID));
+        walDirectory.toFile().list(new AllFilesForBucketFilter(tableName, bucketID));
     if (list == null) {
       return null;
     }
@@ -650,7 +650,7 @@ public class WriteAheadLog {
       String[] filesToFlush = getAllFilesForTableWithBucketId(tableName, partitionId);
       if (filesToFlush != null && filesToFlush.length > 0) {
         final TableDescriptor tableDescriptor = MTableUtils
-                .getTableDescriptor((MonarchCacheImpl) MCacheFactory.getAnyInstance(), tableName);
+            .getTableDescriptor((MonarchCacheImpl) MCacheFactory.getAnyInstance(), tableName);
         for (String walFileName : filesToFlush) {
           final WALWriter writer = getCurrentWriter(tableName, partitionId);
           /* if this file is also being appended to, then sync on the writer */
@@ -685,14 +685,14 @@ public class WriteAheadLog {
     } catch (IOException e) {
       logger.error("Error while writing to Tier1. Exception: " + e.getMessage());
       throw new StoreInternalException(
-              "Error while writing to Tier1. Exception: " + e.getMessage());
+          "Error while writing to Tier1. Exception: " + e.getMessage());
     }
     try {
       file = this.markFileDone(file);
     } catch (IOException e) {
       logger.error("WAL Flush, Error while marking WAL file done  Exception: " + e.getMessage());
       throw new StoreInternalException(
-              "Error while marking WAL file done. Exception: " + e.getMessage());
+          "Error while marking WAL file done. Exception: " + e.getMessage());
     }
     this.deleteWALFile(file);
   }

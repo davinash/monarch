@@ -14,15 +14,7 @@
  */
 package org.apache.geode.cache.client;
 
-import org.apache.geode.cache.AttributesFactory;
-import org.apache.geode.cache.CacheClosedException;
-import org.apache.geode.cache.CacheListener;
-import org.apache.geode.cache.CustomExpiry;
-import org.apache.geode.cache.EvictionAttributes;
-import org.apache.geode.cache.ExpirationAttributes;
-import org.apache.geode.cache.Region;
-import org.apache.geode.cache.RegionDestroyedException;
-import org.apache.geode.cache.RegionExistsException;
+import org.apache.geode.cache.*;
 import org.apache.geode.compression.Compressor;
 
 /**
@@ -59,7 +51,7 @@ import org.apache.geode.compression.Compressor;
 public interface ClientRegionFactory<K, V> {
   /**
    * Adds a cache listener to the end of the list of cache listeners on this factory.
-   * 
+   *
    * @param aListener the cache listener to add
    * @return a reference to this ClientRegionFactory object
    * @throws IllegalArgumentException if <code>aListener</code> is null
@@ -70,7 +62,7 @@ public interface ClientRegionFactory<K, V> {
   /**
    * Removes all cache listeners and then adds each listener in the specified array. for the next
    * <code>RegionAttributes</code> created.
-   * 
+   *
    * @param newListeners a possibly null or empty array of listeners to add to this factory.
    * @return a reference to this ClientRegionFactory object
    * @throws IllegalArgumentException if the <code>newListeners</code> array has a null element
@@ -99,7 +91,7 @@ public interface ClientRegionFactory<K, V> {
 
   /**
    * Sets the custom idleTimeout for the next <code>RegionAttributes</code> created.
-   * 
+   *
    * @param custom the custom method
    * @return the receiver
    * @see AttributesFactory#setCustomEntryIdleTimeout(CustomExpiry)
@@ -120,7 +112,7 @@ public interface ClientRegionFactory<K, V> {
   /**
    * Sets the custom timeToLive expiration method for the next <code>RegionAttributes</code>
    * created.
-   * 
+   *
    * @param custom the custom method
    * @return the receiver
    * @see AttributesFactory#setCustomEntryTimeToLive(CustomExpiry)
@@ -212,7 +204,7 @@ public interface ClientRegionFactory<K, V> {
 
   /**
    * Enables or disabled concurrent modification checks
-   * 
+   *
    * @since GemFire 7.0
    * @param concurrencyChecksEnabled whether to perform concurrency checks on operations
    */
@@ -220,17 +212,17 @@ public interface ClientRegionFactory<K, V> {
 
   /**
    * Sets the DiskStore name attribute. This causes the region to belong to the DiskStore.
-   * 
+   *
    * @param name the name of the diskstore
    * @return a reference to this ClientRegionFactory object
-   * 
+   *
    * @see AttributesFactory#setDiskStoreName
    */
   public ClientRegionFactory<K, V> setDiskStoreName(String name);
 
   /**
    * Sets whether or not the writing to the disk is synchronous.
-   * 
+   *
    * @param isSynchronous boolean if true indicates synchronous writes
    * @return a reference to this ClientRegionFactory object
    */
@@ -247,7 +239,7 @@ public interface ClientRegionFactory<K, V> {
 
   /**
    * Sets cloning on region Note: off-heap regions always behave as if cloning is enabled.
-   * 
+   *
    * @param cloningEnable
    * @return a reference to this ClientRegionFactory object
    * @see AttributesFactory#setCloningEnabled
@@ -260,7 +252,7 @@ public interface ClientRegionFactory<K, V> {
    * <p>
    * The named connection pool must exist on the cache at the time these attributes are used to
    * create a region. See {@link PoolManager#createFactory} for how to create a connection pool.
-   * 
+   *
    * @param poolName the name of the connection pool to use
    * @return a reference to this ClientRegionFactory object
    * @throws IllegalStateException if a cache loader or cache writer has already been set.
@@ -270,7 +262,7 @@ public interface ClientRegionFactory<K, V> {
 
   /**
    * Set the compressor to be used by this region for compressing region entry values.
-   * 
+   *
    * @param compressor a compressor
    * @return a reference to this RegionFactory instance
    * @since GemFire 8.0
@@ -307,5 +299,13 @@ public interface ClientRegionFactory<K, V> {
   public Region<K, V> createSubregion(Region<?, ?> parent, String name)
       throws RegionExistsException;
 
+  /**
+   * Set custom region attributes for regions.
+   *
+   * @param customRegionAttributes CustomeRegionAttributes
+   * @return a reference to this ClientRegionFactory object
+   */
+  ClientRegionFactory<K, V> setCustomRegionAttributes(
+      final CustomRegionAttributes customRegionAttributes);
 
 }

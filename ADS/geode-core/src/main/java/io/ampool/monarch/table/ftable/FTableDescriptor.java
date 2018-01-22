@@ -175,7 +175,7 @@ public class FTableDescriptor extends AbstractTableDescriptor implements DataSer
    * @throws TableInvalidConfiguration if invalid number of splits were specified
    */
   public FTableDescriptor setTotalNumOfSplits(int totalNumOfSplits)
-          throws TableInvalidConfiguration {
+      throws TableInvalidConfiguration {
     return (FTableDescriptor) super.setTotalNumOfSplits(totalNumOfSplits);
   }
 
@@ -198,7 +198,7 @@ public class FTableDescriptor extends AbstractTableDescriptor implements DataSer
    */
   public FTableDescriptor setPartitioningColumn(byte[] partitioningColumn) {
     if (Bytes.compareTo(partitioningColumn,
-            Bytes.toBytes(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME)) == 0) {
+        Bytes.toBytes(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME)) == 0) {
       throw new IllegalArgumentException("Partitioning column cannot be insertion timestamp");
     }
     this.partitioningColumn = new ByteArrayKey(partitioningColumn);
@@ -305,7 +305,7 @@ public class FTableDescriptor extends AbstractTableDescriptor implements DataSer
    * @return Object of this class, used for chained calling.
    */
   public FTableDescriptor addColumn(final String colName, BasicTypes type)
-          throws TableColumnAlreadyExists {
+      throws TableColumnAlreadyExists {
     return (FTableDescriptor) super.addColumn(colName, type);
   }
 
@@ -317,7 +317,7 @@ public class FTableDescriptor extends AbstractTableDescriptor implements DataSer
    * @return Object of this class, used for chained calling.
    */
   public FTableDescriptor addColumn(final byte[] colName, BasicTypes type)
-          throws TableColumnAlreadyExists {
+      throws TableColumnAlreadyExists {
     return (FTableDescriptor) super.addColumn(colName, type);
   }
 
@@ -336,7 +336,7 @@ public class FTableDescriptor extends AbstractTableDescriptor implements DataSer
    * @return Object of this class, used for chained calling.
    */
   public FTableDescriptor addColumn(final String colName, MTableColumnType columnType)
-          throws TableColumnAlreadyExists {
+      throws TableColumnAlreadyExists {
     return (FTableDescriptor) super.addColumn(colName, columnType);
   }
 
@@ -356,7 +356,7 @@ public class FTableDescriptor extends AbstractTableDescriptor implements DataSer
    * @return Object of this class, used for chained calling.
    */
   public FTableDescriptor addColumn(final byte[] colName, MTableColumnType columnType)
-          throws TableColumnAlreadyExists {
+      throws TableColumnAlreadyExists {
     return (FTableDescriptor) super.addColumn(colName, columnType);
   }
 
@@ -369,7 +369,7 @@ public class FTableDescriptor extends AbstractTableDescriptor implements DataSer
    *             {@link FTableDescriptor#addColumn(String, MTableColumnType)} instead.
    */
   public FTableDescriptor addColumn(final String colName, String columnTypeId)
-          throws TableColumnAlreadyExists {
+      throws TableColumnAlreadyExists {
     return (FTableDescriptor) super.addColumn(colName, columnTypeId);
   }
 
@@ -402,7 +402,7 @@ public class FTableDescriptor extends AbstractTableDescriptor implements DataSer
    * @throws IllegalArgumentException : If any tier looping is observed
    */
   public FTableDescriptor addTierStores(LinkedHashMap<String, TierStoreConfiguration> stores)
-          throws IllegalArgumentException {
+      throws IllegalArgumentException {
     this.tierStoreHierarchy = stores;
     return this;
   }
@@ -481,9 +481,9 @@ public class FTableDescriptor extends AbstractTableDescriptor implements DataSer
     int maxLength = 0;
     for (int i = 0; i < fixedLengthColumnIndices.size(); i++) {
       MColumnDescriptor columnDescriptorByIndex =
-              this.getColumnDescriptorByIndex(fixedLengthColumnIndices.get(i));
+          this.getColumnDescriptorByIndex(fixedLengthColumnIndices.get(i));
       if (columnDescriptorByIndex.getColumnNameAsString()
-              .equals(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME)) {
+          .equals(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME)) {
         return maxLength;
       } else if (columnDescriptorByIndex.getColumnType().isFixedLength()) {
         maxLength += columnDescriptorByIndex.getColumnType().lengthOfByteArray();
@@ -498,7 +498,7 @@ public class FTableDescriptor extends AbstractTableDescriptor implements DataSer
     int maxLength = 0;
     for (int i = 0; i < fixedLengthColumnIndices.size(); i++) {
       MColumnDescriptor columnDescriptorByIndex =
-              this.getColumnDescriptorByIndex(fixedLengthColumnIndices.get(i));
+          this.getColumnDescriptorByIndex(fixedLengthColumnIndices.get(i));
       maxLength += columnDescriptorByIndex.getColumnType().lengthOfByteArray();
     }
     return maxLength;

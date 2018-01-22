@@ -75,7 +75,7 @@ public class FTableImpl implements FTable, InternalTable {
   }
 
   public FTableImpl(Region<Object, Object> tableRegion, FTableDescriptor tableDescriptor,
-                    MonarchCacheImpl cache) {
+      MonarchCacheImpl cache) {
     this.tableRegion = tableRegion;
     this.tableDescriptor = tableDescriptor;
 
@@ -310,7 +310,7 @@ public class FTableImpl implements FTable, InternalTable {
 
   @Override
   public RowEndMarker scan(final Scan scan, final ServerLocation serverLocation,
-                           final BlockingQueue<Object> resultQueue) {
+      final BlockingQueue<Object> resultQueue) {
     return srp.scan(scan, resultQueue, tableDescriptor, serverLocation);
   }
 

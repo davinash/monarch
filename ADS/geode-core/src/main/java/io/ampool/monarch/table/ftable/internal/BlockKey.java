@@ -130,8 +130,8 @@ public class BlockKey implements IMKey, DataSerializableFixedID, Serializable {
   @Override
   public boolean equals(Object other) {
     return this == other || (other instanceof BlockKey
-            && this.blockSequenceID == ((BlockKey) other).getBlockSequenceID()
-            && this.bucketID == ((BlockKey) other).getBucketID());
+        && this.blockSequenceID == ((BlockKey) other).getBlockSequenceID()
+        && this.bucketID == ((BlockKey) other).getBucketID());
   }
 
   @Override

@@ -59,7 +59,7 @@ public class FTableBucketRegion extends TableBucketRegion {
   private static final Logger logger = LogService.getLogger();
 
   public FTableBucketRegion(String regionName, RegionAttributes attrs, LocalRegion parentRegion,
-                            GemFireCacheImpl cache, InternalRegionArguments internalRegionArgs) {
+      GemFireCacheImpl cache, InternalRegionArguments internalRegionArgs) {
     super(regionName, attrs, parentRegion, cache, internalRegionArgs);
   }
 
@@ -75,8 +75,8 @@ public class FTableBucketRegion extends TableBucketRegion {
 
   @Override
   public Region createSubregion(String subregionName, RegionAttributes attrs,
-                                InternalRegionArguments internalRegionArgs)
-          throws RegionExistsException, TimeoutException, IOException, ClassNotFoundException {
+      InternalRegionArguments internalRegionArgs)
+      throws RegionExistsException, TimeoutException, IOException, ClassNotFoundException {
     checkReadiness();
     LocalRegion newRegion = null;
     RegionAttributes regionAttributes = attrs;
@@ -111,25 +111,25 @@ public class FTableBucketRegion extends TableBucketRegion {
 
           if (existing == null) {
             if (regionAttributes.getScope().isDistributed()
-                    && internalRegionArgs.isUsedForPartitionedRegionBucket()) {
+                && internalRegionArgs.isUsedForPartitionedRegionBucket()) {
               final PartitionedRegion pr = internalRegionArgs.getPartitionedRegion();
               internalRegionArgs.setUserAttribute(pr.getUserAttribute());
               if (pr.isShadowPR()) {
                 newRegion = new BucketRegionQueue(subregionName, regionAttributes, this, this.cache,
-                        internalRegionArgs);
+                    internalRegionArgs);
               } else {
                 newRegion = new FTableBucketRegion(subregionName, regionAttributes, this,
-                        this.cache, internalRegionArgs);
+                    this.cache, internalRegionArgs);
               }
             } else if (regionAttributes.getPartitionAttributes() != null) {
               newRegion = new FTablePartitionedRegion(subregionName, regionAttributes, this,
-                      this.cache, internalRegionArgs);
+                  this.cache, internalRegionArgs);
             } else {
               boolean local = regionAttributes.getScope().isLocal();
               newRegion = local
-                      ? new TableLocalRegion(subregionName, regionAttributes, this, this.cache,
+                  ? new TableLocalRegion(subregionName, regionAttributes, this, this.cache,
                       internalRegionArgs)
-                      : new TableDistributedRegion(subregionName, regionAttributes, this, this.cache,
+                  : new TableDistributedRegion(subregionName, regionAttributes, this, this.cache,
                       internalRegionArgs);
             }
             Object o = this.subregions.putIfAbsent(subregionName, newRegion);
@@ -143,7 +143,7 @@ public class FTableBucketRegion extends TableBucketRegion {
               logger.debug("Subregion created: {}", newRegion.getFullPath());
             }
             if (snapshotInputStream != null || imageTarget != null
-                    || internalRegionArgs.getRecreateFlag()) {
+                || internalRegionArgs.getRecreateFlag()) {
               this.cache.regionReinitialized(newRegion); // fix for bug 33534
             }
 
@@ -171,7 +171,7 @@ public class FTableBucketRegion extends TableBucketRegion {
         this.cache.setRegionByPath(newRegion.getFullPath(), newRegion);
         if (regionAttributes instanceof UserSpecifiedRegionAttributes) {
           internalRegionArgs
-                  .setIndexes(((UserSpecifiedRegionAttributes) regionAttributes).getIndexes());
+              .setIndexes(((UserSpecifiedRegionAttributes) regionAttributes).getIndexes());
         }
         newRegion.initialize(snapshotInputStream, imageTarget, internalRegionArgs); // releases
         // initialization
@@ -180,17 +180,17 @@ public class FTableBucketRegion extends TableBucketRegion {
         if (!newRegion.isInternalRegion()) {
           if (!newRegion.isDestroyed) {
             cache.getResourceManager()
-                    .addResourceListener(InternalResourceManager.ResourceType.MEMORY, newRegion);
+                .addResourceListener(InternalResourceManager.ResourceType.MEMORY, newRegion);
 
             if (!newRegion.getOffHeap()) {
               newRegion.initialCriticalMembers(
-                      cache.getResourceManager().getHeapMonitor().getState().isCritical(),
-                      cache.getResourceAdvisor().adviseCritialMembers());
+                  cache.getResourceManager().getHeapMonitor().getState().isCritical(),
+                  cache.getResourceAdvisor().adviseCritialMembers());
             } else {
               newRegion.initialCriticalMembers(
-                      cache.getResourceManager().getHeapMonitor().getState().isCritical()
-                              || cache.getResourceManager().getOffHeapMonitor().getState().isCritical(),
-                      cache.getResourceAdvisor().adviseCritialMembers());
+                  cache.getResourceManager().getHeapMonitor().getState().isCritical()
+                      || cache.getResourceManager().getOffHeapMonitor().getState().isCritical(),
+                  cache.getResourceAdvisor().adviseCritialMembers());
             }
 
             // synchronization would be done on ManagementAdapter.regionOpLock
@@ -207,10 +207,10 @@ public class FTableBucketRegion extends TableBucketRegion {
         throw e;
       } catch (final RuntimeException validationException) {
         logger
-                .warn(
-                        LocalizedMessage.create(
-                                LocalizedStrings.LocalRegion_INITIALIZATION_FAILED_FOR_REGION_0, getFullPath()),
-                        validationException);
+            .warn(
+                LocalizedMessage.create(
+                    LocalizedStrings.LocalRegion_INITIALIZATION_FAILED_FOR_REGION_0, getFullPath()),
+                validationException);
         throw validationException;
       } finally {
         if (!success) {
@@ -248,8 +248,8 @@ public class FTableBucketRegion extends TableBucketRegion {
   // This is a copy of BucketRegion::virtualPut + ampool changes.
   @Override
   protected boolean virtualPut(EntryEventImpl event, boolean ifNew, boolean ifOld,
-                               Object expectedOldValue, boolean requireOldValue, long lastModified,
-                               boolean overwriteDestroyed) throws TimeoutException, CacheWriterException {
+      Object expectedOldValue, boolean requireOldValue, long lastModified,
+      boolean overwriteDestroyed) throws TimeoutException, CacheWriterException {
 
     /* synchronize the key generation/merge/put */
     synchronized (this) {
@@ -264,16 +264,16 @@ public class FTableBucketRegion extends TableBucketRegion {
         if (!hasSeenEvent(event)) {
           forceSerialized(event);
           RegionEntry oldEntry = this.entries.basicPut(event, lastModified, ifNew, ifOld,
-                  expectedOldValue, requireOldValue, overwriteDestroyed);
+              expectedOldValue, requireOldValue, overwriteDestroyed);
           return oldEntry != null;
         }
         if (event.getDeltaBytes() != null && event.getRawNewValue() == null
-                && !hasSeenEvent(event)) {
+            && !hasSeenEvent(event)) {
           // This means that this event has delta bytes but no full value.
           // Request the full value of this event.
           // The value in this vm may not be same as this event's value.
           throw new InvalidDeltaException(
-                  "Cache encountered replay of event containing delta bytes for key " + event.getKey());
+              "Cache encountered replay of event containing delta bytes for key " + event.getKey());
         }
         // Forward the operation and event messages
         // to members with bucket copies that may not have seen the event. Their
@@ -281,7 +281,7 @@ public class FTableBucketRegion extends TableBucketRegion {
         // they've already seen it.
         if (logger.isTraceEnabled(LogMarker.DM)) {
           logger.trace(LogMarker.DM, "BR.virtualPut: this cache has already seen this event {}",
-                  event);
+              event);
         }
         if (!getConcurrencyChecksEnabled() || event.hasValidVersionTag()) {
           distributeUpdateOperation(event, lastModified);
@@ -302,7 +302,7 @@ public class FTableBucketRegion extends TableBucketRegion {
         return;
       }
       final Pair<Object, Object> lastEntry =
-              ((RowTupleConcurrentSkipListMap) this.entries.getInternalMap()).lastEntryPair();
+          ((RowTupleConcurrentSkipListMap) this.entries.getInternalMap()).lastEntryPair();
       BlockKey blockKey = null;
       BlockValue blockValue = null;
       long timestamp = System.currentTimeMillis();
@@ -320,10 +320,10 @@ public class FTableBucketRegion extends TableBucketRegion {
         synchronized (lastEntryKey) {
           Object lastEntryValue = ((RegionEntry) lastEntry.getSecond())._getValue();
           boolean blockEvicted =
-                  lastEntryValue instanceof BlockValue && ((BlockValue) lastEntryValue).isEvicted();
+              lastEntryValue instanceof BlockValue && ((BlockValue) lastEntryValue).isEvicted();
           if (blockEvicted) {
             logger.debug("Block already evicted: region= {}, key= {}", this.getRegion().getName(),
-                    lastEntryKey);
+                lastEntryKey);
           }
           boolean isDeltaRequired = false;
           /* recover the value from disk if it is not yet available in map */
@@ -337,8 +337,8 @@ public class FTableBucketRegion extends TableBucketRegion {
             BlockValue lastBlockValue = null;
             if (lastEntryValue instanceof VMCachedDeserializable) {
               lastBlockValue =
-                      (BlockValue) ((VMCachedDeserializable) lastEntryValue).getDeserializedValue(
-                              entryEvent.getRegion(), (RegionEntry) lastEntry.getSecond());
+                  (BlockValue) ((VMCachedDeserializable) lastEntryValue).getDeserializedValue(
+                      entryEvent.getRegion(), (RegionEntry) lastEntry.getSecond());
             } else {
               lastBlockValue = (BlockValue) lastEntryValue;
             }
@@ -353,7 +353,7 @@ public class FTableBucketRegion extends TableBucketRegion {
           }
           blockValue.resetDelta();
           blockKey =
-                  appendToBlockValue(entryEvent, getDescriptor(), blockKey, blockValue, timestamp);
+              appendToBlockValue(entryEvent, getDescriptor(), blockKey, blockValue, timestamp);
           boolean deltaPropagation = this.getSystem().getConfig().getDeltaPropagation();
           if (isDeltaRequired && deltaPropagation && blockValue.hasDelta()) {
             HeapDataOutputStream hdos = new HeapDataOutputStream(Version.CURRENT);
@@ -373,7 +373,7 @@ public class FTableBucketRegion extends TableBucketRegion {
   }
 
   private BlockKey appendToBlockValue(EntryEventImpl entryEvent, FTableDescriptor fTableDescriptor,
-                                      BlockKey blockKey, BlockValue blockValue, long timestamp) {
+      BlockKey blockKey, BlockValue blockValue, long timestamp) {
     if (hasSeenEvent(entryEvent)) {
       return blockKey;
     }
@@ -381,14 +381,14 @@ public class FTableBucketRegion extends TableBucketRegion {
     int offsetToStoreInsertionTS = fTableDescriptor.getOffsetToStoreInsertionTS();
     if (value instanceof byte[]) {
       System.arraycopy(Bytes.toBytes(timestamp), 0, (byte[]) value, offsetToStoreInsertionTS,
-              Bytes.SIZEOF_LONG);
+          Bytes.SIZEOF_LONG);
     } else {
       if (value instanceof VMCachedDeserializable) {
         value = ((VMCachedDeserializable) value).getDeserializedForReading();
       }
       for (byte[] bytes : ((BlockValue) value).getRecords()) {
         System.arraycopy(Bytes.toBytes(timestamp), 0, bytes, offsetToStoreInsertionTS,
-                Bytes.SIZEOF_LONG);
+            Bytes.SIZEOF_LONG);
       }
     }
     blockValue.checkAndAddRecord(value, fTableDescriptor);
@@ -421,11 +421,11 @@ public class FTableBucketRegion extends TableBucketRegion {
       return 0;
     }
     if (!(value instanceof byte[]) && !(value instanceof CachedDeserializable)
-            && !(value instanceof org.apache.geode.Delta) && !(value instanceof GatewaySenderEventImpl)
-            && !(value instanceof BlockValue)) {
+        && !(value instanceof org.apache.geode.Delta) && !(value instanceof GatewaySenderEventImpl)
+        && !(value instanceof BlockValue)) {
       // ezoerner:20090401 it's possible this value is a Delta
       throw new InternalGemFireError(
-              "DEBUG: calcMemSize: weird value (class " + value.getClass() + "): " + value);
+          "DEBUG: calcMemSize: weird value (class " + value.getClass() + "): " + value);
     }
     try {
       return CachedDeserializableFactory.calcMemSize(value);
@@ -447,11 +447,11 @@ public class FTableBucketRegion extends TableBucketRegion {
     Map<Object, Object> iMap = (Map<Object, Object>) this.getRegionMap().getInternalMap();
     /* count the total records from all blocks */
     long totalCount = iMap.values().stream().filter(Objects::nonNull)
-            .map(e -> ((RegionEntry) e)._getValue()).filter(e -> !(e instanceof Token))
-            .map(e -> e instanceof VMCachedDeserializable
-                    ? ((VMCachedDeserializable) e).getDeserializedForReading() : e)
-            .filter(e -> e instanceof BlockValue).mapToLong(e -> ((BlockValue) e).getCurrentIndex())
-            .sum();
+        .map(e -> ((RegionEntry) e)._getValue()).filter(e -> !(e instanceof Token))
+        .map(e -> e instanceof VMCachedDeserializable
+            ? ((VMCachedDeserializable) e).getDeserializedForReading() : e)
+        .filter(e -> e instanceof BlockValue).mapToLong(e -> ((BlockValue) e).getCurrentIndex())
+        .sum();
     actualCount.getAndAdd(totalCount);
     return totalCount;
   }

@@ -98,7 +98,7 @@ public abstract class EntryBits {
 
   public static byte setRecoveredFromDisk(byte b, boolean isRecoveredFromDisk) {
     return isRecoveredFromDisk ? (byte) (b | RECOVERED_FROM_DISK)
-            : (byte) (b & ~RECOVERED_FROM_DISK);
+        : (byte) (b & ~RECOVERED_FROM_DISK);
   }
 
   public static byte setPendingAsync(byte b, boolean isPendingAsync) {
@@ -110,6 +110,6 @@ public abstract class EntryBits {
    */
   public static byte getPersistentBits(byte b) {
     return (byte) (b
-            & (SERIALIZED | INVALID | LOCAL_INVALID | TOMBSTONE | WITH_VERSIONS | DELTA_RECORD));
+        & (SERIALIZED | INVALID | LOCAL_INVALID | TOMBSTONE | WITH_VERSIONS | DELTA_RECORD));
   }
 }

@@ -15,7 +15,6 @@ package org.apache.geode.internal.cache;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -23,9 +22,6 @@ import io.ampool.monarch.table.Bytes;
 import io.ampool.monarch.table.TableDescriptor;
 import io.ampool.monarch.table.exceptions.TruncateTableException;
 import io.ampool.monarch.table.filter.Filter;
-import io.ampool.monarch.table.filter.FilterList;
-import io.ampool.monarch.table.filter.SingleColumnValueFilter;
-import io.ampool.monarch.table.filter.internal.BlockKeyFilter;
 import io.ampool.monarch.table.ftable.FTableDescriptor;
 import io.ampool.monarch.table.ftable.TierStoreConfiguration;
 import io.ampool.monarch.table.ftable.exceptions.FTableNotExistsException;
@@ -34,7 +30,6 @@ import io.ampool.monarch.table.ftable.internal.BlockValue;
 import io.ampool.monarch.table.internal.IMKey;
 import io.ampool.monarch.table.internal.MTableUtils;
 import io.ampool.monarch.table.region.map.RowTupleConcurrentSkipListMap;
-import io.ampool.monarch.types.CompareOp;
 import io.ampool.orc.OrcUtils;
 import io.ampool.store.StoreHandler;
 import io.ampool.tierstore.SharedTierStore;
@@ -60,7 +55,7 @@ public class UpdateTableFunction implements Function, InternalEntity {
     Map<byte[], Object> colValues = (Map<byte[], Object>) args[2];
     try {
       TableDescriptor td = (TableDescriptor) CacheFactory.getAnyInstance()
-              .getRegion(MTableUtils.AMPL_META_REGION_NAME).get(tableName);
+          .getRegion(MTableUtils.AMPL_META_REGION_NAME).get(tableName);
       updateFTable(tableName, filter, colValues, td);
       context.getResultSender().sendResult(true);
     } catch (Exception e) {
@@ -70,7 +65,7 @@ public class UpdateTableFunction implements Function, InternalEntity {
   }
 
   private void updateFTable(final String tableName, final Filter filter,
-                            Map<byte[], Object> colValues, final TableDescriptor td) {
+      Map<byte[], Object> colValues, final TableDescriptor td) {
     /*
      * Truncate from in memory Truncate from WAL Truncate from Tiers 1 to N
      */
@@ -99,7 +94,7 @@ public class UpdateTableFunction implements Function, InternalEntity {
   }
 
   private void updateInMemory(final String tableName, final Filter filter,
-                              Map<Integer, Object> colValues, final TableDescriptor td) {
+      Map<Integer, Object> colValues, final TableDescriptor td) {
     /**
      * For all primary buckets for the region For all the blocks in a bucket If the block falls in
      * range lock the block Process all records in block and re-arrange.
@@ -119,9 +114,9 @@ public class UpdateTableFunction implements Function, InternalEntity {
   }
 
   private void updateBucket(Region region, final BucketRegion br, final Filter filter,
-                            Map<Integer, Object> colValues, TableDescriptor td, final OrcUtils.OrcOptions opts) {
+      Map<Integer, Object> colValues, TableDescriptor td, final OrcUtils.OrcOptions opts) {
     RowTupleConcurrentSkipListMap internalMap =
-            (RowTupleConcurrentSkipListMap) br.getRegionMap().getInternalMap();
+        (RowTupleConcurrentSkipListMap) br.getRegionMap().getInternalMap();
     Map realMap = internalMap.getInternalMap();
 
     /* TODO: Can we skip this bucket? */
@@ -152,14 +147,14 @@ public class UpdateTableFunction implements Function, InternalEntity {
   }
 
   private void updateInTiers(final String tableName, final Filter filter,
-                             Map<Integer, Object> colValues, final TableDescriptor td) throws IOException {
+      Map<Integer, Object> colValues, final TableDescriptor td) throws IOException {
     if (td == null) {
       throw new FTableNotExistsException("Table not found: " + tableName);
     }
     int totalBuckets = td.getTotalNumOfSplits();
     Region region = CacheFactory.getAnyInstance().getRegion(tableName);
     for (Map.Entry<String, TierStoreConfiguration> tierEntry : ((FTableDescriptor) td)
-            .getTierStores().entrySet()) {
+        .getTierStores().entrySet()) {
       String storeName = tierEntry.getKey();
       TierStore store = StoreHandler.getInstance().getTierStore(storeName);
       boolean isShared = store instanceof SharedTierStore;
@@ -168,7 +163,7 @@ public class UpdateTableFunction implements Function, InternalEntity {
         if (br != null && br.getBucketAdvisor().isHosting()) {
           if (!isShared || br.getBucketAdvisor().isPrimary()) {
             updateTierBucket(store, tableName, i, filter, colValues, td,
-                    tierEntry.getValue().getTierProperties());
+                tierEntry.getValue().getTierProperties());
           }
         }
       }
@@ -176,8 +171,8 @@ public class UpdateTableFunction implements Function, InternalEntity {
   }
 
   private void updateTierBucket(TierStore store, String tableName, int i, Filter filter,
-                                Map<Integer, Object> colValues, TableDescriptor td, Properties tierProperties)
-          throws IOException {
+      Map<Integer, Object> colValues, TableDescriptor td, Properties tierProperties)
+      throws IOException {
     store.updateBucket(tableName, i, filter, colValues, td, tierProperties);
   }
 

@@ -22,12 +22,12 @@ public class EncodingB implements Encoding {
 
   @Override
   public int initFullRow(final Object k, final Object v, final ThinRowShared trs, final int offset,
-                         final int length) {
+      final int length) {
     List<Cell> cells = trs.getCells();
     final byte[] buf = (byte[]) v;
     int len;
     int vlCount = 0, flOffset = offset, lenOffset = offset + length - Bytes.SIZEOF_INT,
-            lastOff = -1;
+        lastOff = -1;
     CellRef cell, vlLastCell = null;
     for (int i = 0; i < cells.size(); i++) {
       cell = (CellRef) cells.get(i);
@@ -54,7 +54,7 @@ public class EncodingB implements Encoding {
 
   @Override
   public void writeSelectedColumns(DataOutput out, InternalRow row, List<Integer> columns)
-          throws IOException {
+      throws IOException {
     byte[] value = (byte[]) row.getRawValue();
     if (value == null) {
       MPartList.writeLength(-1, out);

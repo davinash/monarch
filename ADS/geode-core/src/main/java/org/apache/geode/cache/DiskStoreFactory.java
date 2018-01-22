@@ -61,7 +61,7 @@ public interface DiskStoreFactory {
    * Current value: <code>1024</code> which is one gigabyte.
    */
   public static final long DEFAULT_MAX_OPLOG_SIZE =
-          Long.getLong(DistributionConfig.GEMFIRE_PREFIX + "DEFAULT_MAX_OPLOG_SIZE", 1024L).longValue(); // 1024
+      Long.getLong(DistributionConfig.GEMFIRE_PREFIX + "DEFAULT_MAX_OPLOG_SIZE", 1024L).longValue(); // 1024
   // ==
   // 1
   // GB;

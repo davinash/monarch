@@ -17,7 +17,7 @@ import io.ampool.monarch.table.client.MClientCache;
 import io.ampool.monarch.table.client.MClientCacheFactory;
 import io.ampool.monarch.table.internal.CDCConfigImpl;
 import io.ampool.monarch.table.internal.CDCInformation;
-import io.ampool.monarch.table.internal.ProxyMTableRegion;
+import io.ampool.monarch.table.internal.MTableImpl;
 import io.ampool.monarch.types.DataTypeFactory;
 import org.apache.geode.cache.*;
 import org.apache.geode.cache.server.CacheServer;
@@ -55,7 +55,7 @@ public class MTableDUnitConfigFramework extends MTableDUnitHelper {
   protected static int NUM_COLUMNS = 5;
   protected static String[] types = {"BOOLEAN", "BYTE", "SHORT", "INT", "LONG", "DOUBLE", "FLOAT",
       "BIG_DECIMAL", "STRING", "BINARY", "CHARS", "VARCHAR", "DATE", "TIMESTAMP"};
-  public static String TABLENAME = "testTable";
+  public String TABLENAME = "testTable";
   public static int currentConfigId = 0;
   public static MTableDescriptor currentTableDescriptor = null;
 
@@ -121,10 +121,9 @@ public class MTableDUnitConfigFramework extends MTableDUnitHelper {
             public Object call() throws Exception {
               MCache anyInstance = MCacheFactory.getAnyInstance();
               ArrayList<CDCInformation> cdcInformations =
-                  ((ProxyMTableRegion) anyInstance.getTable(TABLENAME)).getTableDescriptor()
+                  ((MTableImpl) anyInstance.getTable(TABLENAME)).getTableDescriptor()
                       .getCdcInformations();
-              Region tableRegion =
-                  ((ProxyMTableRegion) anyInstance.getTable(TABLENAME)).getTableRegion();
+              Region tableRegion = ((MTableImpl) anyInstance.getTable(TABLENAME)).getTableRegion();
               AttributesMutator attributesMutator = tableRegion.getAttributesMutator();
               for (int i = 0; i < cdcInformations.size(); i++) {
                 attributesMutator.removeAsyncEventQueueId(cdcInformations.get(i).getQueueId());
@@ -290,57 +289,57 @@ public class MTableDUnitConfigFramework extends MTableDUnitHelper {
         createMTableDescriptor(withTypes)
             .addCoprocessor("io.ampool.monarch.table.coprocessor.SampleRowCountCoprocessor")
             .addCDCStream("CDCStream", "io.ampool.monarch.table.cdc.CDCEventListener", null)); // ORDERED
-                                                                                               // -
-                                                                                               // NO
-                                                                                               // PERSISTENCE
-                                                                                               // -
-                                                                                               // 1
-                                                                                               // MAXVERSION
+    // -
+    // NO
+    // PERSISTENCE
+    // -
+    // 1
+    // MAXVERSION
     mTableDescriptorMap.put(2,
         createMTableDescriptor(withTypes, MTableType.UNORDERED)
             .addCoprocessor("io.ampool.monarch.table.coprocessor.SampleRowCountCoprocessor")
             .addCDCStream("CDCStream", "io.ampool.monarch.table.cdc.CDCEventListener", null)); // UNORDERED
-                                                                                               // -
-                                                                                               // NOPERSISTENCE
-                                                                                               // -
-                                                                                               // 1
-                                                                                               // MAXVERSION
+    // -
+    // NOPERSISTENCE
+    // -
+    // 1
+    // MAXVERSION
     mTableDescriptorMap.put(3,
         createMTableDescriptor(withTypes).setMaxVersions(5)
             .addCoprocessor("io.ampool.monarch.table.coprocessor.SampleRowCountCoprocessor")
             .addCDCStream("CDCStream", "io.ampool.monarch.table.cdc.CDCEventListener", null)); // ORDERED
-                                                                                               // -
-                                                                                               // NOPERSISTENCE
-                                                                                               // -
-                                                                                               // 5
-                                                                                               // MAXVERSION
+    // -
+    // NOPERSISTENCE
+    // -
+    // 5
+    // MAXVERSION
     mTableDescriptorMap.put(4,
         createMTableDescriptor(withTypes).enableDiskPersistence(MDiskWritePolicy.SYNCHRONOUS)
             .addCoprocessor("io.ampool.monarch.table.coprocessor.SampleRowCountCoprocessor")
             .addCDCStream("CDCStream_P4", "io.ampool.monarch.table.cdc.CDCEventListener",
                 new CDCConfigImpl().setPersistent(true).setDiskSynchronous(true))); // ORDERED -
-                                                                                    // DISKPERSISTENCE
-                                                                                    // - 1
-                                                                                    // MAXVERSION
+    // DISKPERSISTENCE
+    // - 1
+    // MAXVERSION
     mTableDescriptorMap.put(5,
         createMTableDescriptor(withTypes, MTableType.UNORDERED)
             .enableDiskPersistence(MDiskWritePolicy.SYNCHRONOUS)
             .addCoprocessor("io.ampool.monarch.table.coprocessor.SampleRowCountCoprocessor")
             .addCDCStream("CDCStream_P5", "io.ampool.monarch.table.cdc.CDCEventListener",
                 new CDCConfigImpl().setDiskSynchronous(true).setPersistent(true))); // UNORDERED -
-                                                                                    // NOPERSISTENCE
-                                                                                    // - 1
-                                                                                    // MAXVERSION
+    // NOPERSISTENCE
+    // - 1
+    // MAXVERSION
     mTableDescriptorMap.put(6,
         createMTableDescriptor(withTypes)
             .addCoprocessor("io.ampool.monarch.table.coprocessor.SampleRowCountCoprocessor")
             .addCDCStream("CDCStream", "io.ampool.monarch.table.cdc.CDCEventListener", null));// ORDERED
-                                                                                              // -
-                                                                                              // NOPERSISTENCE
-                                                                                              // - 1
-                                                                                              // MAXVERSION
-                                                                                              // - 3
-                                                                                              // COPIES
+    // -
+    // NOPERSISTENCE
+    // - 1
+    // MAXVERSION
+    // - 3
+    // COPIES
     mTableDescriptorMap.put(7,
         createMTableDescriptor(withTypes, MTableType.UNORDERED)
             .addCoprocessor("io.ampool.monarch.table.coprocessor.SampleRowCountCoprocessor")
@@ -352,71 +351,71 @@ public class MTableDUnitConfigFramework extends MTableDUnitHelper {
         createMTableDescriptor(withTypes).setTotalNumOfSplits(1)
             .addCoprocessor("io.ampool.monarch.table.coprocessor.SampleRowCountCoprocessor")
             .addCDCStream("CDCStream", "io.ampool.monarch.table.cdc.CDCEventListener", null)); // ORDERED
-                                                                                               // -
-                                                                                               // NO
-                                                                                               // PERSISTENCE
-                                                                                               // -
-                                                                                               // 1
-                                                                                               // MAXVERSION
+    // -
+    // NO
+    // PERSISTENCE
+    // -
+    // 1
+    // MAXVERSION
     mTableDescriptorMap.put(9,
         createMTableDescriptor(withTypes, MTableType.UNORDERED).setTotalNumOfSplits(1)
             .addCoprocessor("io.ampool.monarch.table.coprocessor.SampleRowCountCoprocessor")
             .addCDCStream("CDCStream", "io.ampool.monarch.table.cdc.CDCEventListener", null)); // UNORDERED
-                                                                                               // -
-                                                                                               // NOPERSISTENCE
-                                                                                               // -
-                                                                                               // 1
-                                                                                               // MAXVERSION
+    // -
+    // NOPERSISTENCE
+    // -
+    // 1
+    // MAXVERSION
     mTableDescriptorMap.put(10,
         createMTableDescriptor(withTypes).setTotalNumOfSplits(1).setMaxVersions(5)
             .addCoprocessor("io.ampool.monarch.table.coprocessor.SampleRowCountCoprocessor")
             .addCDCStream("CDCStream", "io.ampool.monarch.table.cdc.CDCEventListener", null)); // ORDERED
-                                                                                               // -
-                                                                                               // NOPERSISTENCE
-                                                                                               // -
-                                                                                               // 5
-                                                                                               // MAXVERSION
+    // -
+    // NOPERSISTENCE
+    // -
+    // 5
+    // MAXVERSION
     mTableDescriptorMap.put(11,
         createMTableDescriptor(withTypes).setTotalNumOfSplits(1)
             .enableDiskPersistence(MDiskWritePolicy.ASYNCHRONOUS)
             .addCoprocessor("io.ampool.monarch.table.coprocessor.SampleRowCountCoprocessor")
             .addCDCStream("CDCStream_P11", "io.ampool.monarch.table.cdc.CDCEventListener",
                 new CDCConfigImpl().setDiskSynchronous(false).setPersistent(true))); // ORDERED -
-                                                                                     // DISKPERSISTENCE
-                                                                                     // - 1
-                                                                                     // MAXVERSION
+    // DISKPERSISTENCE
+    // - 1
+    // MAXVERSION
     mTableDescriptorMap.put(12,
         createMTableDescriptor(withTypes, MTableType.UNORDERED).setTotalNumOfSplits(1)
             .enableDiskPersistence(MDiskWritePolicy.ASYNCHRONOUS)
             .addCoprocessor("io.ampool.monarch.table.coprocessor.SampleRowCountCoprocessor")
             .addCDCStream("CDCStream_P12", "io.ampool.monarch.table.cdc.CDCEventListener",
                 new CDCConfigImpl().setPersistent(true).setDiskSynchronous(false))); // UNORDERED -
-                                                                                     // NOPERSISTENCE
-                                                                                     // - 1
-                                                                                     // MAXVERSION
+    // NOPERSISTENCE
+    // - 1
+    // MAXVERSION
     mTableDescriptorMap.put(13,
         createMTableDescriptor(withTypes).setTotalNumOfSplits(1).setRedundantCopies(3)
             .addCoprocessor("io.ampool.monarch.table.coprocessor.SampleRowCountCoprocessor")); // ORDERED
-                                                                                               // -
-                                                                                               // NOPERSISTENCE
-                                                                                               // -
-                                                                                               // 1
-                                                                                               // MAXVERSION
-                                                                                               // -
-                                                                                               // 3
-                                                                                               // COPIES
+    // -
+    // NOPERSISTENCE
+    // -
+    // 1
+    // MAXVERSION
+    // -
+    // 3
+    // COPIES
     mTableDescriptorMap.put(14,
         createMTableDescriptor(withTypes, MTableType.UNORDERED).setTotalNumOfSplits(1)
             .setRedundantCopies(3)
             .addCoprocessor("io.ampool.monarch.table.coprocessor.SampleRowCountCoprocessor")); // UNORDERED
-                                                                                               // -
-                                                                                               // NOPERSISTENCE
-                                                                                               // -
-                                                                                               // 1
-                                                                                               // MAXVERSION
-                                                                                               // -
-                                                                                               // 3
-                                                                                               // COPIES
+    // -
+    // NOPERSISTENCE
+    // -
+    // 1
+    // MAXVERSION
+    // -
+    // 3
+    // COPIES
 
     // Set #3 MTable with setting keyspace
 
@@ -830,7 +829,8 @@ public class MTableDUnitConfigFramework extends MTableDUnitHelper {
    * @param runnable
    */
   public void runAllConfigs(FrameworkRunnable runnable) {
-    runAllConfigs(runnable, true, false);
+    String tableName = getTestMethodName();
+    runAllConfigs(tableName, runnable, true, false);
   }
 
   public void runConfig(int configId, FrameworkRunnable runnable, boolean doRestart,
@@ -859,6 +859,11 @@ public class MTableDUnitConfigFramework extends MTableDUnitHelper {
     executeConfig(runnable, doRestart, withTypes, mTableDescriptor);
   }
 
+  public void runAllConfigs(FrameworkRunnable runnable, boolean doRestart, boolean withTypes) {
+    String tableName = getTestMethodName();
+    runAllConfigs(tableName, runnable, doRestart, withTypes);
+  }
+
   /**
    * Same as {@link #runAllConfigs(FrameworkRunnable)}}, but gives option to turn off restart
    * functionality.
@@ -866,8 +871,10 @@ public class MTableDUnitConfigFramework extends MTableDUnitHelper {
    * @param runnable
    * @param doRestart
    */
-  public void runAllConfigs(FrameworkRunnable runnable, boolean doRestart, boolean withTypes) {
-    String baseTableName = TABLENAME;
+  public void runAllConfigs(String tableName, FrameworkRunnable runnable, boolean doRestart,
+      boolean withTypes) {
+    TABLENAME = tableName;
+    logger.info("TableName ->> " + TABLENAME);
 
     int index = 0;
     if (withTypes) {
@@ -939,7 +946,7 @@ public class MTableDUnitConfigFramework extends MTableDUnitHelper {
     createClientCache();
   }
 
-  protected static MTable getTableFromClientCache() {
+  protected MTable getTableFromClientCache() {
     return MClientCacheFactory.getAnyInstance().getTable(TABLENAME);
   }
 }

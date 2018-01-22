@@ -99,7 +99,7 @@ public class FTableDeltaPersistenceDUnitTest extends MTableDUnitHelper {
 
 
   public static FTableDescriptor getFTableDescriptor(final int numSplits, int redundancy,
-                                                     String diskStoreName, boolean synchronous) {
+      String diskStoreName, boolean synchronous) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < NUM_OF_COLUMNS; i++) {
       tableDescriptor.addColumn(COLUMN_NAME_PREFIX + i);
@@ -116,7 +116,7 @@ public class FTableDeltaPersistenceDUnitTest extends MTableDUnitHelper {
   }
 
   public static FTable createFTable(String ftableName, final int numSplits, int redundancy,
-                                    String diskStoreName, boolean synchronous) {
+      String diskStoreName, boolean synchronous) {
     MClientCache clientCache = MClientCacheFactory.getAnyInstance();
     final FTable fTable = clientCache.getAdmin().createFTable(ftableName,
         getFTableDescriptor(numSplits, redundancy, diskStoreName, synchronous));
@@ -124,7 +124,7 @@ public class FTableDeltaPersistenceDUnitTest extends MTableDUnitHelper {
   }
 
   public static FTable createFTable(String ftableName, final int numSplits, int redundancy,
-                                    boolean synchronous) {
+      boolean synchronous) {
     return createFTable(ftableName, numSplits, redundancy, null, synchronous);
   }
 
@@ -241,7 +241,7 @@ public class FTableDeltaPersistenceDUnitTest extends MTableDUnitHelper {
 
 
   private void createDiskStoreOnserver(String disk_store_name, boolean allowDeltaPersistence,
-                                       int maxOplogSize, VM[] vms, boolean autoCompact) {
+      int maxOplogSize, VM[] vms, boolean autoCompact) {
     for (VM vm : vms) {
       vm.invoke(new SerializableCallable<Object>() {
         @Override

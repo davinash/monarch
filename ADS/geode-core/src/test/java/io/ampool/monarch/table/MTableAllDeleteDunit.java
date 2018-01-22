@@ -82,13 +82,13 @@ public class MTableAllDeleteDunit extends MTableDUnitConfigFramework {
       public void run() {
         MTable table = getTable();
         System.out.println("MTableAllDeleteDunit.Normal TableType = "
-                + table.getTableDescriptor().getTableType().name());
+            + table.getTableDescriptor().getTableType().name());
         // Execute for both Ordered and UnOrdered Table
         {
           doPut(table, keys3);
           Map<Integer, List<Object>> collector = table.coprocessorService(UPDATE_COPROCESSOR_CLASS,
-                  "deleteRows", table.getTableDescriptor().getStartRangeKey(),
-                  table.getTableDescriptor().getStopRangeKey(), new MExecutionRequest());
+              "deleteRows", table.getTableDescriptor().getStartRangeKey(),
+              table.getTableDescriptor().getStopRangeKey(), new MExecutionRequest());
           Object[] resultValues = collector.values().toArray();
           for (Object result : resultValues) {
             ArrayList list = (ArrayList) result;
@@ -107,11 +107,11 @@ public class MTableAllDeleteDunit extends MTableDUnitConfigFramework {
         // Execute for both Ordered and Unordered Table
         {
           System.out.println("MTableAllDeleteDunit.Restart TableType = "
-                  + table.getTableDescriptor().getTableType().name());
+              + table.getTableDescriptor().getTableType().name());
           doPut(table, keys3);
           Map<Integer, List<Object>> collector = table.coprocessorService(UPDATE_COPROCESSOR_CLASS,
-                  "deleteRows", table.getTableDescriptor().getStartRangeKey(),
-                  table.getTableDescriptor().getStopRangeKey(), new MExecutionRequest());
+              "deleteRows", table.getTableDescriptor().getStartRangeKey(),
+              table.getTableDescriptor().getStopRangeKey(), new MExecutionRequest());
           Object[] resultValues = collector.values().toArray();
           for (Object result : resultValues) {
             ArrayList list = (ArrayList) result;
@@ -140,7 +140,7 @@ public class MTableAllDeleteDunit extends MTableDUnitConfigFramework {
         if (table.getTableDescriptor().getTableType() == MTableType.ORDERED_VERSIONED) {
           doPut(table, keys1);
           Map<Integer, List<Object>> collector = table.coprocessorService(UPDATE_COPROCESSOR_CLASS,
-                  "doDelete", null, null, new MExecutionRequest());
+              "doDelete", null, null, new MExecutionRequest());
           Object[] resultValues = collector.values().toArray();
           boolean finalResult = true;
           for (Object result : resultValues) {
@@ -160,7 +160,7 @@ public class MTableAllDeleteDunit extends MTableDUnitConfigFramework {
         if (table.getTableDescriptor().getTableType() == MTableType.ORDERED_VERSIONED) {
           doPut(table, keys1);
           Map<Integer, List<Object>> collector = table.coprocessorService(UPDATE_COPROCESSOR_CLASS,
-                  "doDelete", null, null, new MExecutionRequest());
+              "doDelete", null, null, new MExecutionRequest());
           Object[] resultValues = collector.values().toArray();
           boolean finalResult = true;
           for (Object result : resultValues) {
@@ -237,7 +237,7 @@ public class MTableAllDeleteDunit extends MTableDUnitConfigFramework {
       table.delete(invalidRowKey);
     } catch (Exception icne) {
       assertTrue(
-              icne instanceof RowKeyOutOfRangeException || icne instanceof RowKeyDoesNotExistException);
+          icne instanceof RowKeyOutOfRangeException || icne instanceof RowKeyDoesNotExistException);
     }
     Row result = null;
     try {
@@ -316,13 +316,13 @@ public class MTableAllDeleteDunit extends MTableDUnitConfigFramework {
           if (!Bytes.equals(expectedColumnName, row.get(i).getColumnName())) {
             System.out.println("expectedColumnName => " + Arrays.toString(expectedColumnName));
             System.out
-                    .println("actualColumnName   => " + Arrays.toString(row.get(i).getColumnName()));
+                .println("actualColumnName   => " + Arrays.toString(row.get(i).getColumnName()));
             Assert.fail("Invalid Values for Column Name");
           }
           if (!Bytes.equals(exptectedValue, (byte[]) row.get(i).getColumnValue())) {
             System.out.println("exptectedValue => " + Arrays.toString(exptectedValue));
             System.out.println(
-                    "actualValue    => " + Arrays.toString((byte[]) row.get(i).getColumnValue()));
+                "actualValue    => " + Arrays.toString((byte[]) row.get(i).getColumnValue()));
             Assert.fail("Invalid Values for Column Value");
           }
           columnIndex++;
@@ -359,7 +359,7 @@ public class MTableAllDeleteDunit extends MTableDUnitConfigFramework {
       Put record = new Put(Bytes.toBytes(keys2[rowIndex]));
       for (int columnIndex = 0; columnIndex < NUM_COLUMNS; columnIndex++) {
         record.addColumn(Bytes.toBytes(COLUMNNAME_PREFIX + columnIndex),
-                Bytes.toBytes(VALUE_PREFIX + columnIndex));
+            Bytes.toBytes(VALUE_PREFIX + columnIndex));
       }
       table.put(record);
     }
@@ -395,14 +395,14 @@ public class MTableAllDeleteDunit extends MTableDUnitConfigFramework {
           if (!Bytes.equals(expectedColumnName, row.get(i).getColumnName())) {
             System.out.println("expectedColumnName => " + Arrays.toString(expectedColumnName));
             System.out
-                    .println("actualColumnName   => " + Arrays.toString(row.get(i).getColumnName()));
+                .println("actualColumnName   => " + Arrays.toString(row.get(i).getColumnName()));
             Assert.fail("Invalid Values for Column Name");
           }
           {
             if (!Bytes.equals(exptectedValue, (byte[]) row.get(i).getColumnValue())) {
               System.out.println("exptectedValue => " + Arrays.toString(exptectedValue));
               System.out.println(
-                      "actualValue    => " + Arrays.toString((byte[]) row.get(i).getColumnValue()));
+                  "actualValue    => " + Arrays.toString((byte[]) row.get(i).getColumnValue()));
               Assert.fail("Invalid Values for Column Value");
             }
           }
@@ -418,7 +418,7 @@ public class MTableAllDeleteDunit extends MTableDUnitConfigFramework {
           if (!Bytes.equals(expectedColumnName, row.get(i).getColumnName())) {
             System.out.println("expectedColumnName => " + Arrays.toString(expectedColumnName));
             System.out
-                    .println("actualColumnName   => " + Arrays.toString(row.get(i).getColumnName()));
+                .println("actualColumnName   => " + Arrays.toString(row.get(i).getColumnName()));
             Assert.fail("Invalid Values for Column Name");
           }
           if (columnIndex % 2 != 0) {
@@ -427,7 +427,7 @@ public class MTableAllDeleteDunit extends MTableDUnitConfigFramework {
             if (!Bytes.equals(exptectedValue, (byte[]) row.get(i).getColumnValue())) {
               System.out.println("exptectedValue => " + Arrays.toString(exptectedValue));
               System.out.println(
-                      "actualValue    => " + Arrays.toString((byte[]) row.get(i).getColumnValue()));
+                  "actualValue    => " + Arrays.toString((byte[]) row.get(i).getColumnValue()));
               Assert.fail("Invalid Values for Column Value");
             }
           }
@@ -486,7 +486,7 @@ public class MTableAllDeleteDunit extends MTableDUnitConfigFramework {
     if (!Bytes.equals(expectedColumnName, row.get(columnIndex).getColumnName())) {
       System.out.println("expectedColumnName => " + Arrays.toString(expectedColumnName));
       System.out.println(
-              "actualColumnName   => " + Arrays.toString(row.get(columnIndex).getColumnName()));
+          "actualColumnName   => " + Arrays.toString(row.get(columnIndex).getColumnName()));
       Assert.fail("Invalid Values for Column Name");
     }
 
@@ -551,7 +551,7 @@ public class MTableAllDeleteDunit extends MTableDUnitConfigFramework {
       if (!Bytes.equals(expectedColumnName, row.get(columnIndex).getColumnName())) {
         System.out.println("expectedColumnName => " + Arrays.toString(expectedColumnName));
         System.out.println(
-                "actualColumnName   => " + Arrays.toString(row.get(columnIndex).getColumnName()));
+            "actualColumnName   => " + Arrays.toString(row.get(columnIndex).getColumnName()));
         Assert.fail("Invalid Values for Column Name");
       }
     }
@@ -635,7 +635,7 @@ public class MTableAllDeleteDunit extends MTableDUnitConfigFramework {
       if (!Bytes.equals(expectedColumnName, result1.getCells().get(0).getColumnName())) {
         System.out.println("expectedColumnName => " + Arrays.toString(expectedColumnName));
         System.out.println(
-                "actualColumnName   => " + Arrays.toString(result1.getCells().get(0).getColumnName()));
+            "actualColumnName   => " + Arrays.toString(result1.getCells().get(0).getColumnName()));
         Assert.fail("Invalid Values for Column Name");
       }
 
@@ -648,7 +648,7 @@ public class MTableAllDeleteDunit extends MTableDUnitConfigFramework {
         put = new Put(keys_version[5]);
         for (columnIndex = 0; columnIndex < NUM_COLUMNS; columnIndex++) {
           put.addColumn(Bytes.toBytes(COLUMNNAME_PREFIX + columnIndex),
-                  Bytes.toBytes(VALUE_PREFIX + columnIndex));
+              Bytes.toBytes(VALUE_PREFIX + columnIndex));
         }
         put.setTimeStamp(i + 1);
         table.put(put);
@@ -675,7 +675,7 @@ public class MTableAllDeleteDunit extends MTableDUnitConfigFramework {
             if (!Bytes.equals(expectedColumnName, row.get(k).getColumnName())) {
               System.out.println("expectedColumnName => " + Arrays.toString(expectedColumnName));
               System.out
-                      .println("actualColumnName   => " + Arrays.toString(row.get(k).getColumnName()));
+                  .println("actualColumnName   => " + Arrays.toString(row.get(k).getColumnName()));
               Assert.fail("Invalid Values for Column Name");
             }
             if (i <= 2) {
@@ -686,7 +686,7 @@ public class MTableAllDeleteDunit extends MTableDUnitConfigFramework {
               if (!Bytes.equals(exptectedValue, (byte[]) row.get(k).getColumnValue())) {
                 System.out.println("exptectedValue => " + Arrays.toString(exptectedValue));
                 System.out.println(
-                        "actualValue    => " + Arrays.toString((byte[]) row.get(k).getColumnValue()));
+                    "actualValue    => " + Arrays.toString((byte[]) row.get(k).getColumnValue()));
                 Assert.fail("Invalid Values for Column Value");
               }
             }
@@ -704,7 +704,7 @@ public class MTableAllDeleteDunit extends MTableDUnitConfigFramework {
       Put record = new Put(Bytes.toBytes(keys[rowIndex]));
       for (int columnIndex = 0; columnIndex < NUM_COLUMNS; columnIndex++) {
         record.addColumn(Bytes.toBytes(COLUMNNAME_PREFIX + columnIndex),
-                Bytes.toBytes(VALUE_PREFIX + columnIndex));
+            Bytes.toBytes(VALUE_PREFIX + columnIndex));
       }
       table.put(record);
     }

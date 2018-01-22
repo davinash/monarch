@@ -24,10 +24,10 @@ public interface Encoding {
   }
 
   int initFullRow(final Object k, final Object v, final ThinRowShared trs, final int offset,
-                  final int length);
+      final int length);
 
   void writeSelectedColumns(final DataOutput out, final InternalRow row,
-                            final List<Integer> columns) throws IOException;
+      final List<Integer> columns) throws IOException;
 
   /**
    * Write the de-serialized row to the provided output stream. If only selected columns were
@@ -41,7 +41,7 @@ public interface Encoding {
    * @throws IOException if failed to write to the output stream
    */
   default void writeDesRow(final DataOutput out, final TableDescriptor td,
-                           final DeSerializedRow row, final List<Integer> columns) throws IOException {
+      final DeSerializedRow row, final List<Integer> columns) throws IOException {
     if (row == null) {
       MPartList.writeLength(-1, out);
     } else if (columns.isEmpty() || columns.size() == td.getNumOfColumns()) {

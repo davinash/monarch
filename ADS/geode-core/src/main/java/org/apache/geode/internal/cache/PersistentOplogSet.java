@@ -76,9 +76,9 @@ public class PersistentOplogSet implements OplogSet {
   final AtomicInteger inactiveOpenCount = new AtomicInteger();
 
   private final Map<Long, DiskRecoveryStore> pendingRecoveryMap =
-          new HashMap<Long, DiskRecoveryStore>();
+      new HashMap<Long, DiskRecoveryStore>();
   private final Map<Long, DiskRecoveryStore> currentRecoveryMap =
-          new HashMap<Long, DiskRecoveryStore>();
+      new HashMap<Long, DiskRecoveryStore>();
 
   final AtomicBoolean alreadyRecoveredOnce = new AtomicBoolean(false);
 
@@ -199,7 +199,7 @@ public class PersistentOplogSet implements OplogSet {
   }
 
   public void offlineModify(DiskRegionView drv, DiskEntry entry, byte[] value,
-                            boolean isSerializedObject) {
+      boolean isSerializedObject) {
     getChild().offlineModify(drv, entry, value, isSerializedObject);
   }
 
@@ -425,7 +425,7 @@ public class PersistentOplogSet implements OplogSet {
           for (Map.Entry<String, Integer> me : prSizes.entrySet()) {
             parent.incLiveEntryCount(me.getValue());
             System.out.println(me.getKey() + " entryCount=" + me.getValue() + " bucketCount="
-                    + prBuckets.get(me.getKey()));
+                + prBuckets.get(me.getKey()));
           }
         }
         parent.getStats().endRecovery(start, byteCount);
@@ -466,9 +466,9 @@ public class PersistentOplogSet implements OplogSet {
       for (Oplog oplog : oplogSet) {
         long startOpLogRead = parent.getStats().startOplogRead();
         long bytesRead = oplog.recoverCrf(deletedIds,
-                // @todo make recoverValues per region
-                recoverValues(), recoverValuesSync(), this.alreadyRecoveredOnce.get(),
-                oplogsNeedingValueRecovery, latestOplog);
+            // @todo make recoverValues per region
+            recoverValues(), recoverValuesSync(), this.alreadyRecoveredOnce.get(),
+            oplogsNeedingValueRecovery, latestOplog);
         latestOplog = false;
         if (!this.alreadyRecoveredOnce.get()) {
           updateOplogEntryId(oplog.getMaxRecoveredOplogEntryId());
@@ -526,7 +526,7 @@ public class PersistentOplogSet implements OplogSet {
 
         long endRegionInit = System.currentTimeMillis();
         logger.info(LocalizedMessage.create(LocalizedStrings.DiskRegion_REGION_INIT_TIME,
-                endRegionInit - startRegionInit));
+            endRegionInit - startRegionInit));
       }
     }
     return byteCount;
@@ -650,15 +650,15 @@ public class PersistentOplogSet implements OplogSet {
              * .toLocalizedString(new Object[] {MAX_WAIT_FOR_SPACE, /, (1000)}));
              */
             logger.warn(LocalizedMessage.create(
-                    LocalizedStrings.DiskRegion_COMPLEXDISKREGIONGETNEXTDIR_MAX_DIRECTORY_SIZE_WILL_GET_VIOLATED__GOING_AHEAD_WITH_THE_SWITCHING_OF_OPLOG_ANY_WAYS_CURRENTLY_AVAILABLE_SPACE_IN_THE_DIRECTORY_IS__0__THE_CAPACITY_OF_DIRECTORY_IS___1,
-                    new Object[] {Long.valueOf(selectedHolder.getUsedSpace()),
-                            Long.valueOf(selectedHolder.getCapacity())}));
+                LocalizedStrings.DiskRegion_COMPLEXDISKREGIONGETNEXTDIR_MAX_DIRECTORY_SIZE_WILL_GET_VIOLATED__GOING_AHEAD_WITH_THE_SWITCHING_OF_OPLOG_ANY_WAYS_CURRENTLY_AVAILABLE_SPACE_IN_THE_DIRECTORY_IS__0__THE_CAPACITY_OF_DIRECTORY_IS___1,
+                new Object[] {Long.valueOf(selectedHolder.getUsedSpace()),
+                    Long.valueOf(selectedHolder.getCapacity())}));
           }
         } else {
           throw new DiskAccessException(
-                  LocalizedStrings.DiskRegion_DISK_IS_FULL_COMPACTION_IS_DISABLED_NO_SPACE_CAN_BE_CREATED
-                          .toLocalizedString(),
-                  parent);
+              LocalizedStrings.DiskRegion_DISK_IS_FULL_COMPACTION_IS_DISABLED_NO_SPACE_CAN_BE_CREATED
+                  .toLocalizedString(),
+              parent);
         }
       }
     }

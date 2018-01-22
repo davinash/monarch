@@ -62,7 +62,7 @@ public class DeltaOplog extends Oplog {
 
 
   protected DiskEntry.RecoveredEntry handleToken(byte userBits, long oplogId, long offsetInOplog,
-                                                 long oplogKeyId) {
+      long oplogKeyId) {
     DiskEntry.RecoveredEntry re = null;
 
     boolean isInvalid = EntryBits.isInvalid(userBits);
@@ -89,8 +89,8 @@ public class DeltaOplog extends Oplog {
 
   @Override
   public DiskEntry.RecoveredEntry createRecoveredEntry(byte[] valueBytes, int valueLength,
-                                                       byte userBits, long oplogId, long offsetInOplog, long oplogKeyId, boolean recoverValue,
-                                                       long drid, Version version, ByteArrayDataInput in) {
+      byte userBits, long oplogId, long offsetInOplog, long oplogKeyId, boolean recoverValue,
+      long drid, Version version, ByteArrayDataInput in) {
     Object key = getKey(oplogKeyId, version, in);
     DiskRecoveryStore drs = getOplogSet().getCurrentlyRecovering(drid);
     DiskEntry de = drs.getDiskEntry(key);
@@ -131,7 +131,7 @@ public class DeltaOplog extends Oplog {
 
   @Override
   protected void basicModify(DiskRegionView dr, DiskEntry entry,
-                             DiskEntry.Helper.ValueWrapper value, byte userBits, boolean async, boolean calledByCompactor)
+      DiskEntry.Helper.ValueWrapper value, byte userBits, boolean async, boolean calledByCompactor)
       throws IOException, InterruptedException {
     super.basicModify(dr, entry, value, userBits, async, calledByCompactor);
     if (EntryBits.isPersistenceDelta(userBits)) {
@@ -185,8 +185,8 @@ public class DeltaOplog extends Oplog {
 
   @Override
   protected void updateRecoveredEntryWithKey(byte[] valueBytes, int valueLength, byte userBits,
-                                             long oplogId, long offsetInOplog, long oplogKeyId, boolean recoverValue, long drid,
-                                             Version version, ByteArrayDataInput in, VersionTag tag, DiskEntry de, Object key) {
+      long oplogId, long offsetInOplog, long oplogKeyId, boolean recoverValue, long drid,
+      Version version, ByteArrayDataInput in, VersionTag tag, DiskEntry de, Object key) {
     DiskRecoveryStore drs = getOplogSet().getCurrentlyRecovering(drid);
     DiskEntry.RecoveredEntry re = null;
     PersistenceDelta oldValue = null;

@@ -60,7 +60,7 @@ public class FTableDescriptorTest {
     assertEquals(MSG + "redundancy", 0, td.getRedundantCopies());
     assertEquals(MSG + "tier-stores", Collections.emptyMap(), td.getTierStores());
     assertEquals(MSG + "disk-store", MTableUtils.DEFAULT_FTABLE_DISK_STORE_NAME,
-            td.getRecoveryDiskStore());
+        td.getRecoveryDiskStore());
   }
 
   @Test
@@ -145,9 +145,9 @@ public class FTableDescriptorTest {
     for (Map.Entry<String, TierStoreConfiguration> entry : tierStores.entrySet()) {
       assertEquals(2, entry.getValue().getTierProperties().size());
       assertEquals(TimeUnit.HOURS.toMillis(5),
-              entry.getValue().getTierProperties().get(TierStoreConfiguration.TIER_PARTITION_INTERVAL));
+          entry.getValue().getTierProperties().get(TierStoreConfiguration.TIER_PARTITION_INTERVAL));
       assertEquals(TimeUnit.HOURS.toMillis(10),
-              entry.getValue().getTierProperties().get(TierStoreConfiguration.TIER_TIME_TO_EXPIRE));
+          entry.getValue().getTierProperties().get(TierStoreConfiguration.TIER_TIME_TO_EXPIRE));
     }
   }
 
@@ -184,9 +184,9 @@ public class FTableDescriptorTest {
     assertEquals("Incorrect block properties.", props, newTd.getBlockProperties());
     String p = "orc.block.size";
     assertEquals("Incorrect block property: " + p, "12345",
-            newTd.getBlockProperties().getProperty(p));
+        newTd.getBlockProperties().getProperty(p));
     p = "orc.row.index.stride";
     assertEquals("Incorrect block property: " + p, "1000",
-            newTd.getBlockProperties().getProperty(p));
+        newTd.getBlockProperties().getProperty(p));
   }
 }

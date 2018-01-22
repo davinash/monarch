@@ -14,6 +14,7 @@
 
 package io.ampool.monarch.table;
 
+import io.ampool.monarch.table.internal.MTableImpl;
 import org.apache.geode.cache.Region;
 import org.apache.geode.test.dunit.Host;
 import org.apache.geode.test.dunit.IgnoredException;
@@ -30,7 +31,6 @@ import io.ampool.monarch.table.client.MClientCache;
 import io.ampool.monarch.table.client.MClientCacheFactory;
 import io.ampool.monarch.table.coprocessor.MBaseRegionObserver;
 import io.ampool.monarch.table.exceptions.MTableExistsException;
-import io.ampool.monarch.table.internal.ProxyMTableRegion;
 
 @Category(MonarchTest.class)
 public class CreateMTableDUnitTest extends MTableDUnitHelper {
@@ -470,7 +470,7 @@ public class CreateMTableDUnitTest extends MTableDUnitHelper {
       // }
     } while (mtable == null && retries < 500);
     assertNotNull(mtable);
-    final Region<Object, Object> mregion = ((ProxyMTableRegion) mtable).getTableRegion();
+    final Region<Object, Object> mregion = ((MTableImpl) mtable).getTableRegion();
     String path = mregion.getFullPath();
     assertTrue(path.contains(tableName));
     // To verify disk persistence

@@ -92,7 +92,7 @@ public class MClientScannerUsingGetAll extends Scanner implements Runnable {
     // ... also construct the appropriate scan profiler, if required, with
     // reference to original profiler-map.
     this.scan = scan instanceof ScanProfiler
-            ? new ScanProfiler(scan, ((ScanProfiler) scan).getProfileData()) : new Scan(scan);
+        ? new ScanProfiler(scan, ((ScanProfiler) scan).getProfileData()) : new Scan(scan);
     this.table = table;
     // this.tableType = table.getTableDescriptor().getTableType();
     this.clientQueueSize = scan.getClientQueueSize();
@@ -114,7 +114,7 @@ public class MClientScannerUsingGetAll extends Scanner implements Runnable {
     MTableUtils.setColumnNameOrIds(scan, table.getTableDescriptor());
 
     this.bucketIdIterator =
-            scan.isReversed() ? bucketIdSet.descendingIterator() : bucketIdSet.iterator();
+        scan.isReversed() ? bucketIdSet.descendingIterator() : bucketIdSet.iterator();
     this.lastStopKey = null;
     /** in case of streaming mode chunks send over the queue.. so don't need larger queue **/
     resultQueue = new ArrayBlockingQueue<>(scan.batchModeEnabled() ? scan.getClientQueueSize() : 3);
@@ -127,7 +127,7 @@ public class MClientScannerUsingGetAll extends Scanner implements Runnable {
 
     try {
       this.bucketToServerLocationMap =
-              getBucketToServerLocation(table.getName(), scan, this.bucketIdSet);
+          getBucketToServerLocation(table.getName(), scan, this.bucketIdSet);
     } catch (Exception e) {
       MTableUtils.checkSecurityException(e);
       throw e;
@@ -160,7 +160,7 @@ public class MClientScannerUsingGetAll extends Scanner implements Runnable {
   }
 
   private Map<Integer, Set<ServerLocation>> getBucketToServerLocation(String tableName, Scan scan,
-                                                                      Set<Integer> bucketIdSet) {
+      Set<Integer> bucketIdSet) {
     Map<Integer, Set<ServerLocation>> map = scan.getBucketToServerMap();
     if (map == null || map.isEmpty()) {
       map = MTableUtils.getBucketToServerMap(tableName, bucketIdSet, AmpoolOpType.SCAN_OP);
@@ -284,7 +284,7 @@ public class MClientScannerUsingGetAll extends Scanner implements Runnable {
         close();
         logger.error("Unexpected error while getting result from internal result queue", e);
         throw new RuntimeException(
-                "Unexpected error while getting result from internal result queue", e);
+            "Unexpected error while getting result from internal result queue", e);
       }
       if (result instanceof RowEndMarker || this.scanInterrupted) {
         result = null;
@@ -435,8 +435,8 @@ public class MClientScannerUsingGetAll extends Scanner implements Runnable {
 
     if (isDebugEnabled) {
       logger.debug(
-              "Fetching next batch from bucket: {} from after key: {} with batch size: {} at time: {}",
-              currentBucketId, Arrays.toString(lastStopKey), scan.getBatchSize(), System.nanoTime());
+          "Fetching next batch from bucket: {} from after key: {} with batch size: {} at time: {}",
+          currentBucketId, Arrays.toString(lastStopKey), scan.getBatchSize(), System.nanoTime());
     }
     ServerLocation serverLocation = getServerLocation(scan.getBucketId());
     if (serverLocation != null) {
@@ -446,11 +446,11 @@ public class MClientScannerUsingGetAll extends Scanner implements Runnable {
       // This is happen in case metadata refresh has happen and bucket has moved to another server
       // Marking this as bucket ended and using last stop key
       resultEndMarker =
-              new RowEndMarker(ServerScanStatus.BUCKET_ENDED.getStatusBytes(), this.lastStopKey);
+          new RowEndMarker(ServerScanStatus.BUCKET_ENDED.getStatusBytes(), this.lastStopKey);
     }
     updateEndMarkerKeys(resultEndMarker);
     if ((resultEndMarker == null) || (ServerScanStatus.SCAN_COMPLETED == serverScanStatus)
-            || ((ServerScanStatus.BUCKET_ENDED == serverScanStatus) && !bucketIdIterator.hasNext())) {
+        || ((ServerScanStatus.BUCKET_ENDED == serverScanStatus) && !bucketIdIterator.hasNext())) {
       return false;
     } else {
       return true;
@@ -476,61 +476,61 @@ public class MClientScannerUsingGetAll extends Scanner implements Runnable {
   }
 
   private RowEndMarker runScan(Scan scan, ServerLocation serverLocation,
-                               BlockingQueue<Object> resultQueue) {
+      BlockingQueue<Object> resultQueue) {
     RowEndMarker resultEndMarker = null;
     boolean retry;
     int numRetries = 5;
     do {
       /* if the scan is already completed.. do not fetch data from next buckets */
       if (this.scanCompleted || (resultEndMarker != null
-              && resultEndMarker.getServerScanStatus() == ServerScanStatus.SCAN_COMPLETED)) {
+          && resultEndMarker.getServerScanStatus() == ServerScanStatus.SCAN_COMPLETED)) {
         logger.debug("Skipping the scan... scanCompleted= {}, resultEndMarker= {}",
-                this.scanCompleted, resultEndMarker);
+            this.scanCompleted, resultEndMarker);
         return new RowEndMarker(ServerScanStatus.SCAN_COMPLETED.getStatusBytes(), null);
       }
       retry = false;
       numRetries--;
       try {
         logger.debug(
-                "Running scan on server: " + serverLocation + " for bucket id: " + scan.getBucketId());
+            "Running scan on server: " + serverLocation + " for bucket id: " + scan.getBucketId());
         resultEndMarker = table.scan(scan, serverLocation, resultQueue);
         if (resultEndMarker != null
-                && resultEndMarker.getServerScanStatus() == ServerScanStatus.BUCKET_MOVED) {
+            && resultEndMarker.getServerScanStatus() == ServerScanStatus.BUCKET_MOVED) {
           if (Bytes.compareTo(resultEndMarker.getMarkerData(), Bytes.EMPTY_BYTE_ARRAY) != 0) {
             String[] newServerLocation = Bytes.toString(resultEndMarker.getMarkerData())
-                    .split(Constants.General.SERVER_NAME_SEPARATOR);
+                .split(Constants.General.SERVER_NAME_SEPARATOR);
             serverLocation =
-                    new ServerLocation(newServerLocation[0], Integer.parseInt(newServerLocation[1]));
+                new ServerLocation(newServerLocation[0], Integer.parseInt(newServerLocation[1]));
             logger.debug("Bucket with bucket id: " + scan.getBucketId() + " moved to server: "
-                    + serverLocation + " .Retrying...");
+                + serverLocation + " .Retrying...");
             retry = true;
           } else {
             // Since server does not have information about that bucket,
             // we can assume that bucket has been destroyed, moving scan to next bucket
             resultEndMarker =
-                    new RowEndMarker(ServerScanStatus.BUCKET_ENDED.getStatusBytes(), this.lastStopKey);
+                new RowEndMarker(ServerScanStatus.BUCKET_ENDED.getStatusBytes(), this.lastStopKey);
             logger.debug("Bucket with bucket id: " + scan.getBucketId() + " has been destroyed");
           }
         }
       } catch (Exception ex) {
         if (ex instanceof ServerConnectivityException || ex instanceof EOFException) {
           String exceptionMsg =
-                  "Server [" + serverLocation.getHostName() + ":" + serverLocation.getPort()
-                          + "] hosting split(bucket) [ID = " + scan.getBucketId() + "] is down";
+              "Server [" + serverLocation.getHostName() + ":" + serverLocation.getPort()
+                  + "] hosting split(bucket) [ID = " + scan.getBucketId() + "] is down";
           // If bucket scan is in progress and server holding that bucket goes down, throw
           // MScanSplitUnavailableException to end-user without failover
           if (ex.getCause() != null && ex.getCause().getMessage() != null
-                  && (ex.getCause().getMessage().equals(
+              && (ex.getCause().getMessage().equals(
                   LocalizedStrings.Message_THE_CONNECTION_HAS_BEEN_RESET_WHILE_READING_THE_PAYLOAD
-                          .toLocalizedString())
+                      .toLocalizedString())
                   || ex.getCause().getMessage()
-                  .equals(LocalizedStrings.ChunkedMessage_CHUNK_READ_ERROR_CONNECTION_RESET
+                      .equals(LocalizedStrings.ChunkedMessage_CHUNK_READ_ERROR_CONNECTION_RESET
                           .toLocalizedString()))) {
             // wrap the ex into the MScanSplitUnavailableException and throw it to enduser
             throw new MScanSplitUnavailableException(exceptionMsg);
           }
           this.bucketToServerLocationMap =
-                  getBucketToServerLocation(table.getName(), scan, this.bucketIdSet);
+              getBucketToServerLocation(table.getName(), scan, this.bucketIdSet);
           serverLocation = getServerLocation(scan.getBucketId());
           if (serverLocation == null) {
             // This means server was avilable when scan was initiated but it is not available now
@@ -545,7 +545,7 @@ public class MClientScannerUsingGetAll extends Scanner implements Runnable {
       }
     } while (retry && numRetries > 0);
     logger.debug(
-            "Server status for scan of bucket id: " + scan.getBucketId() + " is " + resultEndMarker);
+        "Server status for scan of bucket id: " + scan.getBucketId() + " is " + resultEndMarker);
     return resultEndMarker;
   }
 
@@ -570,8 +570,8 @@ public class MClientScannerUsingGetAll extends Scanner implements Runnable {
 
     if (isDebugEnabled) {
       logger.debug(
-              "Fetching next bucket id starting from bucket id: {} with startkey: {} and stopkey: {} at time: {}",
-              currentBucketId, scan.getStartRow(), scan.getStopRow(), System.nanoTime());
+          "Fetching next bucket id starting from bucket id: {} with startkey: {} and stopkey: {} at time: {}",
+          currentBucketId, scan.getStartRow(), scan.getStopRow(), System.nanoTime());
     }
 
     // Iterating over bucket set and ignoring empty buckets
@@ -599,16 +599,16 @@ public class MClientScannerUsingGetAll extends Scanner implements Runnable {
         if (e.getRootCause() instanceof RegionDestroyedException) {
           final String regionName = table.getName();
           final String reason =
-                  "Region named /" + regionName + " was not found during scan request.";
+              "Region named /" + regionName + " was not found during scan request.";
           throw new MCacheInternalErrorException("Scan operation failed",
-                  new RegionDestroyedException(reason, regionName));
+              new RegionDestroyedException(reason, regionName));
         }
       }
     }
     updateEndMarkerKeys(resultEndMarker);
 
     if ((resultEndMarker == null) || (ServerScanStatus.SCAN_COMPLETED == serverScanStatus)
-            || ((ServerScanStatus.BUCKET_ENDED == serverScanStatus) && !bucketIdIterator.hasNext())) {
+        || ((ServerScanStatus.BUCKET_ENDED == serverScanStatus) && !bucketIdIterator.hasNext())) {
       return false;
     } else {
       return true;
@@ -669,7 +669,7 @@ public class MClientScannerUsingGetAll extends Scanner implements Runnable {
       hasNext = false;
       setException(exc);
       if (exc instanceof InterruptedException
-              || (exc.getCause() != null && exc.getCause() instanceof InterruptedException)) {
+          || (exc.getCause() != null && exc.getCause() instanceof InterruptedException)) {
         this.scanInterrupted = true;
       }
     } finally {
@@ -686,14 +686,14 @@ public class MClientScannerUsingGetAll extends Scanner implements Runnable {
           logger.warn("adding end marker due to exception ", getException().getCause());
           // if there is an exception we end the scan but try to return rest of existing data
           resultQueue.offer(
-                  new RowEndMarker(ServerScanStatus.SCAN_COMPLETED.getStatusBytes(), null), 100,
-                  TimeUnit.MILLISECONDS);
+              new RowEndMarker(ServerScanStatus.SCAN_COMPLETED.getStatusBytes(), null), 100,
+              TimeUnit.MILLISECONDS);
           // if this add fails we have to interrupt the scan and dump any data in the queue
         } else if (!this.scanCompleted) {
           // in the no error case we put the end marker in so we can let client know we are done
           resultQueue.offer(
-                  new RowEndMarker(ServerScanStatus.SCAN_COMPLETED.getStatusBytes(), null), 100,
-                  TimeUnit.MILLISECONDS);
+              new RowEndMarker(ServerScanStatus.SCAN_COMPLETED.getStatusBytes(), null), 100,
+              TimeUnit.MILLISECONDS);
           // we expect to always be able to put end marker in no error case but it will timeout if
           // client is not draining the queue and we will terminate the scan.
         }

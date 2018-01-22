@@ -182,7 +182,7 @@ public class MPartList implements DataSerializableFixedID, Externalizable, Relea
         } else if (objectType == DES_ROW) {
           out.writeByte(BYTES);
           sc.getTableDescriptor().getEncoding().writeDesRow(out, sc.getTableDescriptor(),
-                  (DeSerializedRow) value, sc.getScan().getColumns());
+              (DeSerializedRow) value, sc.getScan().getColumns());
         } else if (objectType == BYTES && value instanceof byte[]) {
           out.writeByte(BYTES);
           writeBytes(out, value);

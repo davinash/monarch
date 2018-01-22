@@ -54,7 +54,7 @@ public class MTableDeleteDUnitTest {
       Put record = new Put(Bytes.toBytes(KEY_PREFIX + rowIndex));
       for (int columnIndex = 0; columnIndex < NUM_OF_COLUMNS; columnIndex++) {
         record.addColumn(Bytes.toBytes(COLUMN_NAME_PREFIX + columnIndex),
-                Bytes.toBytes(VALUE_PREFIX + columnIndex));
+            Bytes.toBytes(VALUE_PREFIX + columnIndex));
       }
       table.put(record);
     }
@@ -92,8 +92,8 @@ public class MTableDeleteDUnitTest {
   @Parameterized.Parameters
   public static Collection<Object[]> data() {
     return Arrays.asList(new Object[][] {{true, 1}, //// Ordered_Versioned with max-versions 1
-            {true, 5}, //// Ordered_Versioned with max-versions 5
-            {false, 1}, //// UnOrdered with max-versions 1
+        {true, 5}, //// Ordered_Versioned with max-versions 5
+        {false, 1}, //// UnOrdered with max-versions 1
     });
   };
 
@@ -131,8 +131,8 @@ public class MTableDeleteDUnitTest {
   @Before
   public void setUpTest() {
     System.out.printf("%s.%s :: TableType=%s; MaxVersions= %s\n", this.getClass().getSimpleName(),
-            testName.getMethodName(),
-            isOrderedTable ? MTableType.ORDERED_VERSIONED : MTableType.UNORDERED, maxVersions);
+        testName.getMethodName(),
+        isOrderedTable ? MTableType.ORDERED_VERSIONED : MTableType.UNORDERED, maxVersions);
 
     createTable(isOrderedTable);
     if (this.maxVersions > 1) {
@@ -189,8 +189,8 @@ public class MTableDeleteDUnitTest {
           byte[] expectedValue = Bytes.toBytes(VALUE_PREFIX + columnIndex + valueSfx);
           assertArrayEquals("Invalid ColumnName.", expectedColumnName, cell.getColumnName());
           assertArrayEquals(
-                  "Invalid ColumnValue: expected= " + VALUE_PREFIX + columnIndex + valueSfx,
-                  expectedValue, (byte[]) cell.getColumnValue());
+              "Invalid ColumnValue: expected= " + VALUE_PREFIX + columnIndex + valueSfx,
+              expectedValue, (byte[]) cell.getColumnValue());
         }
         columnIndex++;
       }
@@ -216,7 +216,7 @@ public class MTableDeleteDUnitTest {
         record.setTimeStamp(ts);
         for (int columnIndex = 0; columnIndex < NUM_OF_COLUMNS; columnIndex++) {
           record.addColumn(Bytes.toBytes(COLUMN_NAME_PREFIX + columnIndex),
-                  Bytes.toBytes(VALUE_PREFIX + columnIndex + "_" + ts));
+              Bytes.toBytes(VALUE_PREFIX + columnIndex + "_" + ts));
         }
         table.put(record);
       }

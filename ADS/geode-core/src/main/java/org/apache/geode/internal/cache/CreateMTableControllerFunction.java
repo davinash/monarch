@@ -50,7 +50,7 @@ import io.ampool.monarch.table.internal.MTableUtils;
 @InterfaceAudience.Private
 @InterfaceStability.Stable
 public final class CreateMTableControllerFunction extends FunctionAdapter
-        implements InternalEntity {
+    implements InternalEntity {
 
   private static final Logger logger = LogService.getLogger();
 
@@ -78,7 +78,7 @@ public final class CreateMTableControllerFunction extends FunctionAdapter
       final Object existingDesc = metaRegion.get(tableName);
       if (existingDesc == null) {
         logger.debug("Instantiating CreateMTableControllerFunction on distributed member "
-                + cache.getDistributedSystem().getDistributedMember());
+            + cache.getDistributedSystem().getDistributedMember());
         // call function on each member to create region
         Function tableCreationFunction = new MTableCreationFunction();
 
@@ -86,9 +86,9 @@ public final class CreateMTableControllerFunction extends FunctionAdapter
         inputList.add(tableName);
         inputList.add(tableDescriptor);
         Execution members =
-                FunctionService.onMembers(MTableUtils.getAllDataMembers(cache)).withArgs(inputList);
+            FunctionService.onMembers(MTableUtils.getAllDataMembers(cache)).withArgs(inputList);
         List createTableResult =
-                (ArrayList) members.execute(tableCreationFunction.getId()).getResult();
+            (ArrayList) members.execute(tableCreationFunction.getId()).getResult();
 
         Boolean finalRes = true;
         for (int i = 0; i < createTableResult.size(); i++) {

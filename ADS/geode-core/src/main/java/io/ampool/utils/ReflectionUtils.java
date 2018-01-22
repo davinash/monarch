@@ -125,7 +125,7 @@ public class ReflectionUtils {
    * @param value the value to be set
    */
   public static void setStaticFieldValue(final Class<?> clazz, final String fieldName,
-                                         final Object value) {
+      final Object value) {
     try {
       Field field = clazz.getDeclaredField(fieldName);
       field.setAccessible(true);
@@ -145,7 +145,7 @@ public class ReflectionUtils {
    * @return the original value of the field before setting the specified value
    */
   public static Object setStaticFinalFieldValue(final Class<?> clazz, final String fieldName,
-                                                final Object value) {
+      final Object value) {
     try {
       Field field = clazz.getDeclaredField(fieldName);
       field.setAccessible(true);
@@ -188,7 +188,7 @@ public class ReflectionUtils {
    * @param value the value to be set
    */
   public static void setFieldValue(final Object object, final String fieldName,
-                                   final Object value) {
+      final Object value) {
     if (object != null) {
       try {
         Field field = object.getClass().getDeclaredField(fieldName);

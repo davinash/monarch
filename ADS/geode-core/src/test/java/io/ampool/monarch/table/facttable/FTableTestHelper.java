@@ -44,22 +44,22 @@ public class FTableTestHelper {
   public static FTable getFTable(String ftableName) {
     MClientCache clientCache = MClientCacheFactory.getAnyInstance();
     final FTable fTable = clientCache.getAdmin().createFTable(ftableName,
-            FTableDescriptorHelper.getFTableDescriptor());
+        FTableDescriptorHelper.getFTableDescriptor());
     return fTable;
   }
 
   public static FTable getFTable(String ftableName, PartitionResolver partitionResolver) {
     MClientCache clientCache = MClientCacheFactory.getAnyInstance();
     final FTable fTable = clientCache.getAdmin().createFTable(ftableName,
-            FTableDescriptorHelper.getFTableDescriptor(partitionResolver));
+        FTableDescriptorHelper.getFTableDescriptor(partitionResolver));
     return fTable;
   }
 
   public static FTable getFTable(String ftableName, byte[] partitioningColumn,
-                                 PartitionResolver partitionResolver) {
+      PartitionResolver partitionResolver) {
     MClientCache clientCache = MClientCacheFactory.getAnyInstance();
     final FTable fTable = clientCache.getAdmin().createFTable(ftableName,
-            FTableDescriptorHelper.getFTableDescriptor(partitioningColumn, partitionResolver));
+        FTableDescriptorHelper.getFTableDescriptor(partitioningColumn, partitionResolver));
     return fTable;
   }
 
@@ -93,14 +93,14 @@ public class FTableTestHelper {
       try {
         // MCacheFactory.getAnyInstance().getResourceManager().setEvictionHeapPercentage(getEvictionHeapPer());
         final PartitionedRegion pr =
-                (PartitionedRegion) MCacheFactory.getAnyInstance().getRegion(getTableName());
+            (PartitionedRegion) MCacheFactory.getAnyInstance().getRegion(getTableName());
         assertNotNull(pr);
 
         raiseFakeNotification();
 
         /** wait for 60 seconds till all entries are evicted.. **/
         Awaitility.await().with().pollInterval(1, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS)
-                .until(() -> getTotalEntryCount(pr) <= 0);
+            .until(() -> getTotalEntryCount(pr) <= 0);
 
         assertTrue("Expected no entries.", getTotalEntryCount(pr) <= 0);
       } finally {
@@ -119,7 +119,7 @@ public class FTableTestHelper {
    */
   public static int getTotalEntryCount(final PartitionedRegion pr) {
     int count =
-            pr.getDataStore().getAllLocalBucketRegions().stream().mapToInt(BucketRegion::size).sum();
+        pr.getDataStore().getAllLocalBucketRegions().stream().mapToInt(BucketRegion::size).sum();
     System.out.println("FTableTestHelper.getTotalEntryCount COUNT" + count);
     return count;
   }
@@ -132,21 +132,21 @@ public class FTableTestHelper {
     HeapMemoryMonitor.setTestDisableMemoryUpdates(true);
     HeapMemoryMonitor.setTestBytesUsedForThresholdSet(1);
     HeapMemoryMonitor hmm =
-            ((MonarchCacheImpl) MCacheFactory.getAnyInstance()).getResourceManager().getHeapMonitor();
+        ((MonarchCacheImpl) MCacheFactory.getAnyInstance()).getResourceManager().getHeapMonitor();
     hmm.setTestMaxMemoryBytes(2);
     hmm.updateStateAndSendEvent();
   }
 
   public static void revokeFakeNotification() {
     ((MonarchCacheImpl) MCacheFactory.getAnyInstance()).getHeapEvictor().testAbortAfterLoopCount =
-            Integer.MAX_VALUE;
+        Integer.MAX_VALUE;
     HeapMemoryMonitor.setTestDisableMemoryUpdates(false);
     System.clearProperty("gemfire.memoryEventTolerance");
     HeapMemoryMonitor.setTestBytesUsedForThresholdSet(-1);
   }
 
   public static int getInMemoryRecordsCount(final VM vm, final String tableName,
-                                            final boolean onlyPrimary) {
+      final boolean onlyPrimary) {
     return (int) vm.invoke(new SerializableCallable() {
       @Override
       public Object call() throws Exception {
@@ -161,12 +161,12 @@ public class FTableTestHelper {
     final Region<Object, Object> region = MCacheFactory.getAnyInstance().getRegion(tableName);
     assertNotNull(region);
     final Iterator<BucketRegion> bucketRegionIterator = onlyPrimary
-            ? ((PartitionedRegion) region).getDataStore().getAllLocalPrimaryBucketRegions().iterator()
-            : ((PartitionedRegion) region).getDataStore().getAllLocalBucketRegions().iterator();
+        ? ((PartitionedRegion) region).getDataStore().getAllLocalPrimaryBucketRegions().iterator()
+        : ((PartitionedRegion) region).getDataStore().getAllLocalBucketRegions().iterator();
     while (bucketRegionIterator.hasNext()) {
       final BucketRegion bucketRegion = bucketRegionIterator.next();
       final RowTupleConcurrentSkipListMap internalMap =
-              (RowTupleConcurrentSkipListMap) bucketRegion.entries.getInternalMap();
+          (RowTupleConcurrentSkipListMap) bucketRegion.entries.getInternalMap();
       final Map concurrentSkipListMap = internalMap.getInternalMap();
       final Iterator<Map.Entry> iterator = concurrentSkipListMap.entrySet().iterator();
       while (iterator.hasNext()) {
@@ -182,8 +182,8 @@ public class FTableTestHelper {
         }
         final BlockValue blockValue = (BlockValue) value;
         System.out
-                .println(Thread.currentThread() + "::FTableTestHelper.getInMemoryRecordsCount 180 "
-                        + entry.getKey() + " value " + blockValue);
+            .println(Thread.currentThread() + "::FTableTestHelper.getInMemoryRecordsCount 180 "
+                + entry.getKey() + " value " + blockValue);
         final Iterator objectIterator = blockValue.iterator();
         while (objectIterator.hasNext()) {
           objectIterator.next();
@@ -191,7 +191,7 @@ public class FTableTestHelper {
         }
       }
       System.out.println(
-              "Bucket Region Name : " + bucketRegion.getName() + "   Size: " + bucketRegion.size());
+          "Bucket Region Name : " + bucketRegion.getName() + "   Size: " + bucketRegion.size());
     }
     System.out.println("FTableAppendDUnitTest.verifyValues :: " + "ECount: " + entriesCount);
     System.out.println("FTableAppendDUnitTest.verifyValues :: " + "RecordCount: " + recordsCount);
@@ -210,7 +210,7 @@ public class FTableTestHelper {
         Scan scan = new Scan();
         scan.setMessageChunkSize(100);
         final ScanContext sc =
-                new ScanContext(null, region, scan, region.getDescriptor(), null, null);
+            new ScanContext(null, region, scan, region.getDescriptor(), null, null);
         for (final BucketRegion br : region.getDataStore().getAllLocalBucketRegions()) {
           if (isPrimary != br.getBucketAdvisor().isPrimary()) {
             continue;
@@ -218,7 +218,7 @@ public class FTableTestHelper {
           scan.setBucketId(br.getId());
           long c = 0;
           final Iterator itr = new FTableScanner(sc,
-                  (RowTupleConcurrentSkipListMap) br.getRegionMap().getInternalMap());
+              (RowTupleConcurrentSkipListMap) br.getRegionMap().getInternalMap());
           while (itr.hasNext()) {
             final Object next = itr.next();
             c++;

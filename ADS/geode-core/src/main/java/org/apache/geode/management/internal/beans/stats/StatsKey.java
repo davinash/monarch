@@ -111,7 +111,7 @@ public class StatsKey {
 
 
   public static final String FUNCTION_EXECUTIONS_COMPLETED_PROCESSING_TIME =
-          "functionExecutionsCompletedProcessingTime";
+      "functionExecutionsCompletedProcessingTime";
 
   public static final String FUNCTION_EXECUTIONS_RUNNING = "functionExecutionsRunning";
 
@@ -120,10 +120,10 @@ public class StatsKey {
   public static final String FUNCTION_EXECUTION_CALLS = "functionExecutionCalls";
 
   public static final String FUNCTION_EXECUTIONS_HASRESULT_COMPLETED_PROCESSING_TIME =
-          "functionExecutionsHasResultCompletedProcessingTime";
+      "functionExecutionsHasResultCompletedProcessingTime";
 
   public static final String FUNCTION_EXECUTIONS_HASRESULT_RUNNING =
-          "functionExecutionsHasResultRunning";
+      "functionExecutionsHasResultRunning";
 
   public static final String FUNCTION_EXECUTION_EXCEPTIONS = "functionExecutionsExceptions";
 
@@ -312,7 +312,7 @@ public class StatsKey {
   public static final String GATEWAYSENDER_TOTAL_BATCHES_REDISTRIBUTED = "batchesRedistributed";
   public static final String GATEWAYSENDER_EVENTS_QUEUED_CONFLATED = "eventsNotQueuedConflated";
   public static final String GATEWAYSENDER_EVENTS_EXCEEDING_ALERT_THRESHOLD =
-          "eventsExceedingAlertThreshold";
+      "eventsExceedingAlertThreshold";
 
   /** AsyncEventQueue Stats **/
   public static final String ASYNCEVENTQUEUE_EVENTS_QUEUE_SIZE = "eventQueueSize";

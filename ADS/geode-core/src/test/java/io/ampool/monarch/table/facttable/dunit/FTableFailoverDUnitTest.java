@@ -106,7 +106,7 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
   }
 
   private FTable createFTable(final String ftableName, final int redundantCopies,
-                              final int numSplits) {
+      final int numSplits) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < DEFAULT_NUM_COLUMNS; i++) {
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
@@ -114,7 +114,7 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
     tableDescriptor.setRedundantCopies(redundantCopies);
     tableDescriptor.setTotalNumOfSplits(numSplits);
     return MClientCacheFactory.getAnyInstance().getAdmin().createFTable(ftableName,
-            tableDescriptor);
+        tableDescriptor);
   }
 
   private void doAppend(final String fTableName, final long numRecords) {
@@ -123,7 +123,7 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
       Record record = new Record();
       for (int j = 0; j < DEFAULT_NUM_COLUMNS; j++) {
         record.add(DEFAULT_COL_PREFIX + j,
-                Bytes.toBytes(DEFAULT_COLVAL_PREFIX + i + "_" + Thread.currentThread().getId()));
+            Bytes.toBytes(DEFAULT_COLVAL_PREFIX + i + "_" + Thread.currentThread().getId()));
       }
       record.add(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME, (long) i);
       fTable.append(record);
@@ -155,11 +155,11 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
     final Region<Object, Object> region = MCacheFactory.getAnyInstance().getRegion(tableName);
     assertNotNull(region);
     final Iterator<BucketRegion> allLocalPrimaryBucketRegions =
-            ((PartitionedRegion) region).getDataStore().getAllLocalPrimaryBucketRegions().iterator();
+        ((PartitionedRegion) region).getDataStore().getAllLocalPrimaryBucketRegions().iterator();
     while (allLocalPrimaryBucketRegions.hasNext()) {
       final BucketRegion bucketRegion = allLocalPrimaryBucketRegions.next();
       final RowTupleConcurrentSkipListMap internalMap =
-              (RowTupleConcurrentSkipListMap) bucketRegion.entries.getInternalMap();
+          (RowTupleConcurrentSkipListMap) bucketRegion.entries.getInternalMap();
       final Map concurrentSkipListMap = internalMap.getInternalMap();
       final Iterator<Entry> iterator = concurrentSkipListMap.entrySet().iterator();
       while (iterator.hasNext()) {
@@ -176,11 +176,11 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
           }
         } else {
           System.out.println(
-                  "FTableBatchAppendDUnitTest.verifyValues:: Entry value is not \"BlockValue\"");
+              "FTableBatchAppendDUnitTest.verifyValues:: Entry value is not \"BlockValue\"");
         }
       }
       System.out.println(
-              "Bucket Region Name : " + bucketRegion.getName() + "   Size: " + bucketRegion.size());
+          "Bucket Region Name : " + bucketRegion.getName() + "   Size: " + bucketRegion.size());
     }
     System.out.println("FTableAppendDUnitTest.verifyValues :: " + "ECount: " + entriesCount);
     return entriesCount;
@@ -189,11 +189,11 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
   private SerializableCallable resetFakeNotification = new SerializableCallable() {
     public Object call() throws Exception {
       InternalResourceManager irm =
-              ((GemFireCacheImpl) MCacheFactory.getAnyInstance()).getResourceManager();
+          ((GemFireCacheImpl) MCacheFactory.getAnyInstance()).getResourceManager();
       // Reset CRITICAL_UP by informing all that heap usage is now 1 byte (0 would disable).
       irm.getHeapMonitor().updateStateAndSendEvent(50);
       Set<ResourceListener> listeners =
-              irm.getResourceListeners(InternalResourceManager.ResourceType.HEAP_MEMORY);
+          irm.getResourceListeners(InternalResourceManager.ResourceType.HEAP_MEMORY);
       Iterator<ResourceListener> it = listeners.iterator();
       while (it.hasNext()) {
         ResourceListener<MemoryEvent> l = it.next();
@@ -222,20 +222,20 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
 
 
   public static void forceEvictiononServer(final VM vm, final String regionName)
-          throws RMIException {
+      throws RMIException {
     vm.invoke(new SerializableRunnable() {
       @Override
       public void run() throws Exception {
         try {
           final PartitionedRegion pr =
-                  (PartitionedRegion) MCacheFactory.getAnyInstance().getRegion(regionName);
+              (PartitionedRegion) MCacheFactory.getAnyInstance().getRegion(regionName);
           assertNotNull(pr);
           FTableTestHelper.raiseFakeNotification();
           /** wait for 60 seconds till all entries are evicted.. **/
           Awaitility.await().with().pollInterval(1, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS)
-                  .until(() -> getTotalEntryCount(pr) == 0);
+              .until(() -> getTotalEntryCount(pr) == 0);
           System.out.println(
-                  "FTableScanServerFailureDUnitTest.run YYYYYYYYYYYYY" + getTotalEntryCount(pr));
+              "FTableScanServerFailureDUnitTest.run YYYYYYYYYYYYY" + getTotalEntryCount(pr));
           assertEquals("Expected no entries.", 0, getTotalEntryCount(pr));
         } finally {
           FTableTestHelper.revokeFakeNotification();
@@ -281,7 +281,7 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
   }
 
   public static int getInMemoryRecordsCount(final VM vm, final String tableName,
-                                            final boolean onlyPrimary) {
+      final boolean onlyPrimary) {
     return (int) vm.invoke(new SerializableCallable() {
       @Override
       public Object call() throws Exception {
@@ -296,12 +296,12 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
     final Region<Object, Object> region = MCacheFactory.getAnyInstance().getRegion(tableName);
     assertNotNull(region);
     final Iterator<BucketRegion> bucketRegionIterator = onlyPrimary
-            ? ((PartitionedRegion) region).getDataStore().getAllLocalPrimaryBucketRegions().iterator()
-            : ((PartitionedRegion) region).getDataStore().getAllLocalBucketRegions().iterator();
+        ? ((PartitionedRegion) region).getDataStore().getAllLocalPrimaryBucketRegions().iterator()
+        : ((PartitionedRegion) region).getDataStore().getAllLocalBucketRegions().iterator();
     while (bucketRegionIterator.hasNext()) {
       final BucketRegion bucketRegion = bucketRegionIterator.next();
       final RowTupleConcurrentSkipListMap internalMap =
-              (RowTupleConcurrentSkipListMap) bucketRegion.entries.getInternalMap();
+          (RowTupleConcurrentSkipListMap) bucketRegion.entries.getInternalMap();
       final Map concurrentSkipListMap = internalMap.getInternalMap();
       final Iterator<Entry> iterator = concurrentSkipListMap.entrySet().iterator();
       while (iterator.hasNext()) {
@@ -323,7 +323,7 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
         }
       }
       System.out.println(
-              "Bucket Region Name : " + bucketRegion.getName() + "   Size: " + bucketRegion.size());
+          "Bucket Region Name : " + bucketRegion.getName() + "   Size: " + bucketRegion.size());
     }
     System.out.println("FTableAppendDUnitTest.verifyValues :: " + "ECount: " + entriesCount);
     System.out.println("FTableAppendDUnitTest.verifyValues :: " + "RecordCount: " + recordsCount);
@@ -333,11 +333,11 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
 
   public Object[] getNumRecords() {
     return new Object[][] {{"testRecovery1", 10}, {"testRecovery4", 100}, {"testRecovery7", 1000},
-            {"testRecovery10", 10000}, {"testRecovery13", 100000},};
+        {"testRecovery10", 10000}, {"testRecovery13", 100000},};
   }
 
   private void appendBatchesWithLargeRecords(final String ftablename, final int numRows,
-                                             final int numBatches, String data) throws InterruptedException {
+      final int numBatches, String data) throws InterruptedException {
 
     final FTable table = MCacheFactory.getAnyInstance().getFTable(ftablename);
     for (int j = 1; j <= numBatches; j++) {
@@ -345,11 +345,11 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
       for (int i = 0; i < numRows; i++) {
         records[i] = new Record();
         final Iterator<MColumnDescriptor> iterator =
-                table.getTableDescriptor().getAllColumnDescriptors().iterator();
+            table.getTableDescriptor().getAllColumnDescriptors().iterator();
         while (iterator.hasNext()) {
           final MColumnDescriptor mColumnDescriptor = iterator.next();
           records[i].add(mColumnDescriptor.getColumnName(),
-                  Bytes.toBytes(mColumnDescriptor.getColumnNameAsString() + "_" + i + "_" + data));
+              Bytes.toBytes(mColumnDescriptor.getColumnNameAsString() + "_" + i + "_" + data));
         }
       }
       table.append(records);
@@ -361,7 +361,7 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
   @Test
   @Parameters(method = "getNumRecords")
   public void testRecovery(final String fTableName, final int numRecords)
-          throws InterruptedException {
+      throws InterruptedException {
     this.tableName = fTableName;
     final FTable fTable = createFTable(fTableName, 1, 1);
     doAppend(fTableName, numRecords);
@@ -493,21 +493,21 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
       @Override
       public void run() throws Exception {
         Iterator<BucketRegion> iterator =
-                ((PartitionedRegion) MCacheFactory.getAnyInstance().getRegion(tableName)).getDataStore()
-                        .getAllLocalPrimaryBucketRegions().iterator();
+            ((PartitionedRegion) MCacheFactory.getAnyInstance().getRegion(tableName)).getDataStore()
+                .getAllLocalPrimaryBucketRegions().iterator();
         while (iterator.hasNext()) {
           BucketRegion bucketRegion = iterator.next();
           Iterator<RegionEntry> regionEntryIterator =
-                  bucketRegion.entries.regionEntries().iterator();
+              bucketRegion.entries.regionEntries().iterator();
           while (regionEntryIterator.hasNext()) {
             RegionEntry regionEntry = regionEntryIterator.next();
             BlockValue value = (BlockValue) ((VMCachedDeserializable) regionEntry._getValue())
-                    .getDeserializedForReading();
+                .getDeserializedForReading();
             System.out.println("FTableDeltaPersistenceDUnitTest.run 256 " + value);
             Iterator<Object> objectIterator = value.iterator();
             while (objectIterator.hasNext()) {
               System.out
-                      .println("FTableDeltaPersistenceDUnitTest.run 261 " + objectIterator.next());
+                  .println("FTableDeltaPersistenceDUnitTest.run 261 " + objectIterator.next());
             }
           }
         }
@@ -534,7 +534,7 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
         @Override
         public Object call() throws Exception {
           ((GemFireCacheImpl) MCacheFactory.getAnyInstance()).getTombstoneService()
-                  .forceBatchExpirationForTests(1000);
+              .forceBatchExpirationForTests(1000);
           return null;
         }
       });
@@ -546,16 +546,16 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
       @Override
       public void run() throws Exception {
         Set<BucketRegion> allBucketRegions =
-                ((PartitionedRegion) MCacheFactory.getAnyInstance().getRegion(tableName)).getDataStore()
-                        .getAllLocalBucketRegions();
+            ((PartitionedRegion) MCacheFactory.getAnyInstance().getRegion(tableName)).getDataStore()
+                .getAllLocalBucketRegions();
 
         System.out.println("NNN allBucketRegions.size() = " + allBucketRegions.size());
         Iterator<BucketRegion> iterator = allBucketRegions.iterator();
         while (iterator.hasNext()) {
           BucketRegion bucketRegion = iterator.next();
           ConcurrentSkipListMap internalMap =
-                  (ConcurrentSkipListMap) ((RowTupleConcurrentSkipListMap) bucketRegion.getRegionMap()
-                          .getInternalMap()).getInternalMap();
+              (ConcurrentSkipListMap) ((RowTupleConcurrentSkipListMap) bucketRegion.getRegionMap()
+                  .getInternalMap()).getInternalMap();
           System.out.println("NNN internalMap.size = " + internalMap.size());
           assertEquals(internalMap.entrySet().size(), expectedKeyCount);
           Iterator<Map.Entry> entryIterator = internalMap.entrySet().iterator();
@@ -564,7 +564,7 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
             System.out.println("NNN Key = " + entry.getKey());
             if (entry.getValue() instanceof VMCachedDeserializable) {
               Object deserializedForReading =
-                      ((VMCachedDeserializable) entry.getValue()).getDeserializedForReading();
+                  ((VMCachedDeserializable) entry.getValue()).getDeserializedForReading();
               System.out.println("NNN Value = " + deserializedForReading);
             } else {
               System.out.println("NNN Value = " + entry.getValue());
@@ -638,7 +638,7 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
     if (tableName != null) {
       try {
         Awaitility.await().with().pollInterval(5, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS)
-                .until(() -> getBucketCount(tableName, new VM[] {vm0, vm1}) == bucketCount);
+            .until(() -> getBucketCount(tableName, new VM[] {vm0, vm1}) == bucketCount);
       } catch (Exception e) {
         /////
         System.out.println("### Time-out (60s) occurred during wait..");
@@ -652,7 +652,7 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
     if (tableName != null) {
       try {
         Awaitility.await().with().pollInterval(5, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS)
-                .until(() -> getInMemoryRecordsCount(vm, tableName, isPrimary) > 0);
+            .until(() -> getInMemoryRecordsCount(vm, tableName, isPrimary) > 0);
       } catch (Exception e) {
         /////
         System.out.println("### Time-out (60s) occurred during wait..");
@@ -699,9 +699,9 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
           }
           scan.setBucketId(br.getId());
           final ScanContext sc =
-                  new ScanContext(null, region, scan, region.getDescriptor(), null, null);
+              new ScanContext(null, region, scan, region.getDescriptor(), null, null);
           final Iterator itr = new FTableScanner(sc,
-                  (RowTupleConcurrentSkipListMap) br.getRegionMap().getInternalMap());
+              (RowTupleConcurrentSkipListMap) br.getRegionMap().getInternalMap());
           while (itr.hasNext()) {
             final Object next = itr.next();
             count++;
@@ -733,8 +733,8 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
    */
   @Test
   public void _testKeyExistOnSecondaryAfterEvictionAndRestart(final String tableName,
-                                                              final int intialRecords, final int remainingReconrds, boolean testLargeRecords)
-          throws InterruptedException {
+      final int intialRecords, final int remainingReconrds, boolean testLargeRecords)
+      throws InterruptedException {
 
 
     // final int intialRecords = 500;
@@ -878,7 +878,7 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
     // create table with redundancy 1 and bucket 1
     final FTable fTable = createFTable(tableName, 1, 1);
     System.out.println("NNN [ tableName => block size ] => " + "[" + fTable.getName() + " => "
-            + fTable.getTableDescriptor().getBlockSize() + "]");
+        + fTable.getTableDescriptor().getBlockSize() + "]");
 
     _testKeyExistOnSecondaryAfterEvictionAndRestart(tableName, 500, 500, false);
 
@@ -903,7 +903,7 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
    * Helper functions
    */
   public static FTableDescriptor getFTableDescriptor(final int numSplits, int redundancy,
-                                                     String diskStoreName, boolean synchronous) {
+      String diskStoreName, boolean synchronous) {
     FTableDescriptor tableDescriptor = new FTableDescriptor();
     for (int i = 0; i < NUM_OF_COLUMNS; i++) {
       tableDescriptor.addColumn(COLUMN_NAME_PREFIX + i);
@@ -920,15 +920,15 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
   }
 
   public static FTable createFTable(String ftableName, final int numSplits, int redundancy,
-                                    String diskStoreName, boolean synchronous) {
+      String diskStoreName, boolean synchronous) {
     MClientCache clientCache = MClientCacheFactory.getAnyInstance();
     final FTable fTable = clientCache.getAdmin().createFTable(ftableName,
-            getFTableDescriptor(numSplits, redundancy, diskStoreName, synchronous));
+        getFTableDescriptor(numSplits, redundancy, diskStoreName, synchronous));
     return fTable;
   }
 
   private void createDiskStore(String disk_store_name, boolean allowDeltaPersistence,
-                               int maxOplogSize, boolean autocompact) {
+      int maxOplogSize, boolean autocompact) {
     DiskStoreAttributes dsa = new DiskStoreAttributes();
     DiskStoreFactory dsf = new DiskStoreFactoryImpl(CacheFactory.getAnyInstance(), dsa);
     dsf.setAutoCompact(autocompact);
@@ -938,7 +938,7 @@ public class FTableFailoverDUnitTest extends MTableDUnitHelper {
   }
 
   private void createDiskStoreOnserver(String disk_store_name, boolean allowDeltaPersistence,
-                                       int maxOplogSize, VM[] vms, boolean autoCompact) {
+      int maxOplogSize, VM[] vms, boolean autoCompact) {
     for (VM vm : vms) {
       vm.invoke(new SerializableCallable<Object>() {
         @Override

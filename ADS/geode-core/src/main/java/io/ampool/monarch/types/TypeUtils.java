@@ -85,53 +85,53 @@ public class TypeUtils {
    * random character to pick from
    **/
   private static final String CHARS =
-          "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+      "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
   private static final Map<DataType, Supplier<Object>> RANDOM_DATA_TYPE_MAP =
-          Collections.unmodifiableMap(new HashMap<DataType, Supplier<Object>>(15) {
-            {
-              put(BasicTypes.BINARY, TypeUtils::getRandomBytes);
-              put(BasicTypes.INT, RANDOM::nextInt);
-              put(BasicTypes.LONG, RANDOM::nextLong);
-              put(BasicTypes.SHORT, () -> new Integer(RANDOM.nextInt()).shortValue());
-              put(BasicTypes.BYTE, () -> new Integer(RANDOM.nextInt()).byteValue());
-              put(BasicTypes.BOOLEAN, RANDOM::nextBoolean);
-              put(BasicTypes.DOUBLE, RANDOM::nextDouble);
-              put(BasicTypes.FLOAT, RANDOM::nextFloat);
-              put(BasicTypes.STRING,
-                      () -> new BigInteger(getRandomInt(MAX_STRING_LEN) * 8, RANDOM).toString(32));
-              put(BasicTypes.VARCHAR,
-                      () -> new BigInteger(getRandomInt(MAX_STRING_LEN) * 8, RANDOM).toString(32));
-              put(BasicTypes.BIG_DECIMAL, () -> getBigDecimal(13, 13));
-              put(BasicTypes.CHAR, () -> CHARS.charAt(RANDOM.nextInt(CHARS.length())));
-              put(BasicTypes.CHARS,
-                      () -> new BigInteger(getRandomInt(MAX_CHARS_LEN) * 8, RANDOM).toString(32));
-              put(BasicTypes.DATE, () -> new Date(LocalDateTime.of(getRandomDate(), LocalTime.now())
-                      .toInstant(ZoneOffset.UTC).toEpochMilli()));
-              put(BasicTypes.TIMESTAMP, () -> new Timestamp(LocalDateTime
-                      .of(getRandomDate(), getRandomTime()).toInstant(ZoneOffset.UTC).toEpochMilli()));
-            }
-          });
+      Collections.unmodifiableMap(new HashMap<DataType, Supplier<Object>>(15) {
+        {
+          put(BasicTypes.BINARY, TypeUtils::getRandomBytes);
+          put(BasicTypes.INT, RANDOM::nextInt);
+          put(BasicTypes.LONG, RANDOM::nextLong);
+          put(BasicTypes.SHORT, () -> new Integer(RANDOM.nextInt()).shortValue());
+          put(BasicTypes.BYTE, () -> new Integer(RANDOM.nextInt()).byteValue());
+          put(BasicTypes.BOOLEAN, RANDOM::nextBoolean);
+          put(BasicTypes.DOUBLE, RANDOM::nextDouble);
+          put(BasicTypes.FLOAT, RANDOM::nextFloat);
+          put(BasicTypes.STRING,
+              () -> new BigInteger(getRandomInt(MAX_STRING_LEN) * 8, RANDOM).toString(32));
+          put(BasicTypes.VARCHAR,
+              () -> new BigInteger(getRandomInt(MAX_STRING_LEN) * 8, RANDOM).toString(32));
+          put(BasicTypes.BIG_DECIMAL, () -> getBigDecimal(13, 13));
+          put(BasicTypes.CHAR, () -> CHARS.charAt(RANDOM.nextInt(CHARS.length())));
+          put(BasicTypes.CHARS,
+              () -> new BigInteger(getRandomInt(MAX_CHARS_LEN) * 8, RANDOM).toString(32));
+          put(BasicTypes.DATE, () -> new Date(LocalDateTime.of(getRandomDate(), LocalTime.now())
+              .toInstant(ZoneOffset.UTC).toEpochMilli()));
+          put(BasicTypes.TIMESTAMP, () -> new Timestamp(LocalDateTime
+              .of(getRandomDate(), getRandomTime()).toInstant(ZoneOffset.UTC).toEpochMilli()));
+        }
+      });
 
   private static final Map<DataType, Class> BASIC_TYPE_TO_PRIMITIVE_MAP =
-          Collections.unmodifiableMap(new HashMap<DataType, Class>(15) {
-            {
-              put(BasicTypes.INT, int.class);
-              put(BasicTypes.LONG, long.class);
-              put(BasicTypes.SHORT, short.class);
-              put(BasicTypes.BYTE, byte.class);
-              put(BasicTypes.BOOLEAN, boolean.class);
-              put(BasicTypes.DOUBLE, double.class);
-              put(BasicTypes.FLOAT, float.class);
-              put(BasicTypes.STRING, String.class);
-              put(BasicTypes.VARCHAR, String.class);
-              put(BasicTypes.BIG_DECIMAL, BigDecimal.class);
-              put(BasicTypes.CHAR, char.class);
-              put(BasicTypes.CHARS, String.class);
-              put(BasicTypes.DATE, Date.class);
-              put(BasicTypes.TIMESTAMP, Timestamp.class);
-            }
-          });
+      Collections.unmodifiableMap(new HashMap<DataType, Class>(15) {
+        {
+          put(BasicTypes.INT, int.class);
+          put(BasicTypes.LONG, long.class);
+          put(BasicTypes.SHORT, short.class);
+          put(BasicTypes.BYTE, byte.class);
+          put(BasicTypes.BOOLEAN, boolean.class);
+          put(BasicTypes.DOUBLE, double.class);
+          put(BasicTypes.FLOAT, float.class);
+          put(BasicTypes.STRING, String.class);
+          put(BasicTypes.VARCHAR, String.class);
+          put(BasicTypes.BIG_DECIMAL, BigDecimal.class);
+          put(BasicTypes.CHAR, char.class);
+          put(BasicTypes.CHARS, String.class);
+          put(BasicTypes.DATE, Date.class);
+          put(BasicTypes.TIMESTAMP, Timestamp.class);
+        }
+      });
 
   /**
    * Get the random number of bytes..
@@ -211,7 +211,7 @@ public class TypeUtils {
    */
   public static Object getRandomValue(final DataType inType) {
     final DataType type =
-            inType instanceof WrapperType ? ((WrapperType) inType).getBasicObjectType() : inType;
+        inType instanceof WrapperType ? ((WrapperType) inType).getBasicObjectType() : inType;
     Object retValue = null;
     if (type instanceof BasicTypes) {
       final Supplier<Object> supplier = RANDOM_DATA_TYPE_MAP.get(type);
@@ -283,24 +283,24 @@ public class TypeUtils {
    * convert a string representation to the respective Java primitive type.
    */
   private static final Map<BasicTypes, Function<String, Object>> STRING_TO_TYPE_CONVERT_MAP =
-          Collections.unmodifiableMap(new HashMap<BasicTypes, Function<String, Object>>(15) {
-            {
-              put(BasicTypes.BOOLEAN, Boolean::parseBoolean);
-              put(BasicTypes.STRING, e -> e);
-              put(BasicTypes.CHARS, e -> e);
-              put(BasicTypes.VARCHAR, e -> e);
-              put(BasicTypes.CHAR, e -> e.charAt(0));
-              put(BasicTypes.INT, Integer::parseInt);
-              put(BasicTypes.BYTE, Byte::parseByte);
-              put(BasicTypes.SHORT, Short::parseShort);
-              put(BasicTypes.LONG, Long::parseLong);
-              put(BasicTypes.FLOAT, Float::parseFloat);
-              put(BasicTypes.DOUBLE, Double::parseDouble);
-              put(BasicTypes.BIG_DECIMAL, BigDecimal::new);
-              put(BasicTypes.DATE, Date::valueOf);
-              put(BasicTypes.TIMESTAMP, Timestamp::valueOf);
-            }
-          });
+      Collections.unmodifiableMap(new HashMap<BasicTypes, Function<String, Object>>(15) {
+        {
+          put(BasicTypes.BOOLEAN, Boolean::parseBoolean);
+          put(BasicTypes.STRING, e -> e);
+          put(BasicTypes.CHARS, e -> e);
+          put(BasicTypes.VARCHAR, e -> e);
+          put(BasicTypes.CHAR, e -> e.charAt(0));
+          put(BasicTypes.INT, Integer::parseInt);
+          put(BasicTypes.BYTE, Byte::parseByte);
+          put(BasicTypes.SHORT, Short::parseShort);
+          put(BasicTypes.LONG, Long::parseLong);
+          put(BasicTypes.FLOAT, Float::parseFloat);
+          put(BasicTypes.DOUBLE, Double::parseDouble);
+          put(BasicTypes.BIG_DECIMAL, BigDecimal::new);
+          put(BasicTypes.DATE, Date::valueOf);
+          put(BasicTypes.TIMESTAMP, Timestamp::valueOf);
+        }
+      });
   private static final ListType BINARY_TYPE = new ListType(BasicTypes.BYTE);
 
   /**
@@ -313,7 +313,7 @@ public class TypeUtils {
    * @throws JSONException
    */
   public static Object jsonToObject(final Object jObject, final DataType type)
-          throws JSONException {
+      throws JSONException {
     if (jObject == null || jObject == JSONObject.NULL) {
       return null;
     }
@@ -354,7 +354,7 @@ public class TypeUtils {
    * @throws JSONException
    */
   private static Object[] toUnion(final UnionType type, final JSONArray jArray)
-          throws JSONException {
+      throws JSONException {
     final DataType[] types = type.getColumnTypes();
     final Object[] array = new Object[2];
     array[0] = jsonToObject(jArray.get(0), BasicTypes.BYTE);
@@ -371,7 +371,7 @@ public class TypeUtils {
    * @throws JSONException
    */
   private static Object[] toStruct(final StructType type, final JSONArray jArray)
-          throws JSONException {
+      throws JSONException {
     final DataType[] types = type.getColumnTypes();
     final Object[] array = new Object[jArray.length()];
     for (int i = 0; i < jArray.length(); i++) {
@@ -389,14 +389,14 @@ public class TypeUtils {
    * @throws JSONException
    */
   private static Map<Object, Object> toMap(final MapType type, final JSONObject jMap)
-          throws JSONException {
+      throws JSONException {
     final Map<Object, Object> map = new LinkedHashMap<>(jMap.length());
     Iterator itr = jMap.keys();
     String key;
     while (itr.hasNext()) {
       key = (String) itr.next();
       map.put(jsonToObject(key, type.getTypeOfKey()),
-              jsonToObject(jMap.get(key), type.getTypeOfValue()));
+          jsonToObject(jMap.get(key), type.getTypeOfValue()));
     }
     return map;
   }
@@ -437,7 +437,7 @@ public class TypeUtils {
    * @throws JSONException
    */
   public static Map<String, Object> getValueMap(final AbstractTableDescriptor td,
-                                                final String valueJson, final Object... ftable) throws JSONException {
+      final String valueJson, final Object... ftable) throws JSONException {
 
     Map<String, Object> valueMap = null;
     valueMap = new HashMap<>(td.getNumOfColumns());
@@ -453,7 +453,7 @@ public class TypeUtils {
         valueMap.put(columnName, jsonToObject(jsonObject.get(columnName), cd.getColumnType()));
       } catch (Exception e) {
         throw new JSONException(String.format("Invalid data for column=%s, type=%s: %s", columnName,
-                cd.getColumnType().toString(), e.getMessage()));
+            cd.getColumnType().toString(), e.getMessage()));
       }
     }
     return valueMap;
@@ -492,7 +492,7 @@ public class TypeUtils {
     sb.append('{');
     for (final String[] column : columns) {
       sb.append(JSONObject.quote(column[0])).append(':').append(JSONObject.quote(column[1]))
-              .append(',');
+          .append(',');
     }
     if (sb.length() > 1) {
       sb.deleteCharAt(sb.length() - 1);

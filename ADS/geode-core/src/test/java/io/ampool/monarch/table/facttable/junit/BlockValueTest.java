@@ -149,12 +149,12 @@ public class BlockValueTest {
 
   private static BlockValue setupBlockValue() {
     final StructType aSchema =
-            (StructType) DataTypeFactory.getTypeFromString("struct<f1:INT,f2:LONG,f3:STRING>");
+        (StructType) DataTypeFactory.getTypeFromString("struct<f1:INT,f2:LONG,f3:STRING>");
     final Properties props = new Properties();
     props.setProperty("orc.row.index.stride", String.valueOf(MAX_STRIDE_SIZE));
 
     td.setBlockFormat(ORC_BYTES).setBlockProperties(props)
-            .setSchema(new Schema(aSchema.getColumnNames(), aSchema.getColumnTypes()));
+        .setSchema(new Schema(aSchema.getColumnNames(), aSchema.getColumnTypes()));
 
     final int totalCount = 5_000;
     final StoreRecord row = new StoreRecord(td.getNumOfColumns());
@@ -175,18 +175,18 @@ public class BlockValueTest {
 
   public static Object[] dataOrcFormatCloseAndIterator() {
     return new Object[][] {
-            {MAX_STRIDE_SIZE,
-                    new FilterList(FilterList.Operator.MUST_PASS_ALL)
-                            .addFilter(new SingleColumnValueFilter("f1", CompareOp.GREATER, 0))
-                            .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS, 10))},
-            {MAX_STRIDE_SIZE,
-                    new FilterList(FilterList.Operator.MUST_PASS_ALL)
-                            .addFilter(new SingleColumnValueFilter("f1", CompareOp.GREATER, 1500))
-                            .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS, 1600))},
-            {5_000 - (4 * MAX_STRIDE_SIZE),
-                    new FilterList(FilterList.Operator.MUST_PASS_ALL)
-                            .addFilter(new SingleColumnValueFilter("f1", CompareOp.GREATER, 4500))
-                            .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS, 4700))},};
+        {MAX_STRIDE_SIZE,
+            new FilterList(FilterList.Operator.MUST_PASS_ALL)
+                .addFilter(new SingleColumnValueFilter("f1", CompareOp.GREATER, 0))
+                .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS, 10))},
+        {MAX_STRIDE_SIZE,
+            new FilterList(FilterList.Operator.MUST_PASS_ALL)
+                .addFilter(new SingleColumnValueFilter("f1", CompareOp.GREATER, 1500))
+                .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS, 1600))},
+        {5_000 - (4 * MAX_STRIDE_SIZE),
+            new FilterList(FilterList.Operator.MUST_PASS_ALL)
+                .addFilter(new SingleColumnValueFilter("f1", CompareOp.GREATER, 4500))
+                .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS, 4700))},};
   }
 
   /**
@@ -239,30 +239,30 @@ public class BlockValueTest {
 
   public static Object[] dataWriteAndReadWithColumnStatistics() {
     return new Object[][] {{false, new SingleColumnValueFilter("f1", CompareOp.EQUAL, 12)},
-            {true, new SingleColumnValueFilter("f1", CompareOp.EQUAL, 0)},
-            {true, new SingleColumnValueFilter("f1", CompareOp.EQUAL, 9)},
-            {true,
-                    new FilterList(FilterList.Operator.MUST_PASS_ALL)
-                            .addFilter(new SingleColumnValueFilter("f1", CompareOp.GREATER, 0))
-                            .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS, 10))},
-            {true,
-                    new FilterList(FilterList.Operator.MUST_PASS_ONE)
-                            .addFilter(new SingleColumnValueFilter("f1", CompareOp.GREATER, 0))
-                            .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS, -100))},
-            {true,
-                    new FilterList(FilterList.Operator.MUST_PASS_ALL)
-                            .addFilter(new SingleColumnValueFilter("f1", CompareOp.GREATER, 0))
-                            .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS, 16))},
-            {false,
-                    new FilterList(FilterList.Operator.MUST_PASS_ALL)
-                            .addFilter(new SingleColumnValueFilter("f1", CompareOp.GREATER, 45))
-                            .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS, 47))},};
+        {true, new SingleColumnValueFilter("f1", CompareOp.EQUAL, 0)},
+        {true, new SingleColumnValueFilter("f1", CompareOp.EQUAL, 9)},
+        {true,
+            new FilterList(FilterList.Operator.MUST_PASS_ALL)
+                .addFilter(new SingleColumnValueFilter("f1", CompareOp.GREATER, 0))
+                .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS, 10))},
+        {true,
+            new FilterList(FilterList.Operator.MUST_PASS_ONE)
+                .addFilter(new SingleColumnValueFilter("f1", CompareOp.GREATER, 0))
+                .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS, -100))},
+        {true,
+            new FilterList(FilterList.Operator.MUST_PASS_ALL)
+                .addFilter(new SingleColumnValueFilter("f1", CompareOp.GREATER, 0))
+                .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS, 16))},
+        {false,
+            new FilterList(FilterList.Operator.MUST_PASS_ALL)
+                .addFilter(new SingleColumnValueFilter("f1", CompareOp.GREATER, 45))
+                .addFilter(new SingleColumnValueFilter("f1", CompareOp.LESS, 47))},};
   }
 
   @Test
   @Parameters(method = "dataWriteAndReadWithColumnStatistics")
   public void testWriteAndReadWithColumnStatistics(final boolean expected, final Filter filter)
-          throws IOException {
+      throws IOException {
     final int count = 10;
     final StoreRecord sr = new StoreRecord(td.getNumOfColumns());
     final BlockValue bv = new BlockValue(count);
@@ -278,7 +278,7 @@ public class BlockValueTest {
   }
 
   private static final Schema SCHEMA_CS =
-          Schema.fromString("struct<f1:INT,f2:LONG,f3:STRING,__INSERTION_TIMESTAMP__:LONG>");
+      Schema.fromString("struct<f1:INT,f2:LONG,f3:STRING,__INSERTION_TIMESTAMP__:LONG>");
 
   @Test
   public void testMergeBlockValuesWithColumnStatistics() {
@@ -360,13 +360,13 @@ public class BlockValueTest {
   }
 
   private void assertColumnStatistics(final String[] expectedMin, final String[] expectedMax,
-                                      final AColumnStatistics acs) {
+      final AColumnStatistics acs) {
     for (int i = 0; i < td.getNumOfColumns(); i++) {
       final ColumnStatistics stats = acs.getColumnStatistics(i);
       assertEquals("Incorrect min value for columnId= " + i, expectedMin[i],
-              AColumnStatistics.get(stats, "getMinimum"));
+          AColumnStatistics.get(stats, "getMinimum"));
       assertEquals("Incorrect max value for columnId= " + i, expectedMax[i],
-              AColumnStatistics.get(stats, "getMaximum"));
+          AColumnStatistics.get(stats, "getMaximum"));
     }
   }
 }

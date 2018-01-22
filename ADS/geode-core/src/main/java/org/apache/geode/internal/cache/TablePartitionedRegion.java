@@ -46,8 +46,8 @@ public class TablePartitionedRegion extends PartitionedRegion {
 
 
   protected TablePartitionedRegion(String regionName, RegionAttributes attrs,
-                                   LocalRegion parentRegion, GemFireCacheImpl cache,
-                                   InternalRegionArguments internalRegionArgs) {
+      LocalRegion parentRegion, GemFireCacheImpl cache,
+      InternalRegionArguments internalRegionArgs) {
     super(regionName, attrs, parentRegion, cache, internalRegionArgs);
   }
 
@@ -64,7 +64,7 @@ public class TablePartitionedRegion extends PartitionedRegion {
 
   @Override
   public Region createSubregion(String subregionName, RegionAttributes attrs,
-                                InternalRegionArguments internalRegionArgs)
+      InternalRegionArguments internalRegionArgs)
       throws RegionExistsException, TimeoutException, IOException, ClassNotFoundException {
     checkReadiness();
     LocalRegion newRegion = null;
@@ -241,9 +241,9 @@ public class TablePartitionedRegion extends PartitionedRegion {
   // From: LocalRegion.java
   @Override
   public Object get(Object key, Object aCallbackArgument, boolean generateCallbacks,
-                    boolean disableCopyOnRead, boolean preferCD, ClientProxyMembershipID requestingClient,
-                    EntryEventImpl clientEvent, boolean returnTombstones, boolean opScopeIsLocal,
-                    boolean retainResult) throws TimeoutException, CacheLoaderException {
+      boolean disableCopyOnRead, boolean preferCD, ClientProxyMembershipID requestingClient,
+      EntryEventImpl clientEvent, boolean returnTombstones, boolean opScopeIsLocal,
+      boolean retainResult) throws TimeoutException, CacheLoaderException {
     assert !retainResult || preferCD;
     validateKey(key);
     validateCallbackArg(aCallbackArgument);

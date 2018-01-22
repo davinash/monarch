@@ -35,14 +35,14 @@ public class FTablePartitionedRegion extends TablePartitionedRegion {
   private static final Logger logger = LogService.getLogger();
 
   public FTablePartitionedRegion(String regionName, RegionAttributes attrs,
-                                 LocalRegion parentRegion, GemFireCacheImpl cache,
-                                 InternalRegionArguments internalRegionArgs) {
+      LocalRegion parentRegion, GemFireCacheImpl cache,
+      InternalRegionArguments internalRegionArgs) {
     super(regionName, attrs, parentRegion, cache, internalRegionArgs);
   }
 
   @Override
   public Region createSubregion(String subregionName, RegionAttributes attrs,
-                                InternalRegionArguments internalRegionArgs)
+      InternalRegionArguments internalRegionArgs)
       throws RegionExistsException, TimeoutException, IOException, ClassNotFoundException {
     checkReadiness();
     LocalRegion newRegion = null;
@@ -205,9 +205,9 @@ public class FTablePartitionedRegion extends TablePartitionedRegion {
 
   @Override
   public Object get(Object key, Object aCallbackArgument, boolean generateCallbacks,
-                    boolean disableCopyOnRead, boolean preferCD, ClientProxyMembershipID requestingClient,
-                    EntryEventImpl clientEvent, boolean returnTombstones, boolean opScopeIsLocal,
-                    boolean retainResult) throws TimeoutException, CacheLoaderException {
+      boolean disableCopyOnRead, boolean preferCD, ClientProxyMembershipID requestingClient,
+      EntryEventImpl clientEvent, boolean returnTombstones, boolean opScopeIsLocal,
+      boolean retainResult) throws TimeoutException, CacheLoaderException {
     return super.get(key, aCallbackArgument, generateCallbacks, disableCopyOnRead, preferCD,
         requestingClient, clientEvent, returnTombstones, opScopeIsLocal, retainResult);
   }

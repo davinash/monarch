@@ -151,7 +151,7 @@ public class FTableBlockKeyDUnitTest extends MTableDUnitHelper {
             BucketRegion br = pr.getDataStore().getLocalBucketById(i);
             if (br != null) {
               RowTupleConcurrentSkipListMap internalMap =
-                      (RowTupleConcurrentSkipListMap) br.getRegionMap().getInternalMap();
+                  (RowTupleConcurrentSkipListMap) br.getRegionMap().getInternalMap();
               Map realMap = internalMap.getInternalMap();
               Iterator<Map.Entry<IMKey, RegionEntry>> itr = realMap.entrySet().iterator();
               while (itr.hasNext()) {

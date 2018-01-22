@@ -50,12 +50,6 @@ import java.util.function.Predicate;
 
 import static io.ampool.monarch.table.internal.MTableUtils.checkSecurityException;
 
-/**
- * Created by nilkanth on 4/11/15.
- */
-
-// TODO:: APIs should throws IOException or MException??
-
 @InterfaceAudience.Private
 @InterfaceStability.Stable
 public class MTableImpl implements MTable, InternalTable {
@@ -70,7 +64,7 @@ public class MTableImpl implements MTable, InternalTable {
   private final MTableLocationInfo mTableLocationInfo;
 
   public MTableImpl(Region<Object, Object> tableRegion, MTableDescriptor tableDescriptor,
-                    MonarchCacheImpl cache) {
+      MonarchCacheImpl cache) {
     this.tableRegion = tableRegion;
     this.tableDescriptor = tableDescriptor;
     this.columnNames = new HashSet<>();
@@ -162,7 +156,7 @@ public class MTableImpl implements MTable, InternalTable {
 
   @Override
   public void put(Put put) throws IllegalArgumentException, IllegalColumnNameException,
-          MCacheInternalErrorException, RowKeyOutOfRangeException, MCacheLowMemoryException {
+      MCacheInternalErrorException, RowKeyOutOfRangeException, MCacheLowMemoryException {
     nullCheck(put, "Invalid Put. operation with null values is not allowed!");
     verifyAllColumnNames(put);
     verifyColumnForNoValues(put);
@@ -286,7 +280,7 @@ public class MTableImpl implements MTable, InternalTable {
   @Override
   public void put(List<Put> puts, final Object callbackArg)
       throws IllegalArgumentException, IllegalColumnNameException, MCacheInternalErrorException,
-          RowKeyOutOfRangeException, MCacheLowMemoryException {
+      RowKeyOutOfRangeException, MCacheLowMemoryException {
     // long l1 = System.nanoTime();
     nullCheck(puts, "Invalid Puts. operation with null values is not allowed!");
     zeroSizeCheck(puts, "Invalid Puts. Operation with 0 size keys is not allowed");
@@ -350,7 +344,7 @@ public class MTableImpl implements MTable, InternalTable {
 
   @Override
   public void put(List<Put> puts) throws IllegalArgumentException, IllegalColumnNameException,
-          MCacheInternalErrorException, RowKeyOutOfRangeException, MCacheLowMemoryException {
+      MCacheInternalErrorException, RowKeyOutOfRangeException, MCacheLowMemoryException {
     put(puts, null);
   }
 
@@ -392,7 +386,7 @@ public class MTableImpl implements MTable, InternalTable {
 
   @Override
   public Row get(Get get) throws IllegalArgumentException, IllegalColumnNameException,
-          MCacheInternalErrorException, RowKeyOutOfRangeException {
+      MCacheInternalErrorException, RowKeyOutOfRangeException {
     nullCheck(get, "Invalid Get. operation with null values is not allowed!");
     verifyKeyForRange(get.getRowKey());
 
@@ -444,7 +438,7 @@ public class MTableImpl implements MTable, InternalTable {
 
   @Override
   public Row[] get(List<Get> gets) throws IllegalArgumentException, IllegalColumnNameException,
-          MCacheInternalErrorException, RowKeyOutOfRangeException {
+      MCacheInternalErrorException, RowKeyOutOfRangeException {
     nullCheck(gets, "Invalid Get. operation with null values is not allowed");
     zeroSizeCheck(gets, "Invalid Gets. Operation with 0 size keys is not allowed");
     Row[] results = null;
@@ -513,7 +507,7 @@ public class MTableImpl implements MTable, InternalTable {
 
   @Override
   public void delete(Delete delete) throws IllegalArgumentException, IllegalColumnNameException,
-          MCacheInternalErrorException, RowKeyOutOfRangeException {
+      MCacheInternalErrorException, RowKeyOutOfRangeException {
     nullCheck(delete, "Invalid Delete. operation with null values is not allowed!");
     verifyKeyForRange(delete.getRowKey());
     _delete(delete, false, null, null);
@@ -531,7 +525,7 @@ public class MTableImpl implements MTable, InternalTable {
     try {
       Function atcf = new DeleteWithFilterFunction();
       FunctionService.registerFunction(atcf);
-      List<Object> inputList = new ArrayList<Object>();
+      java.util.List<Object> inputList = new java.util.ArrayList<Object>();
       inputList.add(getName());
       inputList.add(deleteFilterMap);
 
@@ -579,7 +573,7 @@ public class MTableImpl implements MTable, InternalTable {
    * Private method for delete and checkAndDelete
    */
   private boolean _delete(Delete delete, boolean isCheckAndDelete, byte[] value,
-                          byte[] checkColumnName) {
+      byte[] checkColumnName) {
     MTableKey key = new MTableKey(delete.getRowKey());
     int noColsTobeDeleted = delete.getColumnNameList().size();
     int totalNumOfCols = getTotalNumOfColumns();
@@ -704,14 +698,14 @@ public class MTableImpl implements MTable, InternalTable {
   @Override
   public void delete(List<Delete> deletes)
       throws IllegalArgumentException, IllegalColumnNameException, MCacheInternalErrorException,
-          MCacheLowMemoryException, MCacheLowMemoryException {
+      MCacheLowMemoryException, MCacheLowMemoryException {
     throw new UnsupportedOperationException("Bulk delete is not supoorted");
   }
 
   @Override
   public void delete(Map<Delete, Filter> deleteFilterMap)
       throws IllegalArgumentException, IllegalColumnNameException, MCacheInternalErrorException,
-          MCacheLowMemoryException, MCacheLowMemoryException {
+      MCacheLowMemoryException, MCacheLowMemoryException {
     _delete(deleteFilterMap);
   }
 
@@ -788,7 +782,7 @@ public class MTableImpl implements MTable, InternalTable {
    * across buckets by key, and this is not the case for range
    * <p>
    * partitioned tables.
-   * 
+   *
    * @param scan the {@link Scan} object that defined the scan.
    * @return the parallel scanner
    */
@@ -822,7 +816,7 @@ public class MTableImpl implements MTable, InternalTable {
    * across buckets by key, and this is not the case for range
    * <p>
    * partitioned tables.
-   * 
+   *
    * @param scan the {@link Scan} object that defined the scan.
    * @return the parallel scanner
    */
@@ -833,7 +827,7 @@ public class MTableImpl implements MTable, InternalTable {
 
   /**
    * Retrieves Client Scanner instance for Mash cli
-   * 
+   *
    * @return returns the client side scanner
    */
   public Scanner getClientScanner(Scan scan) throws MException {
@@ -846,7 +840,7 @@ public class MTableImpl implements MTable, InternalTable {
   }
 
   private MResultCollector coprocessorExecutionOnBucketId(MCoprocessor endpoint, int bucketId,
-                                                          ResultCollector rc, MExecutionRequest request) {
+      ResultCollector rc, MExecutionRequest request) {
     Execution members = null;
 
     members = FunctionService.onMTable(this).withTableSplitId(bucketId).withCollector(rc)
@@ -964,12 +958,12 @@ public class MTableImpl implements MTable, InternalTable {
 
   /**
    * Does get operation using the Scan Object
-   * 
+   *
    * @return Number of results returned
    */
   @Override
   public RowEndMarker scan(Scan scan, ServerLocation serverLocation,
-                           BlockingQueue<Object> resultQueue) {
+      BlockingQueue<Object> resultQueue) {
     return srp.scan(scan, resultQueue, tableDescriptor, serverLocation);
   }
 
@@ -980,7 +974,7 @@ public class MTableImpl implements MTable, InternalTable {
 
   /**
    * Provide the internal region.
-   * 
+   *
    * @return the internal Geode region
    */
   @Override

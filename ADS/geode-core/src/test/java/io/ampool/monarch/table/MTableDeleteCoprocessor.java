@@ -54,7 +54,7 @@ public class MTableDeleteCoprocessor extends MCoprocessor {
       Put record = new Put(Bytes.toBytes(keys[rowIndex]));
       for (int columnIndex = 0; columnIndex < NUM_COLUMNS; columnIndex++) {
         record.addColumn(Bytes.toBytes(COLUMNNAME_PREFIX + columnIndex),
-                Bytes.toBytes(VALUE_PREFIX + columnIndex));
+            Bytes.toBytes(VALUE_PREFIX + columnIndex));
       }
       table.put(record);
     }
@@ -106,11 +106,11 @@ public class MTableDeleteCoprocessor extends MCoprocessor {
       table.delete(invalidRowKey);
     } catch (Exception icne) {
       if (table.getTableDescriptor().getStartRangeKey() != null
-              || table.getTableDescriptor().getStopRangeKey() != null
-              || table.getTableDescriptor().getKeySpace() != null) {
+          || table.getTableDescriptor().getStopRangeKey() != null
+          || table.getTableDescriptor().getKeySpace() != null) {
         /** for universal key-space this key may fall in some valid range **/
         Assert.assertTrue((icne instanceof RowKeyOutOfRangeException
-                || icne instanceof RowKeyDoesNotExistException));
+            || icne instanceof RowKeyDoesNotExistException));
       } else {
         Assert.assertTrue(icne instanceof RowKeyDoesNotExistException);
       }
@@ -202,13 +202,13 @@ public class MTableDeleteCoprocessor extends MCoprocessor {
           if (!Bytes.equals(expectedColumnName, row.get(i).getColumnName())) {
             System.out.println("expectedColumnName => " + Arrays.toString(expectedColumnName));
             System.out
-                    .println("actualColumnName   => " + Arrays.toString(row.get(i).getColumnName()));
+                .println("actualColumnName   => " + Arrays.toString(row.get(i).getColumnName()));
             Assert.fail("Invalid Values for Column Name");
           }
           if (!Bytes.equals(exptectedValue, (byte[]) row.get(i).getColumnValue())) {
             System.out.println("exptectedValue => " + Arrays.toString(exptectedValue));
             System.out.println(
-                    "actualValue    => " + Arrays.toString((byte[]) row.get(i).getColumnValue()));
+                "actualValue    => " + Arrays.toString((byte[]) row.get(i).getColumnValue()));
             Assert.fail("Invalid Values for Column Value");
           }
           columnIndex++;
@@ -247,7 +247,7 @@ public class MTableDeleteCoprocessor extends MCoprocessor {
       Put record = new Put(Bytes.toBytes(keys2[rowIndex]));
       for (int columnIndex = 0; columnIndex < NUM_COLUMNS; columnIndex++) {
         record.addColumn(Bytes.toBytes(COLUMNNAME_PREFIX + columnIndex),
-                Bytes.toBytes(VALUE_PREFIX + columnIndex));
+            Bytes.toBytes(VALUE_PREFIX + columnIndex));
       }
       table.put(record);
     }
@@ -283,14 +283,14 @@ public class MTableDeleteCoprocessor extends MCoprocessor {
           if (!Bytes.equals(expectedColumnName, row.get(i).getColumnName())) {
             System.out.println("expectedColumnName => " + Arrays.toString(expectedColumnName));
             System.out
-                    .println("actualColumnName   => " + Arrays.toString(row.get(i).getColumnName()));
+                .println("actualColumnName   => " + Arrays.toString(row.get(i).getColumnName()));
             Assert.fail("Invalid Values for Column Name");
           }
           {
             if (!Bytes.equals(exptectedValue, (byte[]) row.get(i).getColumnValue())) {
               System.out.println("exptectedValue => " + Arrays.toString(exptectedValue));
               System.out.println(
-                      "actualValue    => " + Arrays.toString((byte[]) row.get(i).getColumnValue()));
+                  "actualValue    => " + Arrays.toString((byte[]) row.get(i).getColumnValue()));
               Assert.fail("Invalid Values for Column Value");
             }
           }
@@ -306,7 +306,7 @@ public class MTableDeleteCoprocessor extends MCoprocessor {
           if (!Bytes.equals(expectedColumnName, row.get(i).getColumnName())) {
             System.out.println("expectedColumnName => " + Arrays.toString(expectedColumnName));
             System.out
-                    .println("actualColumnName   => " + Arrays.toString(row.get(i).getColumnName()));
+                .println("actualColumnName   => " + Arrays.toString(row.get(i).getColumnName()));
             Assert.fail("Invalid Values for Column Name");
           }
           if (columnIndex % 2 != 0) {
@@ -315,7 +315,7 @@ public class MTableDeleteCoprocessor extends MCoprocessor {
             if (!Bytes.equals(exptectedValue, (byte[]) row.get(i).getColumnValue())) {
               System.out.println("exptectedValue => " + Arrays.toString(exptectedValue));
               System.out.println(
-                      "actualValue    => " + Arrays.toString((byte[]) row.get(i).getColumnValue()));
+                  "actualValue    => " + Arrays.toString((byte[]) row.get(i).getColumnValue()));
               Assert.fail("Invalid Values for Column Value");
             }
           }
@@ -375,7 +375,7 @@ public class MTableDeleteCoprocessor extends MCoprocessor {
     if (!Bytes.equals(expectedColumnName, row.get(columnIndex).getColumnName())) {
       System.out.println("expectedColumnName => " + Arrays.toString(expectedColumnName));
       System.out.println(
-              "actualColumnName   => " + Arrays.toString(row.get(columnIndex).getColumnName()));
+          "actualColumnName   => " + Arrays.toString(row.get(columnIndex).getColumnName()));
       Assert.fail("Invalid Values for Column Name");
     }
     System.out.println("MTableDeleteCoprocessor.doDelete 10");
@@ -473,7 +473,7 @@ public class MTableDeleteCoprocessor extends MCoprocessor {
         if (!Bytes.equals(expectedColumnName, row.get(columnIndex).getColumnName())) {
           System.out.println("expectedColumnName => " + Arrays.toString(expectedColumnName));
           System.out.println(
-                  "actualColumnName   => " + Arrays.toString(row.get(columnIndex).getColumnName()));
+              "actualColumnName   => " + Arrays.toString(row.get(columnIndex).getColumnName()));
           Assert.fail("Invalid Values for Column Name");
         }
       } catch (Exception ex) {
@@ -601,7 +601,7 @@ public class MTableDeleteCoprocessor extends MCoprocessor {
         if (!Bytes.equals(expectedColumnName, result1.getCells().get(0).getColumnName())) {
           System.out.println("expectedColumnName => " + Arrays.toString(expectedColumnName));
           System.out.println("actualColumnName   => "
-                  + Arrays.toString(result1.getCells().get(0).getColumnName()));
+              + Arrays.toString(result1.getCells().get(0).getColumnName()));
           Assert.fail("Invalid Values for Column Name");
         }
       } catch (Exception ex) {
@@ -622,7 +622,7 @@ public class MTableDeleteCoprocessor extends MCoprocessor {
         put = new Put(keys_version[5]);
         for (columnIndex = 0; columnIndex < NUM_COLUMNS; columnIndex++) {
           put.addColumn(Bytes.toBytes(COLUMNNAME_PREFIX + columnIndex),
-                  Bytes.toBytes(VALUE_PREFIX + columnIndex));
+              Bytes.toBytes(VALUE_PREFIX + columnIndex));
         }
         put.setTimeStamp(i + 1);
         try {
@@ -658,7 +658,7 @@ public class MTableDeleteCoprocessor extends MCoprocessor {
             if (!Bytes.equals(expectedColumnName, row.get(j).getColumnName())) {
               System.out.println("expectedColumnName => " + Arrays.toString(expectedColumnName));
               System.out
-                      .println("actualColumnName   => " + Arrays.toString(row.get(j).getColumnName()));
+                  .println("actualColumnName   => " + Arrays.toString(row.get(j).getColumnName()));
               Assert.fail("Invalid Values for Column Name");
             }
             if (i <= 2) {
@@ -669,7 +669,7 @@ public class MTableDeleteCoprocessor extends MCoprocessor {
               if (!Bytes.equals(exptectedValue, (byte[]) row.get(j).getColumnValue())) {
                 System.out.println("exptectedValue => " + Arrays.toString(exptectedValue));
                 System.out.println(
-                        "actualValue    => " + Arrays.toString((byte[]) row.get(j).getColumnValue()));
+                    "actualValue    => " + Arrays.toString((byte[]) row.get(j).getColumnValue()));
                 Assert.fail("Invalid Values for Column Value");
               }
             }

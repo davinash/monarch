@@ -42,7 +42,7 @@ public class MCacheFactory extends CacheFactory {
     MonarchCacheImpl instance = MonarchCacheImpl.getInstance();
     if (instance == null) {
       throw new CacheClosedException(
-              LocalizedStrings.CacheFactory_A_CACHE_HAS_NOT_YET_BEEN_CREATED.toLocalizedString());
+          LocalizedStrings.CacheFactory_A_CACHE_HAS_NOT_YET_BEEN_CREATED.toLocalizedString());
     } else {
       instance.getCancelCriterion().checkCancelInProgress(null);
       return instance;
@@ -107,7 +107,7 @@ public class MCacheFactory extends CacheFactory {
 
   @Override
   public MCache create()
-          throws TimeoutException, CacheWriterException, GatewayException, RegionExistsException {
+      throws TimeoutException, CacheWriterException, GatewayException, RegionExistsException {
     synchronized (MCacheFactory.class) {
       DistributedSystem ds = null;
       if (this.dsProps.isEmpty()) {
@@ -122,15 +122,15 @@ public class MCacheFactory extends CacheFactory {
   }
 
   private static synchronized MCache create(DistributedSystem system, boolean existingOk,
-                                            CacheConfig cacheConfig) throws CacheExistsException, TimeoutException, CacheWriterException,
-          GatewayException, RegionExistsException {
+      CacheConfig cacheConfig) throws CacheExistsException, TimeoutException, CacheWriterException,
+      GatewayException, RegionExistsException {
     // Moved code in this method to GemFireCacheImpl.create
     return MonarchCacheImpl.create(system, existingOk, cacheConfig);
   }
 
   @Deprecated
   public static synchronized MCache create(DistributedSystem system) throws CacheExistsException,
-          TimeoutException, CacheWriterException, GatewayException, RegionExistsException {
+      TimeoutException, CacheWriterException, GatewayException, RegionExistsException {
     return MonarchCacheImpl.create(system, false, new CacheConfig());
   }
 

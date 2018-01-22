@@ -62,7 +62,7 @@ public class TierStoreORCReader extends AbstractTierStoreReader {
             // initialize file list
             fileList = getFilesToScan(tableName, partitionId, scan.getRanges(), Crc);
             logger.debug("OrcFilePath= {}, TimePartRanges= {}, ScannedFiles= {}, ReaderOptions= {}",
-                    partPath, scan.getRanges(), TypeHelper.deepToString(fileList), getReaderOptions());
+                partPath, scan.getRanges(), TypeHelper.deepToString(fileList), getReaderOptions());
             if (fileList == null) {
               return false;
             }
@@ -75,7 +75,7 @@ public class TierStoreORCReader extends AbstractTierStoreReader {
             final ReaderOptions opts = getReaderOptions();
             // can be called more parameterized rows to filter at ORC level
             recordReader = opts == null ? fis.rows()
-                    : fis.rowsOptions(((OrcUtils.OrcOptions) opts).getOptions());
+                : fis.rowsOptions(((OrcUtils.OrcOptions) opts).getOptions());
             return hasNext();
           } else {
             // end of file list return false
@@ -114,7 +114,7 @@ public class TierStoreORCReader extends AbstractTierStoreReader {
     final FTableOrcStruct fTableOrcStruct = new FTableOrcStruct(orcStruct);
     StoreRecord storeRecord = new StoreRecord(fTableOrcStruct.getNumFields());
     final List<ColumnConverterDescriptor> columnConverters =
-            converterDescriptor.getColumnConverters();
+        converterDescriptor.getColumnConverters();
     for (int i = 0; i < fTableOrcStruct.getNumFields(); i++) {
       storeRecord.addValue(columnConverters.get(i).getReadable(fTableOrcStruct.getFieldValue(i)));
     }
@@ -124,6 +124,6 @@ public class TierStoreORCReader extends AbstractTierStoreReader {
   @Override
   public String toString() {
     return "TierStoreORCReader{" + "recordReader=" + recordReader + ", isInitialized="
-            + isInitialized + '}';
+        + isInitialized + '}';
   }
 }

@@ -157,11 +157,11 @@ public class MTableUtils {
 
   public static boolean isAmpoolProperty(final String propertyName) {
     if (MONARCH_LOCATOR_ADDRESS.equals(propertyName) || MONARCH_LOCATOR_PORT.equals(propertyName)
-            || MONARCH_LOCATORS.equals(propertyName) || MONARCH_CLIENT_LOG.equals(propertyName)
-            || ENABLE_META_REGION_CACHING.equals(propertyName)
-            || ENABLE_POOL_SUBSCRIPTION.equals(propertyName)
-            || MONARCH_CLIENT_SOCK_BUFFER_SIZE.equals(propertyName)
-            || MONARCH_CLIENT_READ_TIMEOUT.equals(propertyName)) {
+        || MONARCH_LOCATORS.equals(propertyName) || MONARCH_CLIENT_LOG.equals(propertyName)
+        || ENABLE_META_REGION_CACHING.equals(propertyName)
+        || ENABLE_POOL_SUBSCRIPTION.equals(propertyName)
+        || MONARCH_CLIENT_SOCK_BUFFER_SIZE.equals(propertyName)
+        || MONARCH_CLIENT_READ_TIMEOUT.equals(propertyName)) {
       return true;
     }
     return false;
@@ -177,13 +177,13 @@ public class MTableUtils {
           String[] addrPort = locatorSpec.split(Pattern.quote("["));
           if (addrPort.length != 2) {
             throw new MCacheInvalidConfigurationException(
-                    "Allowed format for locators is: \"addr[port], addr[port]\"");
+                "Allowed format for locators is: \"addr[port], addr[port]\"");
           } else if (addrPort[1].charAt(addrPort[1].length() - 1) != ']') {
             throw new MCacheInvalidConfigurationException(
-                    "Allowed format for locators is: \"addr[port], addr[port]\"");
+                "Allowed format for locators is: \"addr[port], addr[port]\"");
           } else if (addrPort[1].length() < 2) {
             throw new MCacheInvalidConfigurationException(
-                    "Allowed format for locators is: \"addr[port], addr[port]\"");
+                "Allowed format for locators is: \"addr[port], addr[port]\"");
           }
           String addr = addrPort[0];
           Integer port = Integer.parseInt(addrPort[1].substring(0, addrPort[1].length() - 1));
@@ -227,14 +227,14 @@ public class MTableUtils {
   }
 
   private static void executeRegionCreateFnOnServer(MonarchCacheImpl cache,
-                                                    final String regionName) {
+      final String regionName) {
     try {
       Function atcf = new MTableCreationFunction();
       FunctionService.registerFunction(atcf);
 
       MCreateFunctionArguments funArgs =
-              new MCreateFunctionArguments(regionName, false, null, 0, 0, null, null, false, null, null,
-                      null, MDiskWritePolicy.ASYNCHRONOUS, MEvictionPolicy.OVERFLOW_TO_DISK, null, null);
+          new MCreateFunctionArguments(regionName, false, null, 0, 0, null, null, false, null, null,
+              null, MDiskWritePolicy.ASYNCHRONOUS, MEvictionPolicy.OVERFLOW_TO_DISK, null, null);
 
       java.util.List<Object> inputList = new java.util.ArrayList<Object>();
       inputList.add(funArgs);
@@ -268,27 +268,27 @@ public class MTableUtils {
    * @param clientCachingProxy true if caching-proxy to be used for client; false otherwise
    */
   public static Region<String, TableDescriptor> createMetaRegion(MonarchCacheImpl cache,
-                                                                 boolean clientCachingProxy) {
+      boolean clientCachingProxy) {
     Region<String, TableDescriptor> metaRegion = cache.getRegion(AMPL_META_REGION_NAME);
     if (metaRegion == null) {
       if (cache.isClient()) {
         final ClientRegionFactory<String, TableDescriptor> clientRegionFactory =
-                cache.createClientRegionFactory(clientCachingProxy ? ClientRegionShortcut.CACHING_PROXY
-                        : ClientRegionShortcut.PROXY);
+            cache.createClientRegionFactory(clientCachingProxy ? ClientRegionShortcut.CACHING_PROXY
+                : ClientRegionShortcut.PROXY);
         metaRegion = clientRegionFactory.create(AMPL_META_REGION_NAME);
       } else if (cache.getDistributedSystem().getDistributedMember()
-              .getVmKind() == DistributionManager.NORMAL_DM_TYPE
-              || cache.getDistributedSystem().getDistributedMember()
+          .getVmKind() == DistributionManager.NORMAL_DM_TYPE
+          || cache.getDistributedSystem().getDistributedMember()
               .getVmKind() == DistributionManager.LONER_DM_TYPE) {
         AttributesFactory<String, TableDescriptor> regionAttrsFactory =
-                new AttributesFactory<String, TableDescriptor>();
+            new AttributesFactory<String, TableDescriptor>();
         regionAttrsFactory.setDataPolicy(DataPolicy.PERSISTENT_REPLICATE);
         regionAttrsFactory.setScope(Scope.GLOBAL);
         InternalRegionArguments internalArgs = new InternalRegionArguments();
         internalArgs.setIsUsedForMetaRegion(true);
         try {
           metaRegion = cache.createVMRegion(AMPL_META_REGION_NAME, regionAttrsFactory.create(),
-                  internalArgs);
+              internalArgs);
         } catch (IOException e) {
           logger.error("Metaregion creation failed." + e);
         } catch (ClassNotFoundException e) {
@@ -298,7 +298,7 @@ public class MTableUtils {
         if (META_REGION_SNAPSHOT != null) {
           try {
             metaRegion.getSnapshotService().load(new File(getMetaRegionSnapshot()),
-                    SnapshotOptions.SnapshotFormat.GEMFIRE);
+                SnapshotOptions.SnapshotFormat.GEMFIRE);
           } catch (Exception ex) {
             // ex.printStackTrace();
           }
@@ -315,25 +315,25 @@ public class MTableUtils {
    */
   public static Region<String, Map<String, Object>> createStoreMetaRegion(MonarchCacheImpl cache) {
     Region<String, Map<String, Object>> storeMetaRegion =
-            cache.getRegion(AMPL_STORE_META_REGION_NAME);
+        cache.getRegion(AMPL_STORE_META_REGION_NAME);
     if (storeMetaRegion == null) {
       if (cache.isClient()) {
         final ClientRegionFactory<String, Map<String, Object>> clientRegionFactory =
-                cache.createClientRegionFactory(ClientRegionShortcut.PROXY);
+            cache.createClientRegionFactory(ClientRegionShortcut.PROXY);
         storeMetaRegion = clientRegionFactory.create(AMPL_STORE_META_REGION_NAME);
       } else if (cache.getDistributedSystem().getDistributedMember()
-              .getVmKind() == DistributionManager.NORMAL_DM_TYPE
-              || cache.getDistributedSystem().getDistributedMember()
+          .getVmKind() == DistributionManager.NORMAL_DM_TYPE
+          || cache.getDistributedSystem().getDistributedMember()
               .getVmKind() == DistributionManager.LONER_DM_TYPE) {
         AttributesFactory<String, Map<String, Object>> regionAttrsFactory =
-                new AttributesFactory<String, Map<String, Object>>();
+            new AttributesFactory<String, Map<String, Object>>();
         regionAttrsFactory.setDataPolicy(DataPolicy.PERSISTENT_REPLICATE);
         regionAttrsFactory.setScope(Scope.GLOBAL);
         InternalRegionArguments internalArgs = new InternalRegionArguments();
         internalArgs.setIsUsedForMetaRegion(true);
         try {
           storeMetaRegion = cache.createVMRegion(AMPL_STORE_META_REGION_NAME,
-                  regionAttrsFactory.create(), internalArgs);
+              regionAttrsFactory.create(), internalArgs);
         } catch (IOException e) {
           logger.error("Store metaregion creation failed." + e);
         } catch (ClassNotFoundException e) {
@@ -369,11 +369,11 @@ public class MTableUtils {
 
     for (int i = start; i < end; i++) {
       if (Character.isLetterOrDigit(tableName.charAt(i)) || tableName.charAt(i) == '_'
-              || tableName.charAt(i) == '.') {
+          || tableName.charAt(i) == '.') {
         continue;
       }
       throw new IllegalArgumentException("Illegal character <" + tableName.charAt(i) + "> at " + i
-              + ". Name can only contain " + "'alphanumeric characters': i.e. [a-zA-Z_0-9].");
+          + ". Name can only contain " + "'alphanumeric characters': i.e. [a-zA-Z_0-9].");
     }
   }
 
@@ -396,7 +396,7 @@ public class MTableUtils {
       throw (AuthenticationFailedException) ex.getCause();
     }
     if (ex.getCause() != null
-            && ex.getCause().getCause() instanceof AuthenticationFailedException) {
+        && ex.getCause().getCause() instanceof AuthenticationFailedException) {
       throw (AuthenticationFailedException) ex.getCause().getCause();
     }
 
@@ -588,7 +588,7 @@ public class MTableUtils {
       byte[] startKey = range.getFirst();
       byte[] stopKey = range.getSecond();
       if ((Bytes.compareToPrefix(row, startKey) >= 0)
-              && (Bytes.compareToPrefix(row, stopKey)) <= 0) {
+          && (Bytes.compareToPrefix(row, stopKey)) <= 0) {
         bucketId = entry.getKey();
         break;
       }
@@ -610,10 +610,10 @@ public class MTableUtils {
    * @return returns set of bucketIds given start and stop key
    */
   public static Set<Integer> getBucketIdSet(byte[] startkey, byte[] endKey,
-                                            TableDescriptor tableDescriptor) throws IllegalArgumentException {
+      TableDescriptor tableDescriptor) throws IllegalArgumentException {
     if (tableDescriptor == null) {
       throw new IllegalArgumentException(
-              "tableDescriptor cannot be null while invoking getBucketIdSet()!");
+          "tableDescriptor cannot be null while invoking getBucketIdSet()!");
     }
 
     int totalBuckets = tableDescriptor.getTotalNumOfSplits();
@@ -630,7 +630,7 @@ public class MTableUtils {
 
     } else if (startkey != null && endKey == null) {
       int startBucketId =
-              getStartBucketId(startkey, ((MTableDescriptor) tableDescriptor).getKeySpace());
+          getStartBucketId(startkey, ((MTableDescriptor) tableDescriptor).getKeySpace());
       for (int i = startBucketId; i < totalBuckets; i++) {
         bucketIdSet.add(i);
       }
@@ -640,7 +640,7 @@ public class MTableUtils {
       }
 
       int startBucketId =
-              getStartBucketId(startkey, ((MTableDescriptor) tableDescriptor).getKeySpace());
+          getStartBucketId(startkey, ((MTableDescriptor) tableDescriptor).getKeySpace());
       int endBucketId = getEndBucketId(endKey, ((MTableDescriptor) tableDescriptor).getKeySpace());
 
       if (startBucketId != -1 && endBucketId != -1) {
@@ -697,13 +697,13 @@ public class MTableUtils {
    * @return start, end key pair for the input bucketid
    */
   public static Pair<byte[], byte[]> getStartEndKeysOverKeySpace(MTableDescriptor tableDescriptor,
-                                                                 int bucketId) {
+      int bucketId) {
     Map<Integer, Pair<byte[], byte[]>> splitsMap = tableDescriptor.getKeySpace();
     return splitsMap.get(bucketId);
   }
 
   public static Map<Integer, Pair<byte[], byte[]>> getUniformKeySpaceSplit(
-          int totalNumberOfBuckets) {
+      int totalNumberOfBuckets) {
     return getUniformKeySpaceSplit(totalNumberOfBuckets, null, null);
   }
 
@@ -714,7 +714,7 @@ public class MTableUtils {
    * code.
    */
   public static Map<Integer, Pair<byte[], byte[]>> getUniformKeySpaceSplit(int totalNumberOfBuckets,
-                                                                           byte[] startRangeKey, byte[] stopRangeKey) {
+      byte[] startRangeKey, byte[] stopRangeKey) {
     byte xFF = (byte) 0xFF;
     byte[] EMPTY_BYTE_ARRAY = new byte[0];
     byte[] MAX_BYTE_ARRAY = new byte[] {xFF, xFF, xFF, xFF, xFF, xFF, xFF, xFF};
@@ -750,7 +750,7 @@ public class MTableUtils {
 
       if (splits == null) {
         throw new IllegalArgumentException(
-                "unable to generate region split with provided parameters");
+            "unable to generate region split with provided parameters");
       }
 
       for (int index = 1; index < splits.length; index++) {
@@ -777,13 +777,13 @@ public class MTableUtils {
 
   public static Set<ServerLocation> getServerLocationForBucketId(MTable table, int bucketId) {
     Map<Integer, Set<ServerLocation>> bucketToServerMap =
-            getBucketToServerMap(table.getName(), null, AmpoolOpType.ANY_OP);
+        getBucketToServerMap(table.getName(), null, AmpoolOpType.ANY_OP);
     return bucketToServerMap.get(bucketId);
   }
 
   public static ServerLocation getPrimaryServerLocationForBucketId(MTable table, int bucketId) {
     Map<Integer, ServerLocation> bucketToServerMap =
-            getPrimaryBucketToServerMap(table.getName(), null);
+        getPrimaryBucketToServerMap(table.getName(), null);
     return bucketToServerMap.get(bucketId);
   }
 
@@ -795,7 +795,7 @@ public class MTableUtils {
    */
   private static InternalTable getInternalTable(final String tableName) {
     return (InternalTable) ((MonarchCacheImpl) MClientCacheFactory.getAnyInstance())
-            .getAnyTable(tableName);
+        .getAnyTable(tableName);
   }
 
   /**
@@ -806,27 +806,27 @@ public class MTableUtils {
    * @return the list of splits
    */
   public static List<MSplit> getSplits(final String tableName, final int numSplits,
-                                       final int maxBucketCount, Map<Integer, Set<ServerLocation>> bucketLocationMap) {
+      final int maxBucketCount, Map<Integer, Set<ServerLocation>> bucketLocationMap) {
     if (numSplits > maxBucketCount) {
       throw new IllegalArgumentException("Number of splits cannot be greater than number of "
-              + "buckets. [numSplits=" + numSplits + ",numBuckets=" + maxBucketCount + "]");
+          + "buckets. [numSplits=" + numSplits + ",numBuckets=" + maxBucketCount + "]");
     }
     Map<Integer, ServerLocation> primaryBucketMap = new HashMap<>(113);
     MTableUtils.getLocationMap(getInternalTable(tableName), null, primaryBucketMap, null,
-            AmpoolOpType.ANY_OP);
+        AmpoolOpType.ANY_OP);
 
     /**
      * group the buckets by server-location so that co-located buckets can be part of same split.
      */
     Map<ServerLocation, List<Integer>> serverToBuckets;
     serverToBuckets =
-            primaryBucketMap.entrySet().stream().filter(e -> e.getValue() != null).map(e -> {
-              Set<ServerLocation> set = new LinkedHashSet<>();
-              set.add(e.getValue());
-              bucketLocationMap.put(e.getKey(), set);
-              return e;
-            }).collect(Collectors.groupingBy(Map.Entry::getValue,
-                    Collectors.mapping(Map.Entry::getKey, Collectors.toList())));
+        primaryBucketMap.entrySet().stream().filter(e -> e.getValue() != null).map(e -> {
+          Set<ServerLocation> set = new LinkedHashSet<>();
+          set.add(e.getValue());
+          bucketLocationMap.put(e.getKey(), set);
+          return e;
+        }).collect(Collectors.groupingBy(Map.Entry::getValue,
+            Collectors.mapping(Map.Entry::getKey, Collectors.toList())));
 
     int bucketsPerSplit = (int) Math.ceil(1.0 * bucketLocationMap.size() / numSplits);
     List<MSplit> splits = new ArrayList<>(numSplits);
@@ -888,7 +888,7 @@ public class MTableUtils {
    * @return the list of splits
    */
   public static List<MSplit> getSplitsWithSize(final String tableName, int numSplits,
-                                               final int maxBucketCount, Map<Integer, Set<ServerLocation>> bucketLocationMap) {
+      final int maxBucketCount, Map<Integer, Set<ServerLocation>> bucketLocationMap) {
     if (numSplits > maxBucketCount) {
       numSplits = maxBucketCount;
     }
@@ -896,10 +896,10 @@ public class MTableUtils {
     Map<ServerLocation, List<Integer>> serverToBuckets;
     Map<Integer, Pair<ServerLocation, Long>> primaryBucketMap = new HashMap<>(113);
     serverToBuckets =
-            MTableUtils.getLocationAndSize(getInternalTable(tableName), primaryBucketMap, null);
+        MTableUtils.getLocationAndSize(getInternalTable(tableName), primaryBucketMap, null);
 
     primaryBucketMap.entrySet().forEach(
-            e -> bucketLocationMap.put(e.getKey(), Collections.singleton(e.getValue().getFirst())));
+        e -> bucketLocationMap.put(e.getKey(), Collections.singleton(e.getValue().getFirst())));
 
     int bucketsPerSplit = (int) Math.ceil(1.0 * bucketLocationMap.size() / numSplits);
     List<MSplit> splits = new ArrayList<>(numSplits);
@@ -970,7 +970,7 @@ public class MTableUtils {
 
   public static Map<String, Object> getStoreInfo(String storeName) {
     Map<String, Object> storeInfoMap = (Map<String, Object>) MCacheFactory.getAnyInstance()
-            .getRegion(AMPL_STORE_META_REGION_NAME).get(storeName);
+        .getRegion(AMPL_STORE_META_REGION_NAME).get(storeName);
     if (storeInfoMap == null) {
       throw new TierStoreNotAvailableException("Tier store " + storeName + " not found");
     }
@@ -978,7 +978,7 @@ public class MTableUtils {
   }
 
   public static TableDescriptor getTableDescriptor(final MonarchCacheImpl gemfireCache,
-                                                   final String tableName) {
+      final String tableName) {
     try {
       return (TableDescriptor) gemfireCache.getRegion(AMPL_META_REGION_NAME).get(tableName);
     } catch (GemFireException ex) {
@@ -1037,7 +1037,7 @@ public class MTableUtils {
   }
 
   private static ArrayList<AsyncEventQueue> getAsyncEventArrayList(MonarchCacheImpl cache,
-                                                                   TableDescriptor tableDescriptor) {
+      TableDescriptor tableDescriptor) {
 
     ArrayList<AsyncEventQueue> result = new ArrayList<>();
     ArrayList<CDCInformation> cdcInformations = new ArrayList<>();
@@ -1055,18 +1055,18 @@ public class MTableUtils {
       if (asyncQueue != null) {
       } else {
         AsyncEventQueueFactoryImpl factory =
-                (AsyncEventQueueFactoryImpl) cache.createAsyncEventQueueFactory();
+            (AsyncEventQueueFactoryImpl) cache.createAsyncEventQueueFactory();
         factory.setParallel(isParallel);
         if (config != null) {
           if (logger.isDebugEnabled()) {
             logger.debug("MTableUtils.createRegionInGeode config.getBatchSize() = "
-                    + config.getBatchSize() + " config.getPersistent() " + config.getPersistent()
-                    + " config.getDiskStoreName() = " + config.getDiskStoreName()
-                    + " config.getMaximumQueueMemory() " + config.getMaximumQueueMemory()
-                    + " config.getDiskSynchronous() = " + config.getDiskSynchronous()
-                    + " config.getBatchTimeInterval() = " + config.getBatchTimeInterval()
-                    + " config.getBatchConflationEnabled() = " + config.getBatchConflationEnabled()
-                    + " config.getDispatcherThreads() = " + config.getDispatcherThreads());
+                + config.getBatchSize() + " config.getPersistent() " + config.getPersistent()
+                + " config.getDiskStoreName() = " + config.getDiskStoreName()
+                + " config.getMaximumQueueMemory() " + config.getMaximumQueueMemory()
+                + " config.getDiskSynchronous() = " + config.getDiskSynchronous()
+                + " config.getBatchTimeInterval() = " + config.getBatchTimeInterval()
+                + " config.getBatchConflationEnabled() = " + config.getBatchConflationEnabled()
+                + " config.getDispatcherThreads() = " + config.getDispatcherThreads());
           }
           factory.setBatchSize(config.getBatchSize());
           factory.setPersistent(config.getPersistent());
@@ -1079,7 +1079,7 @@ public class MTableUtils {
         }
         try {
           MAsyncEventListener listener =
-                  (MAsyncEventListener) MTableUtils.createInstance(listenerClassPath);
+              (MAsyncEventListener) MTableUtils.createInstance(listenerClassPath);
           asyncQueue = factory.create(queueId, listener);
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
           throw new IllegalArgumentException(e);
@@ -1097,7 +1097,7 @@ public class MTableUtils {
   }
 
   public static Object createInstance(String className)
-          throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+      throws InstantiationException, IllegalAccessException, ClassNotFoundException {
     Object instance;
     try {
       instance = ClassPathLoader.getLatest().forName(className).newInstance();
@@ -1129,7 +1129,7 @@ public class MTableUtils {
   }
 
   private static DiskStoreFactory getDiskStoreFactory(MonarchCacheImpl monarchCacheImpl,
-                                                      final DiskStoreAttributes diskStoreAttributes) {
+      final DiskStoreAttributes diskStoreAttributes) {
 
     DiskStoreFactory diskStoreFactory = monarchCacheImpl.createDiskStoreFactory();
     diskStoreFactory.setAutoCompact(diskStoreAttributes.getAutoCompact());
@@ -1141,20 +1141,20 @@ public class MTableUtils {
     diskStoreFactory.setQueueSize(diskStoreAttributes.getQueueSize());
     diskStoreFactory.setDiskDirs(diskStoreAttributes.getDiskDirs());
     diskStoreFactory.setDiskDirsAndSizes(diskStoreAttributes.getDiskDirs(),
-            diskStoreAttributes.getDiskDirSizes());
+        diskStoreAttributes.getDiskDirSizes());
     diskStoreFactory
-            .setDiskUsageWarningPercentage(diskStoreAttributes.getDiskUsageWarningPercentage());
+        .setDiskUsageWarningPercentage(diskStoreAttributes.getDiskUsageWarningPercentage());
     diskStoreFactory
-            .setDiskUsageCriticalPercentage(diskStoreAttributes.getDiskUsageCriticalPercentage());
+        .setDiskUsageCriticalPercentage(diskStoreAttributes.getDiskUsageCriticalPercentage());
     diskStoreFactory.setEnableDeltaPersistence(diskStoreAttributes.getEnableDeltaPersistence());
     return diskStoreFactory;
   }
 
   private static void createDiskStore(MonarchCacheImpl monarchCacheImpl,
-                                      AbstractTableDescriptor tableDescriptor) {
+      AbstractTableDescriptor tableDescriptor) {
     String diskStoreName = tableDescriptor.getDiskStore();
     if (StringUtils.compare(diskStoreName, DEFAULT_FTABLE_DISK_STORE_NAME)
-            || StringUtils.compare(diskStoreName, DEFAULT_MTABLE_DISK_STORE_NAME)) {
+        || StringUtils.compare(diskStoreName, DEFAULT_MTABLE_DISK_STORE_NAME)) {
       return;
     }
 
@@ -1164,19 +1164,19 @@ public class MTableUtils {
       tableDescriptor.setDiskStoreAttributes(getDiskStoreAttributes(diskStore));
     } else {
       DiskStoreFactory diskStoreFactory =
-              getDiskStoreFactory(monarchCacheImpl, tableDescriptor.getDiskStoreAttributes());
+          getDiskStoreFactory(monarchCacheImpl, tableDescriptor.getDiskStoreAttributes());
       diskStoreFactory.create(tableDescriptor.diskStoreName);
     }
   }
 
   public static Region createRegionInGeode(MonarchCacheImpl monarchCacheImpl,
-                                           final String tableName, TableDescriptor tableDescriptor) {
+      final String tableName, TableDescriptor tableDescriptor) {
     Region r = monarchCacheImpl.getRegion(tableName);
     if (r != null) {
       throw new MTableExistsException("Mtable " + tableName + " already exists");
     }
     ArrayList<AsyncEventQueue> asyncEventQueueArrayList =
-            getAsyncEventArrayList(monarchCacheImpl, tableDescriptor);
+        getAsyncEventArrayList(monarchCacheImpl, tableDescriptor);
     AmpoolTableRegionAttributes ampoolTableRegionAttributes = new AmpoolTableRegionAttributes();
 
     // Here should we decide are we creating FTable or MTable or Normal Geode region
@@ -1191,7 +1191,7 @@ public class MTableUtils {
           if (mTableDescriptor.isDiskPersistenceEnabled()) {
             if (mTableDescriptor.getEvictionPolicy() == MEvictionPolicy.OVERFLOW_TO_DISK) {
               rf = monarchCacheImpl
-                      .createRegionFactory(RegionShortcut.PARTITION_PERSISTENT_OVERFLOW);
+                  .createRegionFactory(RegionShortcut.PARTITION_PERSISTENT_OVERFLOW);
             } else {
               rf = monarchCacheImpl.createRegionFactory(RegionShortcut.PARTITION_PERSISTENT);
             }
@@ -1224,12 +1224,12 @@ public class MTableUtils {
           paf.setTotalNumBuckets(mTableDescriptor.getTotalNumOfSplits());
 
           if (mTableDescriptor
-                  .getLocalMaxMemory() != AbstractTableDescriptor.DEFAULT_LOCAL_MAX_MEMORY) {
+              .getLocalMaxMemory() != AbstractTableDescriptor.DEFAULT_LOCAL_MAX_MEMORY) {
             paf.setLocalMaxMemory(mTableDescriptor.getLocalMaxMemory());
           } else if (mTableDescriptor
-                  .getLocalMaxMemoryPct() != AbstractTableDescriptor.DEFAULT_LOCAL_MAX_MEMORY_PCT) {
+              .getLocalMaxMemoryPct() != AbstractTableDescriptor.DEFAULT_LOCAL_MAX_MEMORY_PCT) {
             int localMaxMemoryInMB = (int) ((Runtime.getRuntime().maxMemory() / ONE_MEGA_BYTE)
-                    * ((float) mTableDescriptor.getLocalMaxMemoryPct() / 100));
+                * ((float) mTableDescriptor.getLocalMaxMemoryPct() / 100));
             paf.setLocalMaxMemory(localMaxMemoryInMB);
           }
 
@@ -1239,10 +1239,10 @@ public class MTableUtils {
             ampoolTableRegionAttributes.setRegionDataOrder(RegionDataOrder.ROW_TUPLE_UNORDERED);
           } else {
             paf.setPartitionResolver(new MTableRangePartitionResolver(
-                    mTableDescriptor.getTotalNumOfSplits(), mTableDescriptor.getStartRangeKey(),
-                    mTableDescriptor.getStopRangeKey(), mTableDescriptor.getKeySpace()));
+                mTableDescriptor.getTotalNumOfSplits(), mTableDescriptor.getStartRangeKey(),
+                mTableDescriptor.getStopRangeKey(), mTableDescriptor.getKeySpace()));
             ampoolTableRegionAttributes
-                    .setRegionDataOrder(RegionDataOrder.ROW_TUPLE_ORDERED_VERSIONED);
+                .setRegionDataOrder(RegionDataOrder.ROW_TUPLE_ORDERED_VERSIONED);
           }
           // paf.addPartitionListener(new RowTuplePartitionListener());
           // Attach Coprocessors to Table
@@ -1257,48 +1257,48 @@ public class MTableUtils {
           rf.setPartitionAttributes(paf.create());
 
           if (tableDescriptor
-                  .getLocalMaxMemory() == AbstractTableDescriptor.DEFAULT_LOCAL_MAX_MEMORY
-                  && tableDescriptor
+              .getLocalMaxMemory() == AbstractTableDescriptor.DEFAULT_LOCAL_MAX_MEMORY
+              && tableDescriptor
                   .getLocalMaxMemoryPct() == AbstractTableDescriptor.DEFAULT_LOCAL_MAX_MEMORY_PCT) {
             if (mTableDescriptor.getEvictionPolicy() == MEvictionPolicy.OVERFLOW_TO_DISK) {
               rf.setEvictionAttributes(EvictionAttributes.createLRUHeapAttributes(null,
-                      EvictionAction.OVERFLOW_TO_DISK));
+                  EvictionAction.OVERFLOW_TO_DISK));
             } else if (mTableDescriptor.getEvictionPolicy() == MEvictionPolicy.OVERFLOW_TO_TIER) {
               rf.setEvictionAttributes(EvictionAttributes.createLRUHeapAttributes(null,
-                      EvictionAction.OVERFLOW_TO_TIER));
+                  EvictionAction.OVERFLOW_TO_TIER));
             } else if (mTableDescriptor.getEvictionPolicy() == MEvictionPolicy.LOCAL_DESTROY) {
               rf.setEvictionAttributes(
-                      EvictionAttributes.createLRUHeapAttributes(null, EvictionAction.LOCAL_DESTROY));
+                  EvictionAttributes.createLRUHeapAttributes(null, EvictionAction.LOCAL_DESTROY));
             }
           } else {
             if (mTableDescriptor.getEvictionPolicy() == MEvictionPolicy.OVERFLOW_TO_DISK) {
               rf.setEvictionAttributes(EvictionAttributes.createLRUMemoryAttributes(null,
-                      EvictionAction.OVERFLOW_TO_DISK));
+                  EvictionAction.OVERFLOW_TO_DISK));
             } else if (mTableDescriptor.getEvictionPolicy() == MEvictionPolicy.OVERFLOW_TO_TIER) {
               rf.setEvictionAttributes(EvictionAttributes.createLRUMemoryAttributes(null,
-                      EvictionAction.OVERFLOW_TO_TIER));
+                  EvictionAction.OVERFLOW_TO_TIER));
             } else if (mTableDescriptor.getEvictionPolicy() == MEvictionPolicy.LOCAL_DESTROY) {
               rf.setEvictionAttributes(
-                      EvictionAttributes.createLRUMemoryAttributes(null, EvictionAction.LOCAL_DESTROY));
+                  EvictionAttributes.createLRUMemoryAttributes(null, EvictionAction.LOCAL_DESTROY));
             }
           }
 
           MExpirationAttributes mExpirationAttributes = mTableDescriptor.getExpirationAttributes();
           if (mExpirationAttributes != null) {
             ExpirationAction expirationAction =
-                    MExpirationAction.DESTROY == mExpirationAttributes.getAction()
-                            ? ExpirationAction.DESTROY : ExpirationAction.INVALIDATE;
+                MExpirationAction.DESTROY == mExpirationAttributes.getAction()
+                    ? ExpirationAction.DESTROY : ExpirationAction.INVALIDATE;
             rf.setEntryTimeToLive(
-                    new ExpirationAttributes(mExpirationAttributes.getTimeout(), expirationAction));
+                new ExpirationAttributes(mExpirationAttributes.getTimeout(), expirationAction));
           }
           for (int i = 0; i < asyncEventQueueArrayList.size(); i++) {
             rf.addAsyncEventQueueId(asyncEventQueueArrayList.get(i).getId());
           }
           if (mTableDescriptor.getCacheLoaderClassName() != null
-                  && mTableDescriptor.getMaxVersions() == 1) {
+              && mTableDescriptor.getMaxVersions() == 1) {
             try {
               rf.setCacheLoader((CacheLoader<MTableKey, byte[]>) createInstance(
-                      mTableDescriptor.getCacheLoaderClassName()));
+                  mTableDescriptor.getCacheLoaderClassName()));
             } catch (InstantiationException e) {
               logger.error("MTableUtils::createRegionInGeode::InstantiationException", e);
             } catch (IllegalAccessException e) {
@@ -1329,7 +1329,7 @@ public class MTableUtils {
                 ampoolTableRegionAttributes.setRegionDataOrder(RegionDataOrder.ROW_TUPLE_UNORDERED);
               } else {
                 ampoolTableRegionAttributes
-                        .setRegionDataOrder(RegionDataOrder.ROW_TUPLE_ORDERED_VERSIONED);
+                    .setRegionDataOrder(RegionDataOrder.ROW_TUPLE_ORDERED_VERSIONED);
               }
             }
             rf.setCustomAttributes(ampoolTableRegionAttributes);
@@ -1380,12 +1380,12 @@ public class MTableUtils {
         paf.setPartitionResolver(pr == null ? MPartitionResolver.DEFAULT_RESOLVER : pr);
 
         if (fTableDescriptor
-                .getLocalMaxMemory() != AbstractTableDescriptor.DEFAULT_LOCAL_MAX_MEMORY) {
+            .getLocalMaxMemory() != AbstractTableDescriptor.DEFAULT_LOCAL_MAX_MEMORY) {
           paf.setLocalMaxMemory(fTableDescriptor.getLocalMaxMemory());
         } else if (fTableDescriptor
-                .getLocalMaxMemoryPct() != AbstractTableDescriptor.DEFAULT_LOCAL_MAX_MEMORY_PCT) {
+            .getLocalMaxMemoryPct() != AbstractTableDescriptor.DEFAULT_LOCAL_MAX_MEMORY_PCT) {
           int localMaxMemoryInMB = (int) ((Runtime.getRuntime().maxMemory() / ONE_MEGA_BYTE)
-                  * ((float) fTableDescriptor.getLocalMaxMemoryPct() / 100));
+              * ((float) fTableDescriptor.getLocalMaxMemoryPct() / 100));
           paf.setLocalMaxMemory(localMaxMemoryInMB);
         }
 
@@ -1410,41 +1410,41 @@ public class MTableUtils {
               if (!storeMap.containsKey(tierStores[storeIndex])) {
                 // throw stoore not available exception
                 throw new TierStoreNotAvailableException(
-                        CliStrings.format("Store {0} is not available", tierStores[storeIndex]));
+                    CliStrings.format("Store {0} is not available", tierStores[storeIndex]));
               }
             }
           }
           if (tableDescriptor
-                  .getLocalMaxMemory() == AbstractTableDescriptor.DEFAULT_LOCAL_MAX_MEMORY
-                  && tableDescriptor
+              .getLocalMaxMemory() == AbstractTableDescriptor.DEFAULT_LOCAL_MAX_MEMORY
+              && tableDescriptor
                   .getLocalMaxMemoryPct() == AbstractTableDescriptor.DEFAULT_LOCAL_MAX_MEMORY_PCT) {
             rf.setEvictionAttributes(
-                    EvictionAttributes.createLRUHeapAttributes(null, EvictionAction.OVERFLOW_TO_TIER));
+                EvictionAttributes.createLRUHeapAttributes(null, EvictionAction.OVERFLOW_TO_TIER));
           } else {
             rf.setEvictionAttributes(EvictionAttributes.createLRUMemoryAttributes(null,
-                    EvictionAction.OVERFLOW_TO_TIER));
+                EvictionAction.OVERFLOW_TO_TIER));
           }
         } else if (fTableDescriptor.getEvictionPolicy() == MEvictionPolicy.LOCAL_DESTROY) {
           // if action is explicitly set to LOCAL_DESTROY then set accordingly
           if (tableDescriptor
-                  .getLocalMaxMemory() == AbstractTableDescriptor.DEFAULT_LOCAL_MAX_MEMORY
-                  && tableDescriptor
+              .getLocalMaxMemory() == AbstractTableDescriptor.DEFAULT_LOCAL_MAX_MEMORY
+              && tableDescriptor
                   .getLocalMaxMemoryPct() == AbstractTableDescriptor.DEFAULT_LOCAL_MAX_MEMORY_PCT) {
             rf.setEvictionAttributes(
-                    EvictionAttributes.createLRUHeapAttributes(null, EvictionAction.LOCAL_DESTROY));
+                EvictionAttributes.createLRUHeapAttributes(null, EvictionAction.LOCAL_DESTROY));
           } else {
             rf.setEvictionAttributes(
-                    EvictionAttributes.createLRUMemoryAttributes(null, EvictionAction.LOCAL_DESTROY));
+                EvictionAttributes.createLRUMemoryAttributes(null, EvictionAction.LOCAL_DESTROY));
           }
         }
 
         MExpirationAttributes mExpirationAttributes = fTableDescriptor.getExpirationAttributes();
         if (mExpirationAttributes != null) {
           ExpirationAction expirationAction =
-                  MExpirationAction.DESTROY == mExpirationAttributes.getAction()
-                          ? ExpirationAction.DESTROY : ExpirationAction.INVALIDATE;
+              MExpirationAction.DESTROY == mExpirationAttributes.getAction()
+                  ? ExpirationAction.DESTROY : ExpirationAction.INVALIDATE;
           rf.setEntryTimeToLive(
-                  new ExpirationAttributes(mExpirationAttributes.getTimeout(), expirationAction));
+              new ExpirationAttributes(mExpirationAttributes.getTimeout(), expirationAction));
         }
         rf.setCustomAttributes(ampoolTableRegionAttributes);
         rf.setRegionMapFactory("io.ampool.monarch.table.region.map.AmpoolRegionMapFactory");
@@ -1460,7 +1460,7 @@ public class MTableUtils {
    * @return returns list of columns names corresponding to given column indexes
    */
   public static List<byte[]> getColumnNames(List<Integer> columns,
-                                            TableDescriptor tableDescriptor) {
+      TableDescriptor tableDescriptor) {
     final List<MColumnDescriptor> cds = tableDescriptor.getAllColumnDescriptors();
     return columns.stream().map(c -> cds.get(c).getColumnName()).collect(Collectors.toList());
   }
@@ -1473,24 +1473,24 @@ public class MTableUtils {
    * @return list of columns indexes corresponding to given column names
    */
   public static List<Integer> getColumnIds(List<byte[]> columnNames,
-                                           TableDescriptor tableDescriptor) {
+      TableDescriptor tableDescriptor) {
     Map<MColumnDescriptor, Integer> cdMap = tableDescriptor.getColumnDescriptorsMap();
     List<Integer> columns = columnNames.stream().sequential()
-            .map(column -> cdMap.get(new MColumnDescriptor(column))).collect(Collectors.toList());
+        .map(column -> cdMap.get(new MColumnDescriptor(column))).collect(Collectors.toList());
     return columns;
   }
 
   public static Map<Integer, Set<ServerLocation>> getBucketToServerMap(final String tableName,
-                                                                       final Set<Integer> buckets, int parentOp) {
+      final Set<Integer> buckets, int parentOp) {
     Map<Integer, ServerLocation> primaryBucketMap = new HashMap<>(113);
     Map<Integer, Set<ServerLocation>> secondaryBucketMap = new HashMap<>(113);
     MTableUtils.getLocationMap(getInternalTable(tableName), null, primaryBucketMap,
-            secondaryBucketMap, parentOp);
+        secondaryBucketMap, parentOp);
 
     // Adding primary buckets
     Map<Integer, Set<ServerLocation>> allBucketMap = new HashMap<>();
     for (Map.Entry<Integer, ServerLocation> integerServerLocationEntry : primaryBucketMap
-            .entrySet()) {
+        .entrySet()) {
       Integer bucketId = integerServerLocationEntry.getKey();
       Set<ServerLocation> serverLocations = allBucketMap.get(bucketId);
       if (serverLocations == null) {
@@ -1516,7 +1516,7 @@ public class MTableUtils {
   }
 
   public static Map<Integer, ServerLocation> getPrimaryBucketToServerMap(final String tableName,
-                                                                         final Set<Integer> buckets) {
+      final Set<Integer> buckets) {
     /** for getting bucket-locations via function execution.. **/
     Map<Integer, ServerLocation> primaryBucketMap = new HashMap<>(113);
     MTableImpl mTable = (MTableImpl) MClientCacheFactory.getAnyInstance().getTable(tableName);
@@ -1558,19 +1558,19 @@ public class MTableUtils {
    */
   @SuppressWarnings("unchecked")
   public static long getTotalCount(final Table table, final Set<Integer> bucketIds,
-                                   final Filter[] predicates, boolean countEvictedRecords) {
+      final Filter[] predicates, boolean countEvictedRecords) {
     MCountFunction.Args args =
-            new MCountFunction.Args(table.getName(), bucketIds, countEvictedRecords);
+        new MCountFunction.Args(table.getName(), bucketIds, countEvictedRecords);
     // args.setPredicates(predicates);
     args.setFilter(predicates);
     Object output = null;
     if (!MCacheFactory.getAnyInstance().isServer()) {
       output =
-              FunctionService.onServers(((InternalTable) table).getInternalRegion().getRegionService())
-                      .withArgs(args).execute(MCountFunction.COUNT_FUNCTION).getResult();
+          FunctionService.onServers(((InternalTable) table).getInternalRegion().getRegionService())
+              .withArgs(args).execute(MCountFunction.COUNT_FUNCTION).getResult();
     } else {
       output = FunctionService.onMembers().withArgs(args).execute(MCountFunction.COUNT_FUNCTION)
-              .getResult();
+          .getResult();
     }
     assert output instanceof List;
     return ((List<Object>) output).stream().mapToLong(e -> (Long) e).sum();
@@ -1581,17 +1581,17 @@ public class MTableUtils {
    **/
   @SuppressWarnings("unchecked")
   public static void getLocationAndCount(final Table table,
-                                         Map<Integer, Pair<ServerLocation, Long>> primaryMap,
-                                         Map<Integer, Set<Pair<ServerLocation, Long>>> secondaryMap) {
+      Map<Integer, Pair<ServerLocation, Long>> primaryMap,
+      Map<Integer, Set<Pair<ServerLocation, Long>>> secondaryMap) {
     MGetMetadataFunction.Args args = new MGetMetadataFunction.Args(table.getName());
     Object output = null;
     if (!MCacheFactory.getAnyInstance().isServer()) {
       output =
-              FunctionService.onServers(((InternalTable) table).getInternalRegion().getRegionService())
-                      .withArgs(args).execute(MGetMetadataFunction.GET_METADATA_FUNCTION).getResult();
+          FunctionService.onServers(((InternalTable) table).getInternalRegion().getRegionService())
+              .withArgs(args).execute(MGetMetadataFunction.GET_METADATA_FUNCTION).getResult();
     } else {
       output = FunctionService.onMembers().withArgs(args)
-              .execute(MGetMetadataFunction.GET_METADATA_FUNCTION).getResult();
+          .execute(MGetMetadataFunction.GET_METADATA_FUNCTION).getResult();
     }
     for (Object[] objects : ((List<Object[]>) output)) {
       primaryMap.putAll((Map) objects[0]);
@@ -1610,19 +1610,19 @@ public class MTableUtils {
 
   @SuppressWarnings("unchecked")
   public static Map<ServerLocation, List<Integer>> getLocationAndSize(final Table table,
-                                                                      Map<Integer, Pair<ServerLocation, Long>> primaryMap,
-                                                                      Map<Integer, Set<Pair<ServerLocation, Long>>> secondaryMap) {
+      Map<Integer, Pair<ServerLocation, Long>> primaryMap,
+      Map<Integer, Set<Pair<ServerLocation, Long>>> secondaryMap) {
     MGetMetadataFunction.Args args =
-            new MGetMetadataFunction.Args(table.getName(), null, MGetMetadataFunction.Opt.SIZE);
+        new MGetMetadataFunction.Args(table.getName(), null, MGetMetadataFunction.Opt.SIZE);
     // args.setParentOp(AmpoolOpType.SCAN_OP);
     Object output;
     if (!MCacheFactory.getAnyInstance().isServer()) {
       output =
-              FunctionService.onServers(((InternalTable) table).getInternalRegion().getRegionService())
-                      .withArgs(args).execute(MGetMetadataFunction.GET_METADATA_FUNCTION).getResult();
+          FunctionService.onServers(((InternalTable) table).getInternalRegion().getRegionService())
+              .withArgs(args).execute(MGetMetadataFunction.GET_METADATA_FUNCTION).getResult();
     } else {
       output = FunctionService.onMembers().withArgs(args)
-              .execute(MGetMetadataFunction.GET_METADATA_FUNCTION).getResult();
+          .execute(MGetMetadataFunction.GET_METADATA_FUNCTION).getResult();
     }
     Map<ServerLocation, List<Integer>> serverToBucketMap = new HashMap<>(10);
     for (Object[] objects : ((List<Object[]>) output)) {
@@ -1646,24 +1646,24 @@ public class MTableUtils {
 
   @SuppressWarnings("unchecked")
   public static void getLocationMap(final Table table, Set<Integer> buckets,
-                                    Map<Integer, ServerLocation> primaryMap, Map<Integer, Set<ServerLocation>> secondaryMap,
-                                    int parentOp) {
+      Map<Integer, ServerLocation> primaryMap, Map<Integer, Set<ServerLocation>> secondaryMap,
+      int parentOp) {
     MGetMetadataFunction.Args args = new MGetMetadataFunction.Args(table.getName(), buckets);
     args.setParentOp(parentOp);
 
     Object output =
-            FunctionService.onServers(((InternalTable) table).getInternalRegion().getRegionService())
-                    .withArgs(args).execute(MGetMetadataFunction.GET_METADATA_FUNCTION).getResult();
+        FunctionService.onServers(((InternalTable) table).getInternalRegion().getRegionService())
+            .withArgs(args).execute(MGetMetadataFunction.GET_METADATA_FUNCTION).getResult();
 
     /** extract only server-location from the original map **/
     for (Object[] objects : ((List<Object[]>) output)) {
       if (primaryMap != null) {
         ((Map<Integer, Pair<ServerLocation, Long>>) objects[0])
-                .forEach((k, v) -> primaryMap.put(k, v.getFirst()));
+            .forEach((k, v) -> primaryMap.put(k, v.getFirst()));
       }
       if (secondaryMap != null) {
         for (Map.Entry<Integer, Set<Pair<ServerLocation, Long>>> integerSetEntry : ((Map<Integer, Set<Pair<ServerLocation, Long>>>) objects[1])
-                .entrySet()) {
+            .entrySet()) {
           Set<Pair<ServerLocation, Long>> value = integerSetEntry.getValue();
           Set<ServerLocation> locationSet = new LinkedHashSet<>();
           for (Pair<ServerLocation, Long> serverLocationLongPair : value) {
@@ -1712,7 +1712,7 @@ public class MTableUtils {
       FunctionService.registerFunction(function);
 
       ResultCollector<?, ?> rc = FunctionService.onRegion(region)
-              .withCollector(new TableIsEmptyResultCollector()).execute(function);
+          .withCollector(new TableIsEmptyResultCollector()).execute(function);
 
       return (Boolean) rc.getResult();
     } catch (GemFireException ge) {
@@ -1756,14 +1756,14 @@ public class MTableUtils {
       for (int i = 0; i < len; i++) {
         element = Array.get(object, i);
         result = 31 * result + (element == null ? 0
-                : (element instanceof Object[] || element.getClass().isArray()
+            : (element instanceof Object[] || element.getClass().isArray()
                 ? getDeepHashCode(element) : element.hashCode()));
       }
     } else if (object instanceof Map) {
       result = 0;
       for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) object).entrySet()) {
         result += (MTableUtils.getDeepHashCode(entry.getKey())
-                ^ MTableUtils.getDeepHashCode(entry.getValue()));
+            ^ MTableUtils.getDeepHashCode(entry.getValue()));
       }
     } else {
       result = object.hashCode();
@@ -1774,22 +1774,22 @@ public class MTableUtils {
 
   public static StorageFormatter getStorageFormatter(TableDescriptor tableDescriptor) {
     byte[] magicNoEncodingIdReservedBytes =
-            ((AbstractTableDescriptor) tableDescriptor).getStorageFormatterIdentifiers();
+        ((AbstractTableDescriptor) tableDescriptor).getStorageFormatterIdentifiers();
     return StorageFormatters.getInstance(magicNoEncodingIdReservedBytes[0],
-            magicNoEncodingIdReservedBytes[1], magicNoEncodingIdReservedBytes[2]);
+        magicNoEncodingIdReservedBytes[1], magicNoEncodingIdReservedBytes[2]);
   }
 
   public static StorageFormatter getStorageFormatter(byte[] magicNoEncodingIdReservedBytes) {
     if (magicNoEncodingIdReservedBytes.length < 4) {
       throw new MException(
-              "Invalid storage identifiers. StorageIdentifiers are need to be of size 4 bytes");
+          "Invalid storage identifiers. StorageIdentifiers are need to be of size 4 bytes");
     }
     return StorageFormatters.getInstance(magicNoEncodingIdReservedBytes[0],
-            magicNoEncodingIdReservedBytes[1], magicNoEncodingIdReservedBytes[3]);
+        magicNoEncodingIdReservedBytes[1], magicNoEncodingIdReservedBytes[3]);
   }
 
   private Row getRow(final byte[] bytes, final MTableDescriptor td, final List<Integer> columns)
-          throws IOException, ClassNotFoundException, InterruptedException {
+      throws IOException, ClassNotFoundException, InterruptedException {
     return null;
   }
 
@@ -1806,8 +1806,8 @@ public class MTableUtils {
    * @param getNewValue function provided to get the new value
    */
   public static void changeOldVersionValue(final Object oldValue,
-                                           final MTableDescriptor mTableDescriptor, final Put put, final String columnName1,
-                                           final String columnName2, BiFunction<BasicTypes, Object, Object> getNewValue) {
+      final MTableDescriptor mTableDescriptor, final Put put, final String columnName1,
+      final String columnName2, BiFunction<BasicTypes, Object, Object> getNewValue) {
 
     // 1. check old value for multiversion instance
     if (oldValue != null && oldValue instanceof MultiVersionValue) {
@@ -1819,22 +1819,22 @@ public class MTableUtils {
         // -2 is needed as we are updating the oldvalue with the new version
         byte[] oldVersion = versions[versions.length - 1];
         MColumnDescriptor mColumnDescriptor1 = mTableDescriptor.getColumnDescriptors().stream()
-                .filter(CD -> CD.getColumnNameAsString().equals(columnName1)).findFirst().get();
+            .filter(CD -> CD.getColumnNameAsString().equals(columnName1)).findFirst().get();
         MColumnDescriptor mColumnDescriptor2 = mTableDescriptor.getColumnDescriptors().stream()
-                .filter(CD -> CD.getColumnNameAsString().equals(columnName2)).findFirst().get();
+            .filter(CD -> CD.getColumnNameAsString().equals(columnName2)).findFirst().get();
 
         if (oldVersion != null && mColumnDescriptor1 != null && mColumnDescriptor2 != null) {
           // 4. get column1 value and column2 value
           Object column1Value =
-                  put.getColumnValueMap().get(new ByteArrayKey(mColumnDescriptor1.getColumnName()));
+              put.getColumnValueMap().get(new ByteArrayKey(mColumnDescriptor1.getColumnName()));
           Object column2Value =
-                  getNewValue.apply((BasicTypes) mColumnDescriptor1.getColumnType(), column1Value);
+              getNewValue.apply((BasicTypes) mColumnDescriptor1.getColumnType(), column1Value);
           if (column1Value != null && column2Value != null) {
             // fixed length column
             byte[] column2ValBytes = mColumnDescriptor1.getColumnType().serialize(column2Value);
             // get the bitmap
             IBitMap oldValueBitmap =
-                    MTableStorageFormatter.readBitMap(mTableDescriptor, oldVersion);
+                MTableStorageFormatter.readBitMap(mTableDescriptor, oldVersion);
             if (mColumnDescriptor1.getColumnType().isFixedLength()) {
               // if the column is already present the older version we just need to update the value
               // in place
@@ -1852,26 +1852,26 @@ public class MTableUtils {
                   }
                   if (oldValueBitmap.get(colIndex)) {
                     int lengthOfByteArray = mTableDescriptor.getColumnDescriptorByIndex(colIndex)
-                            .getColumnType().lengthOfByteArray();
+                        .getColumnType().lengthOfByteArray();
                     offset += lengthOfByteArray;
                   }
                 }
                 System.arraycopy(column2ValBytes, 0, oldVersion, offset, column2ValBytes.length);
                 logger.info(
-                        "Updated the old version value in place with the new value for fixed length column");
+                    "Updated the old version value in place with the new value for fixed length column");
               } else { // column is not there in the older version
                 // need to create new byte[] with adding new column and value
                 byte[] newVerison = new byte[oldVersion.length + column2ValBytes.length];
                 // write the row header
                 System.arraycopy(oldVersion, 0, newVerison, 0,
-                        mTableDescriptor.getRowHeaderBytes().length);
+                    mTableDescriptor.getRowHeaderBytes().length);
                 int offset = mTableDescriptor.getRowHeaderBytes().length;
                 // write the timestamp
                 System.arraycopy(oldVersion, offset, newVerison, offset, Bytes.SIZEOF_LONG);
                 offset += Bytes.SIZEOF_LONG;
                 oldValueBitmap.set(mColumnDescriptor2.getIndex());
                 System.arraycopy(oldValueBitmap.toByteArray(), 0, newVerison, offset,
-                        oldValueBitmap.toByteArray().length);
+                    oldValueBitmap.toByteArray().length);
                 offset += oldValueBitmap.toByteArray().length;
                 Iterator<Integer> iterator = mTableDescriptor.getFixedLengthColumns().iterator();
                 // get the column value offset by iterating the fixed length columns
@@ -1881,14 +1881,14 @@ public class MTableUtils {
                   if (oldValueBitmap.get(colIndex)) {
                     if (colIndex == mColumnDescriptor2.getIndex()) {
                       System.arraycopy(column2ValBytes, 0, newVerison, offset,
-                              column2ValBytes.length);
+                          column2ValBytes.length);
                       offset += column2ValBytes.length;
                     } else {
                       int lengthOfByteArray = mTableDescriptor.getColumnDescriptorByIndex(colIndex)
-                              .getColumnType().lengthOfByteArray();
+                          .getColumnType().lengthOfByteArray();
                       // copy value to new byte array
                       System.arraycopy(oldVersion, oldverisonOffset, newVerison, offset,
-                              lengthOfByteArray);
+                          lengthOfByteArray);
                       offset += lengthOfByteArray;
                       oldverisonOffset += lengthOfByteArray;
                     }
@@ -1896,18 +1896,18 @@ public class MTableUtils {
                 } // end while
                 // now append all the remaining data for the variable length columns
                 int numColumns = (int) mTableDescriptor.getVaribleLengthColumns().stream()
-                        .filter(integer -> oldValueBitmap.get(integer)).count();
+                    .filter(integer -> oldValueBitmap.get(integer)).count();
 
                 if (numColumns > 0) {
                   // get the varaible length offset
                   int varstartOffset = oldVersion.length - numColumns * Bytes.SIZEOF_INT;
                   // copy all the variable length column data
                   System.arraycopy(oldVersion, oldverisonOffset, newVerison, offset,
-                          varstartOffset - oldverisonOffset);
+                      varstartOffset - oldverisonOffset);
                   offset = newVerison.length - numColumns * Bytes.SIZEOF_INT;
                   for (int i = 0; i < numColumns; i++) {
                     int columnOffsetValue =
-                            Bytes.toInt(oldVersion, varstartOffset) + column2ValBytes.length;
+                        Bytes.toInt(oldVersion, varstartOffset) + column2ValBytes.length;
                     Bytes.putInt(newVerison, offset, columnOffsetValue);
                     varstartOffset += Bytes.SIZEOF_INT;
                     offset += Bytes.SIZEOF_INT;
@@ -1915,9 +1915,9 @@ public class MTableUtils {
                 }
                 // set the new version in the mutiversion value
                 oldMultiVersionValue.getVersions()[oldMultiVersionValue.getVersions().length - 1] =
-                        newVerison;
+                    newVerison;
                 logger.info(
-                        "Updated the old version value new byte array version for fixed length column");
+                    "Updated the old version value new byte array version for fixed length column");
               }
 
             } else { // column is variable length
@@ -1927,7 +1927,7 @@ public class MTableUtils {
                 List<Integer> varLengthColumns = mTableDescriptor.getVaribleLengthColumns();
                 int offsetPosition = oldVersion.length - Bytes.SIZEOF_INT;
                 int numOfVarColsInCurrentValue = (int) varLengthColumns.stream()
-                        .filter(integer -> oldValueBitmap.get(integer)).count();
+                    .filter(integer -> oldValueBitmap.get(integer)).count();
 
                 int totalOffSetOverhead = numOfVarColsInCurrentValue * Bytes.SIZEOF_INT;
                 int offsetStartingPos = (oldVersion.length - totalOffSetOverhead);
@@ -1939,10 +1939,10 @@ public class MTableUtils {
                     if ((oldVersion.length - totalOffSetOverhead) == (offsetPosition)) {
                       // this is last set bit
                       offsets =
-                              new Pair(Bytes.toInt(oldVersion, offsetPosition), offsetStartingPos);
+                          new Pair(Bytes.toInt(oldVersion, offsetPosition), offsetStartingPos);
                     } else {
                       offsets = new Pair(Bytes.toInt(oldVersion, offsetPosition),
-                              Bytes.toInt(oldVersion, offsetPosition - Bytes.SIZEOF_INT));
+                          Bytes.toInt(oldVersion, offsetPosition - Bytes.SIZEOF_INT));
 
                     }
                     posToOffsetMap.put(colIndex, offsets);
@@ -1952,19 +1952,19 @@ public class MTableUtils {
 
                 // need to create new byte[] with adding new column and value
                 byte[] newVerison = new byte[oldVersion.length + column2ValBytes.length
-                        - (posToOffsetMap.get(mColumnDescriptor2.getIndex()).getSecond()
+                    - (posToOffsetMap.get(mColumnDescriptor2.getIndex()).getSecond()
                         - posToOffsetMap.get(mColumnDescriptor2.getIndex()).getFirst())];
 
                 // write the row header
                 System.arraycopy(oldVersion, 0, newVerison, 0,
-                        mTableDescriptor.getRowHeaderBytes().length);
+                    mTableDescriptor.getRowHeaderBytes().length);
                 int offset = mTableDescriptor.getRowHeaderBytes().length;
                 // write the timestamp
                 System.arraycopy(oldVersion, offset, newVerison, offset, Bytes.SIZEOF_LONG);
                 offset += Bytes.SIZEOF_LONG;
                 oldValueBitmap.set(mColumnDescriptor2.getIndex());
                 System.arraycopy(oldValueBitmap.toByteArray(), 0, newVerison, offset,
-                        oldValueBitmap.toByteArray().length);
+                    oldValueBitmap.toByteArray().length);
                 offset += oldValueBitmap.toByteArray().length;
                 Iterator<Integer> iterator = mTableDescriptor.getFixedLengthColumns().iterator();
                 // get the column value offset by iterating the fixed length columns
@@ -1972,7 +1972,7 @@ public class MTableUtils {
                   int colIndex = iterator.next();
                   if (oldValueBitmap.get(colIndex)) {
                     int lengthOfByteArray = mTableDescriptor.getColumnDescriptorByIndex(colIndex)
-                            .getColumnType().lengthOfByteArray();
+                        .getColumnType().lengthOfByteArray();
                     // copy value to new byte array
                     System.arraycopy(oldVersion, offset, newVerison, offset, lengthOfByteArray);
                     offset += lengthOfByteArray;
@@ -1988,10 +1988,10 @@ public class MTableUtils {
                     if (colIndex == mColumnDescriptor2.getIndex()) {
                       // write value
                       System.arraycopy(column2ValBytes, 0, newVerison, offset,
-                              column2ValBytes.length);
+                          column2ValBytes.length);
                       // write offset
                       System.arraycopy(BasicTypes.INT.serialize(offset), 0, newVerison,
-                              newColumnOffset, Bytes.SIZEOF_INT);
+                          newColumnOffset, Bytes.SIZEOF_INT);
                       offset += column2ValBytes.length;
                       newColumnOffset -= Bytes.SIZEOF_INT;
                     } else {
@@ -2001,7 +2001,7 @@ public class MTableUtils {
                       System.arraycopy(oldVersion, offsetLen.getFirst(), newVerison, offset, len);
                       // write offset
                       System.arraycopy(BasicTypes.INT.serialize(offset), 0, newVerison,
-                              newColumnOffset, Bytes.SIZEOF_INT);
+                          newColumnOffset, Bytes.SIZEOF_INT);
                       offset += len;
                       newColumnOffset -= Bytes.SIZEOF_INT;
                     }
@@ -2009,19 +2009,19 @@ public class MTableUtils {
                 } // end while
                 // set the new version in the mutiversion value
                 oldMultiVersionValue.getVersions()[oldMultiVersionValue.getVersions().length - 1] =
-                        newVerison;
+                    newVerison;
                 logger.info(
-                        "Updated the old version with new byte array for variable length column and column is present in the old version");
+                    "Updated the old version with new byte array for variable length column and column is present in the old version");
               } else { // column is not there in the older version
                 // need to create new byte[] with adding new column and value
                 byte[] newVerison =
-                        new byte[oldVersion.length + column2ValBytes.length + Bytes.SIZEOF_INT];
+                    new byte[oldVersion.length + column2ValBytes.length + Bytes.SIZEOF_INT];
 
                 // get the offsets and length map
                 List<Integer> varLengthColumns = mTableDescriptor.getVaribleLengthColumns();
                 int offsetPosition = oldVersion.length - Bytes.SIZEOF_INT;
                 int numOfVarColsInCurrentValue = (int) varLengthColumns.stream()
-                        .filter(integer -> oldValueBitmap.get(integer)).count();
+                    .filter(integer -> oldValueBitmap.get(integer)).count();
 
                 int totalOffSetOverhead = numOfVarColsInCurrentValue * Bytes.SIZEOF_INT;
                 int offsetStartingPos = (oldVersion.length - totalOffSetOverhead);
@@ -2033,10 +2033,10 @@ public class MTableUtils {
                     if ((oldVersion.length - totalOffSetOverhead) == (offsetPosition)) {
                       // this is last set bit
                       offsets =
-                              new Pair(Bytes.toInt(oldVersion, offsetPosition), offsetStartingPos);
+                          new Pair(Bytes.toInt(oldVersion, offsetPosition), offsetStartingPos);
                     } else {
                       offsets = new Pair(Bytes.toInt(oldVersion, offsetPosition),
-                              Bytes.toInt(oldVersion, offsetPosition - Bytes.SIZEOF_INT));
+                          Bytes.toInt(oldVersion, offsetPosition - Bytes.SIZEOF_INT));
 
                     }
                     posToOffsetMap.put(colIndex, offsets);
@@ -2046,14 +2046,14 @@ public class MTableUtils {
 
                 // write the row header
                 System.arraycopy(oldVersion, 0, newVerison, 0,
-                        mTableDescriptor.getRowHeaderBytes().length);
+                    mTableDescriptor.getRowHeaderBytes().length);
                 int offset = mTableDescriptor.getRowHeaderBytes().length;
                 // write the timestamp
                 System.arraycopy(oldVersion, offset, newVerison, offset, Bytes.SIZEOF_LONG);
                 offset += Bytes.SIZEOF_LONG;
                 oldValueBitmap.set(mColumnDescriptor2.getIndex());
                 System.arraycopy(oldValueBitmap.toByteArray(), 0, newVerison, offset,
-                        oldValueBitmap.toByteArray().length);
+                    oldValueBitmap.toByteArray().length);
                 offset += oldValueBitmap.toByteArray().length;
                 Iterator<Integer> iterator = mTableDescriptor.getFixedLengthColumns().iterator();
                 // get the column value offset by iterating the fixed length columns
@@ -2061,7 +2061,7 @@ public class MTableUtils {
                   int colIndex = iterator.next();
                   if (oldValueBitmap.get(colIndex)) {
                     int lengthOfByteArray = mTableDescriptor.getColumnDescriptorByIndex(colIndex)
-                            .getColumnType().lengthOfByteArray();
+                        .getColumnType().lengthOfByteArray();
                     // copy value to new byte array
                     System.arraycopy(oldVersion, offset, newVerison, offset, lengthOfByteArray);
                     offset += lengthOfByteArray;
@@ -2077,10 +2077,10 @@ public class MTableUtils {
                     if (colIndex == mColumnDescriptor2.getIndex()) {
                       // write value
                       System.arraycopy(column2ValBytes, 0, newVerison, offset,
-                              column2ValBytes.length);
+                          column2ValBytes.length);
                       // write offset
                       System.arraycopy(BasicTypes.INT.serialize(offset), 0, newVerison,
-                              newColumnOffset, Bytes.SIZEOF_INT);
+                          newColumnOffset, Bytes.SIZEOF_INT);
                       offset += column2ValBytes.length;
                       newColumnOffset -= Bytes.SIZEOF_INT;
                     } else {
@@ -2090,7 +2090,7 @@ public class MTableUtils {
                       System.arraycopy(oldVersion, offsetLen.getFirst(), newVerison, offset, len);
                       // write offset
                       System.arraycopy(BasicTypes.INT.serialize(offset), 0, newVerison,
-                              newColumnOffset, Bytes.SIZEOF_INT);
+                          newColumnOffset, Bytes.SIZEOF_INT);
                       offset += len;
                       newColumnOffset -= Bytes.SIZEOF_INT;
                     }
@@ -2098,9 +2098,9 @@ public class MTableUtils {
                 } // end while
                 // set the new version in the mutiversion value
                 oldMultiVersionValue.getVersions()[oldMultiVersionValue.getVersions().length - 1] =
-                        newVerison;
+                    newVerison;
                 logger
-                        .info("Updated the old version with new byte array for variable length column");
+                    .info("Updated the old version with new byte array for variable length column");
               }
             }
           } else {
@@ -2158,7 +2158,7 @@ public class MTableUtils {
        * throw new RuntimeException("Fix me new format " + newValue.getClass().getName()); }
        */
       if (opInfo != null && opInfo.getTimestamp() == 0 && !event.isOriginRemote()
-              && !(isMVVValue)) {
+          && !(isMVVValue)) {
         // set timestamp for future put use
         long timestamp = System.nanoTime();
         event.setCallbackArgument(timestamp);

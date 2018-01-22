@@ -37,7 +37,7 @@ public class WALWriter {
   private final int partitionId;
 
   public WALWriter(String tableName, int partitionId, Path file, int recordLimit)
-          throws IOException {
+      throws IOException {
     this.tableName = tableName;
     this.file = file;
     this.partitionId = partitionId;
@@ -48,8 +48,8 @@ public class WALWriter {
   private void initWriter(Path file, int recordLimit) throws IOException {
     if (file == null) {
       this.file = Paths.get(WriteAheadLog.getInstance().getWalDirectory() + "/" + tableName + "_"
-              + partitionId + "_" + WriteAheadLog.getInstance().getNextSeqNo(tableName, partitionId)
-              + WAL_INPROGRESS_SUFFIX);
+          + partitionId + "_" + WriteAheadLog.getInstance().getNextSeqNo(tableName, partitionId)
+          + WAL_INPROGRESS_SUFFIX);
     }
 
     this.recordLimit = recordLimit;

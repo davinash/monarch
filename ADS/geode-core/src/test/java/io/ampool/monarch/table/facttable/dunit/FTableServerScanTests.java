@@ -90,8 +90,8 @@ public class FTableServerScanTests extends MTableDUnitHelper {
   private static boolean isOverflowEnabled = false;
 
   private String unsupportedFilterMessage =
-          "Unsupported filters : " + "[class io.ampool.monarch.table.filter.RowFilter, "
-                  + "class io.ampool.monarch.table.filter.KeyOnlyFilter]";
+      "Unsupported filters : " + "[class io.ampool.monarch.table.filter.RowFilter, "
+          + "class io.ampool.monarch.table.filter.KeyOnlyFilter]";
 
   private Host host = null;
   private VM vm0 = null;
@@ -154,7 +154,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
     for (int i = 0; i < NUM_ROWS; i++) {
       for (int colIndex = 0; colIndex < NUM_OF_COLUMNS; colIndex++) {
         System.out.println("FTableScanDUnitTest.testFTableScanBasic :: index: " + colIndex
-                + " Putting byte[] " + Arrays.toString(Bytes.toBytes(COLUMN_NAME_PREFIX + colIndex)));
+            + " Putting byte[] " + Arrays.toString(Bytes.toBytes(COLUMN_NAME_PREFIX + colIndex)));
         record.add(COLUMN_NAME_PREFIX + colIndex, Bytes.toBytes(COLUMN_NAME_PREFIX + colIndex));
       }
       table.append(record);
@@ -238,7 +238,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
     Record record = new Record();
     for (int colIndex = 0; colIndex < NUM_OF_COLUMNS; colIndex++) {
       System.out.println("FTableScanDUnitTest.testFTableScanBasic :: index: " + colIndex
-              + " Putting byte[] " + Arrays.toString(Bytes.toBytes(COLUMN_NAME_PREFIX + colIndex)));
+          + " Putting byte[] " + Arrays.toString(Bytes.toBytes(COLUMN_NAME_PREFIX + colIndex)));
       record.add(COLUMN_NAME_PREFIX + colIndex, Bytes.toBytes(COLUMN_NAME_PREFIX + colIndex));
     }
     for (int i = 0; i < NUM_ROWS; i++) {
@@ -274,7 +274,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
     }
 
     System.out.println("FTableServerScanTests.testFTableScanSelectedColumns :: "
-            + "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+        + "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
     // selected cols by addColumn method
     Scan scan1 = new Scan();
     scan1 = scan1.addColumn(Bytes.toBytes(COLUMN_NAME_PREFIX + 1));
@@ -341,7 +341,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
       scanner = table.getScanner(scan);
     } catch (MException ex) {
       assertTrue(
-              ex.getMessage().equalsIgnoreCase("Batch mode is not supported for immutable tables"));
+          ex.getMessage().equalsIgnoreCase("Batch mode is not supported for immutable tables"));
       return;
     }
     fail("Expected exception but not received");
@@ -379,7 +379,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
     Record record = new Record();
     for (int colIndex = 0; colIndex < NUM_OF_COLUMNS; colIndex++) {
       System.out.println("FTableScanDUnitTest.testFTableScanBasic :: index: " + colIndex
-              + " Putting byte[] " + Arrays.toString(Bytes.toBytes(COLUMN_NAME_PREFIX + colIndex)));
+          + " Putting byte[] " + Arrays.toString(Bytes.toBytes(COLUMN_NAME_PREFIX + colIndex)));
       record.add(COLUMN_NAME_PREFIX + colIndex, Bytes.toBytes(COLUMN_NAME_PREFIX + colIndex));
     }
     long insertionStartTime = TimestampUtil.getCurrentTime();
@@ -394,7 +394,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
     Set<Object> sortedKeySet = new TreeSet();
     while (iterator.hasNext()) {
       final BlockValue blockValue =
-              (BlockValue) ((FTableImpl) table).getTableRegion().get(iterator.next());
+          (BlockValue) ((FTableImpl) table).getTableRegion().get(iterator.next());
       // sortedKeySet.addAll(blockValue.);
     }
     final Iterator<Object> itr = sortedKeySet.iterator();
@@ -419,7 +419,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
 
 
     Filter filter =
-            new RowFilter(CompareOp.LESS_OR_EQUAL, Bytes.toBytes(TimestampUtil.getCurrentTime()));
+        new RowFilter(CompareOp.LESS_OR_EQUAL, Bytes.toBytes(TimestampUtil.getCurrentTime()));
     scan.setFilter(filter);
 
     try {
@@ -427,7 +427,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
       fail("Expected an exception");
     } catch (Exception ex) {
       System.out.println(
-              "FTableServerScanTests.testFTableScanRowKeyFilter :: " + "Checking for exception");
+          "FTableServerScanTests.testFTableScanRowKeyFilter :: " + "Checking for exception");
       assertEquals(unsupportedFilterMessage, ex.getCause().getMessage());
     }
 
@@ -505,9 +505,9 @@ public class FTableServerScanTests extends MTableDUnitHelper {
 
 
     Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-            CompareOp.GREATER, startTimestamp);
+        CompareOp.GREATER, startTimestamp);
     Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-            CompareOp.LESS, stopTimestamp);
+        CompareOp.LESS, stopTimestamp);
 
     FilterList list = new FilterList(FilterList.Operator.MUST_PASS_ALL, filter1, filter2);
 
@@ -580,7 +580,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
 
     // MFilter filter = new RowFilter(CompareOp.LESS_OR_EQUAL,Bytes.toBytes(System.nanoTime()));
     Filter filter = new SingleColumnValueFilter(COLUMN_NAME_PREFIX + 0, CompareOp.EQUAL,
-            Bytes.toBytes(COLUMN_NAME_PREFIX + 0));
+        Bytes.toBytes(COLUMN_NAME_PREFIX + 0));
     scan.setFilter(filter);
 
     try {
@@ -592,7 +592,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
 
 
     filter = new SingleColumnValueFilter(COLUMN_NAME_PREFIX + 0, CompareOp.GREATER,
-            Bytes.toBytes(COLUMN_NAME_PREFIX + 0));
+        Bytes.toBytes(COLUMN_NAME_PREFIX + 0));
     scan.setFilter(filter);
     // after this number of records from scan should be zero rows
     try {
@@ -602,7 +602,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
     }
 
     filter = new SingleColumnValueFilter(COLUMN_NAME_PREFIX + 0, CompareOp.GREATER_OR_EQUAL,
-            Bytes.toBytes(COLUMN_NAME_PREFIX + 0));
+        Bytes.toBytes(COLUMN_NAME_PREFIX + 0));
     scan.setFilter(filter);
     // after this number of records from scan should be zero rows
     try {
@@ -612,7 +612,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
     }
 
     filter = new SingleColumnValueFilter(COLUMN_NAME_PREFIX + 0, CompareOp.LESS,
-            Bytes.toBytes(COLUMN_NAME_PREFIX + 0));
+        Bytes.toBytes(COLUMN_NAME_PREFIX + 0));
     scan.setFilter(filter);
     // after this number of records from scan should be zero rows
 
@@ -623,7 +623,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
     }
 
     filter = new SingleColumnValueFilter(COLUMN_NAME_PREFIX + 0, CompareOp.LESS_OR_EQUAL,
-            Bytes.toBytes(COLUMN_NAME_PREFIX + 0));
+        Bytes.toBytes(COLUMN_NAME_PREFIX + 0));
     scan.setFilter(filter);
     // after this number of records from scan should be zero rows
 
@@ -634,7 +634,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
     }
 
     filter = new SingleColumnValueFilter(COLUMN_NAME_PREFIX + 0, CompareOp.NOT_EQUAL,
-            Bytes.toBytes(COLUMN_NAME_PREFIX + 0));
+        Bytes.toBytes(COLUMN_NAME_PREFIX + 0));
     scan.setFilter(filter);
     // after this number of records from scan should be zero rows
     try {
@@ -721,7 +721,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
   // ---------------------------------------------------------------------------
 
   private void runAtServerAndVerifyCount(final String tableName, final Scan scan, int expectedCount,
-                                         final ArrayList<byte[]> selCols, final FTableDescriptor ftd) throws Exception {
+      final ArrayList<byte[]> selCols, final FTableDescriptor ftd) throws Exception {
     final List<Integer> recordCounts = new ArrayList<>();
     try {
       recordCounts.add(vm0.invoke("t1", new SerializableCallable<Integer>() {
@@ -757,7 +757,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
 
 
   private int runScanAtServer(final String tableName, Scan mscan, List<byte[]> selCols,
-                              FTableDescriptor ftd) {
+      FTableDescriptor ftd) {
     System.out.println("FTableScanTests.runScanAtServer :: " + "got table name: " + tableName);
     final MCache cache = MCacheFactory.getAnyInstance();
     final FTable table = cache.getFTable(tableName);
@@ -782,35 +782,35 @@ public class FTableServerScanTests extends MTableDUnitHelper {
     final SingleVersionRow row = res.getLatestRow();
     final Iterator<Cell> itr = row.getCells().iterator();
     System.out.println(
-            "FTableServerScanTests.verifyScannedValue :: " + "cell size: " + row.getCells().size());
+        "FTableServerScanTests.verifyScannedValue :: " + "cell size: " + row.getCells().size());
     row.getCells().forEach((cell) -> {
       System.out.println("FTableServerScanTests.verifyScannedValue :: " + "NAME: "
-              + Bytes.toString(cell.getColumnName()));
+          + Bytes.toString(cell.getColumnName()));
     });
     int colIndex = 0;
     while (itr.hasNext()) {
       final Cell cell = itr.next();
       if (!Bytes.toString(cell.getColumnName())
-              .equalsIgnoreCase(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME)) {
+          .equalsIgnoreCase(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME)) {
         assertEquals(Bytes.toString(cell.getColumnName()), COLUMN_NAME_PREFIX + colIndex);
         System.out.println("FTableScanDUnitTest.verifyScannedValue :: " + "CNAME: "
-                + Bytes.toString(cell.getColumnName()));
+            + Bytes.toString(cell.getColumnName()));
         System.out.println("FTableScanDUnitTest.verifyScannedValue :: " + "VALUE: "
-                + Arrays.toString(cell.getValueArray()));
+            + Arrays.toString(cell.getValueArray()));
         assertTrue("Incorrect column value for: " + cell,
-                Bytes.compareTo(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength(),
-                        Bytes.toBytes(COLUMN_NAME_PREFIX + (colIndex)), 0, cell.getValueLength()) == 0);
+            Bytes.compareTo(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength(),
+                Bytes.toBytes(COLUMN_NAME_PREFIX + (colIndex)), 0, cell.getValueLength()) == 0);
         // System.out.println("FTableScanDUnitTest.verifyScannedValue :: " + "VALUE: "+
         // (String)cell.getColumnValue());
         colIndex++;
       }
       System.out.println(
-              "---------------------------------------------------------------------------------------------------------------------------------");
+          "---------------------------------------------------------------------------------------------------------------------------------");
     }
   }
 
   private void verifyScannedValue(final Row res, final int index, List<byte[]> selCols,
-                                  FTableDescriptor ftd) {
+      FTableDescriptor ftd) {
     final SingleVersionRow row = res.getLatestRow();
     assertEquals(selCols.size(), row.getCells().size());
     System.out.println("FTableServerScanTests.verifyScannedValue :: " + "selCols: " + selCols);
@@ -819,29 +819,29 @@ public class FTableServerScanTests extends MTableDUnitHelper {
       final Cell cell = itr.next();
       for (int i = 0; i < selCols.size(); i++) {
         if (!Bytes.toString(cell.getColumnName())
-                .equalsIgnoreCase(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME)) {
+            .equalsIgnoreCase(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME)) {
           final Integer positionIndex = ftd.getColumnDescriptorsMap()
-                  .get(ftd.getColumnsByName().get(new ByteArrayKey(cell.getColumnName())));
+              .get(ftd.getColumnsByName().get(new ByteArrayKey(cell.getColumnName())));
           System.out.println(
-                  "FTableServerScanTests.verifyScannedValue :: " + "posIndex: " + positionIndex);
+              "FTableServerScanTests.verifyScannedValue :: " + "posIndex: " + positionIndex);
           if (Bytes.compareTo(selCols.get(i), cell.getColumnName()) == 0) {
             // check for this col
             assertEquals(Bytes.toString(cell.getColumnName()),
-                    COLUMN_NAME_PREFIX + (positionIndex));
+                COLUMN_NAME_PREFIX + (positionIndex));
             System.out.println("FTableScanDUnitTest.verifyScannedValue :: " + "CNAME: "
-                    + Bytes.toString(cell.getColumnName()));
+                + Bytes.toString(cell.getColumnName()));
             System.out.println("FTableScanDUnitTest.verifyScannedValue :: " + "VALUE: "
-                    + Arrays.toString(cell.getValueArray()) + " string: " + Bytes
+                + Arrays.toString(cell.getValueArray()) + " string: " + Bytes
                     .toString(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength()));
             assertTrue("Incorrect column value for: " + cell,
-                    Bytes.compareTo(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength(),
-                            Bytes.toBytes(COLUMN_NAME_PREFIX + (positionIndex)), 0,
-                            cell.getValueLength()) == 0);
+                Bytes.compareTo(cell.getValueArray(), cell.getValueOffset(), cell.getValueLength(),
+                    Bytes.toBytes(COLUMN_NAME_PREFIX + (positionIndex)), 0,
+                    cell.getValueLength()) == 0);
           }
         }
       }
       System.out.println(
-              "---------------------------------------------------------------------------------------------------------------------------------");
+          "---------------------------------------------------------------------------------------------------------------------------------");
     }
   }
 
@@ -866,8 +866,8 @@ public class FTableServerScanTests extends MTableDUnitHelper {
 
   private Iterator<BucketRegion> getBucketsIterator(Region region, boolean doScanAll) {
     return doScanAll ////
-            ? ((PartitionedRegion) region).getDataStore().getAllLocalBucketRegions().iterator()
-            : ((PartitionedRegion) region).getDataStore().getAllLocalPrimaryBucketRegions().iterator();
+        ? ((PartitionedRegion) region).getDataStore().getAllLocalBucketRegions().iterator()
+        : ((PartitionedRegion) region).getDataStore().getAllLocalPrimaryBucketRegions().iterator();
   }
 
   protected int verifyValues(String tableName, final boolean doScanAll) {
@@ -878,7 +878,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
     while (itr.hasNext()) {
       final BucketRegion bucketRegion = itr.next();
       final RowTupleConcurrentSkipListMap internalMap =
-              (RowTupleConcurrentSkipListMap) bucketRegion.entries.getInternalMap();
+          (RowTupleConcurrentSkipListMap) bucketRegion.entries.getInternalMap();
       final Map concurrentSkipListMap = internalMap.getInternalMap();
       final Iterator<Entry> iterator = concurrentSkipListMap.entrySet().iterator();
       while (iterator.hasNext()) {
@@ -920,7 +920,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
   }
 
   private static FTable createFTable(final String tableName,
-                                     final FTableDescriptor tableDescriptor) {
+      final FTableDescriptor tableDescriptor) {
     // System.out.println("CreateMTableDUnitTest.createFTable :: " + "Creating mtable:---- " +
     // tableDescriptor);
     int numberOfKeysPerBucket = 20;
@@ -955,12 +955,12 @@ public class FTableServerScanTests extends MTableDUnitHelper {
         // sets a partitioningColumn
         if (colmnIndex == 0) {
           tableDescriptor = tableDescriptor.addColumn(
-                  Bytes.toBytes(COLUMN_NAME_PREFIX + colmnIndex)/* , MBasicObjectType.INT */);
+              Bytes.toBytes(COLUMN_NAME_PREFIX + colmnIndex)/* , MBasicObjectType.INT */);
           tableDescriptor =
-                  tableDescriptor.setPartitioningColumn(Bytes.toBytes(COLUMN_NAME_PREFIX + colmnIndex));
+              tableDescriptor.setPartitioningColumn(Bytes.toBytes(COLUMN_NAME_PREFIX + colmnIndex));
         } else {
           tableDescriptor =
-                  tableDescriptor.addColumn(Bytes.toBytes(COLUMN_NAME_PREFIX + colmnIndex));
+              tableDescriptor.addColumn(Bytes.toBytes(COLUMN_NAME_PREFIX + colmnIndex));
         }
       }
       tableDescriptor.setRedundantCopies(0);
@@ -980,7 +980,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
   }
 
   private static void verifyTableOnServer(final String tableName,
-                                          final FTableDescriptor tableDescriptor) {
+      final FTableDescriptor tableDescriptor) {
     final MCache serverCache = MCacheFactory.getAnyInstance();
     assertNotNull(serverCache);
     FTable mtable = null;
@@ -1006,7 +1006,7 @@ public class FTableServerScanTests extends MTableDUnitHelper {
     assertTrue(path.contains(tableName));
     // To verify disk persistence
     assertEquals(tableDescriptor.isDiskPersistenceEnabled(),
-            mregion.getAttributes().getDataPolicy().withPersistence());
+        mregion.getAttributes().getDataPolicy().withPersistence());
   }
 
   protected void setEvictionPercetangeOnAllVMs(float percetange) {

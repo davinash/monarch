@@ -16,7 +16,7 @@
 package org.apache.geode.internal.cache.execute;
 
 import io.ampool.monarch.table.MTable;
-import io.ampool.monarch.table.internal.ProxyMTableRegion;
+import io.ampool.monarch.table.internal.MTableImpl;
 import org.apache.geode.cache.CacheClosedException;
 import org.apache.geode.cache.Region;
 import org.apache.geode.cache.client.internal.ProxyCache;
@@ -50,8 +50,10 @@ public class ServerRegionFunctionExecutor extends AbstractExecution {
   private static final Logger logger = LogService.getLogger();
 
   final private LocalRegion region;
+  // AMPOOL SPECIFIC CHANGES STARTS HERE
   private boolean tableExecution = false;
   private MTable table = null;
+  // AMPOOL SPECIFIC CHANGES ENDS HERE
   private boolean executeOnBucketSet = false;
 
   public ServerRegionFunctionExecutor(Region r, ProxyCache proxyCache) {
@@ -82,10 +84,12 @@ public class ServerRegionFunctionExecutor extends AbstractExecution {
     this.filter.addAll(serverRegionFunctionExecutor.filter);
     this.args = args;
     this.executeOnBucketSet = serverRegionFunctionExecutor.executeOnBucketSet;
+    // AMPOOL SPECIFIC CHANGES STARTS HERE
     this.table = serverRegionFunctionExecutor.table;
     this.tableExecution = serverRegionFunctionExecutor.tableExecution;
     this.coProcessorContext = serverRegionFunctionExecutor.coProcessorContext;
     this.targetBucketId = serverRegionFunctionExecutor.targetBucketId;
+    // AMPOOL SPECIFIC CHANGES ENDS HERE
   }
 
   private ServerRegionFunctionExecutor(ServerRegionFunctionExecutor serverRegionFunctionExecutor,
@@ -109,10 +113,12 @@ public class ServerRegionFunctionExecutor extends AbstractExecution {
     this.filter.addAll(serverRegionFunctionExecutor.filter);
     this.rc = rc != null ? new SynchronizedResultCollector(rc) : null;
     this.executeOnBucketSet = serverRegionFunctionExecutor.executeOnBucketSet;
+    // AMPOOL SPECIFIC CHANGES STARTS HERE
     this.table = serverRegionFunctionExecutor.table;
     this.tableExecution = serverRegionFunctionExecutor.tableExecution;
     this.coProcessorContext = serverRegionFunctionExecutor.coProcessorContext;
     this.targetBucketId = serverRegionFunctionExecutor.targetBucketId;
+    // AMPOOL SPECIFIC CHANGES ENDS HERE
   }
 
   private ServerRegionFunctionExecutor(ServerRegionFunctionExecutor serverRegionFunctionExecutor,
@@ -124,10 +130,12 @@ public class ServerRegionFunctionExecutor extends AbstractExecution {
     this.filter.clear();
     this.filter.addAll(filter2);
     this.executeOnBucketSet = serverRegionFunctionExecutor.executeOnBucketSet;
+    // AMPOOL SPECIFIC CHANGES STARTS HERE
     this.table = serverRegionFunctionExecutor.table;
     this.tableExecution = serverRegionFunctionExecutor.tableExecution;
     this.coProcessorContext = serverRegionFunctionExecutor.coProcessorContext;
     this.targetBucketId = serverRegionFunctionExecutor.targetBucketId;
+    // AMPOOL SPECIFIC CHANGES ENDS HERE
   }
 
   private ServerRegionFunctionExecutor(ServerRegionFunctionExecutor serverRegionFunctionExecutor,
@@ -139,12 +147,15 @@ public class ServerRegionFunctionExecutor extends AbstractExecution {
     this.filter.clear();
     this.filter.addAll(bucketsAsFilter);
     this.executeOnBucketSet = executeOnBucketSet;
+    // AMPOOL SPECIFIC CHANGES STARTS HERE
     this.table = serverRegionFunctionExecutor.table;
     this.tableExecution = serverRegionFunctionExecutor.tableExecution;
     this.coProcessorContext = serverRegionFunctionExecutor.coProcessorContext;
     this.targetBucketId = serverRegionFunctionExecutor.targetBucketId;
+    // AMPOOL SPECIFIC CHANGES ENDS HERE
   }
 
+  // AMPOOL SPECIFIC CHANGES STARTS HERE
   private ServerRegionFunctionExecutor(ServerRegionFunctionExecutor executor, int bucketId,
       boolean tableExecution, MTable table) {
 
@@ -178,7 +189,7 @@ public class ServerRegionFunctionExecutor extends AbstractExecution {
           LocalizedStrings.ExecuteRegionFunction_THE_INPUT_0_FOR_THE_EXECUTE_FUNCTION_REQUEST_IS_NULL
               .toLocalizedString("Table"));
     }
-    this.region = (LocalRegion) ((ProxyMTableRegion) table).getTableRegion();
+    this.region = (LocalRegion) ((MTableImpl) table).getTableRegion();
     this.proxyCache = proxyCache;
     this.table = table;
     this.tableExecution = true;
@@ -224,6 +235,7 @@ public class ServerRegionFunctionExecutor extends AbstractExecution {
     this.coProcessorContext = 1;
     return new ServerRegionFunctionExecutor(this, 1, 1);
   }
+  // AMPOOL SPECIFIC CHANGES ENDS HERE
 
   public Execution withFilter(Set fltr) {
     if (fltr == null) {
@@ -259,9 +271,17 @@ public class ServerRegionFunctionExecutor extends AbstractExecution {
         hasResult = 1;
         if (this.rc == null) { // Default Result Collector
           ResultCollector defaultCollector = new DefaultResultCollector();
-          return executeOnServer(function, defaultCollector, hasResult, this.tableExecution);
+          return executeOnServer(function, defaultCollector, hasResult
+          // AMPOOL SPECIFIC CHANGES STARTS HERE
+              , this.tableExecution
+          // AMPOOL SPECIFIC CHANGES ENDS HERE
+          );
         } else { // Custome Result COllector
-          return executeOnServer(function, this.rc, hasResult, this.tableExecution);
+          return executeOnServer(function, this.rc, hasResult
+          // AMPOOL SPECIFIC CHANGES STARTS HERE
+              , this.tableExecution
+          // AMPOOL SPECIFIC CHANGES ENDS HERE
+          );
         }
       } else { // No results
         executeOnServerNoAck(function, hasResult);
@@ -300,13 +320,18 @@ public class ServerRegionFunctionExecutor extends AbstractExecution {
   }
 
   private ResultCollector executeOnServer(Function function, ResultCollector collector,
-      byte hasResult, boolean tableExecution) throws FunctionException {
+      byte hasResult
+      // AMPOOL SPECIFIC CHANGES STARTS HERE
+      , boolean tableExecution
+  // AMPOOL SPECIFIC CHANGES ENDS HERE
+  ) throws FunctionException {
     ServerRegionProxy srp = getServerRegionProxy();
     FunctionStats stats = FunctionStats.getFunctionStats(function.getId(), this.region.getSystem());
     try {
       validateExecution(function, null);
       long start = stats.startTime();
       stats.startFunctionExecution(true);
+      // AMPOOL SPECIFIC CHANGES STARTS HERE
       if (tableExecution) {
         if (this.targetBucketId != INVALID_BUCKET_ID) {
           srp.executeFunctionOnMTableSplit(this, function, collector, hasResult, false);
@@ -314,6 +339,7 @@ public class ServerRegionFunctionExecutor extends AbstractExecution {
           throw new IllegalStateException("Invalid Bucket Id passed for MTable Function");
         }
       } else {
+        // AMPOOL SPECIFIC CHANGES ENDS HERE
         srp.executeFunction(this.region.getFullPath(), function, this, collector, hasResult, false);
       }
       stats.endFunctionExecution(start, true);
@@ -446,7 +472,7 @@ public class ServerRegionFunctionExecutor extends AbstractExecution {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.apache.geode.internal.cache.execute.AbstractExecution#validateExecution(org.apache.geode.
    * cache.execute.Function, java.util.Set)
@@ -576,6 +602,12 @@ public class ServerRegionFunctionExecutor extends AbstractExecution {
   public boolean getExecuteOnBucketSetFlag() {
     return this.executeOnBucketSet;
   }
+
+  // AMPOOL SPECIFIC CHANGES START HERE
+
+
+
+  // AMPOOL CHANGES ENDS HERE
 
 
 }

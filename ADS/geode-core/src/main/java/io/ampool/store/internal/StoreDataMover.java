@@ -33,16 +33,16 @@ public class StoreDataMover {
   private BucketRegion region;
 
   public StoreDataMover(final TierStore store, final int tier, BucketRegion region, int partitionId,
-                        final InternalDistributedMember recipient) {
+      final InternalDistributedMember recipient) {
     this.store = store;
     this.region = region;
     this.partitionId = partitionId;
     this.recipient = recipient;
     this.tier = tier;
     logger.info(
-            "StoreDataMover: Moving data to tierId= {} using tierStore= {} for table= {}, "
-                    + "partitionId= {} from {}",
-            tier, store.getName(), region.getDisplayName(), partitionId, recipient);
+        "StoreDataMover: Moving data to tierId= {} using tierStore= {} for table= {}, "
+            + "partitionId= {} from {}",
+        tier, store.getName(), region.getDisplayName(), partitionId, recipient);
   }
 
   public void start() {
@@ -54,7 +54,7 @@ public class StoreDataMover {
     requestStoreImageMessage.setTier(tier);
     requestStoreImageMessage.setPartitionID(this.region.getId());
     StoreImageProcessor processor = new StoreImageProcessor(this.region.getSystem(), recipient,
-            tier, tableName, this.partitionId);
+        tier, tableName, this.partitionId);
     requestStoreImageMessage.setProcessorID(processor.getProcessorId());
     dm.putOutgoing(requestStoreImageMessage);
     processor.waitForRepliesUninterruptibly();

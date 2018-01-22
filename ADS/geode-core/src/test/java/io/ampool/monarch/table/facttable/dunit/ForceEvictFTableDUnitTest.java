@@ -179,7 +179,7 @@ public class ForceEvictFTableDUnitTest extends MTableDUnitHelper {
       ((AdminImpl) MClientCacheFactory.getAnyInstance().getAdmin()).forceFTableEviction(tableName);
     } catch (Exception e1) {
       System.out.println(
-              "FTableFlushToTierDUnitTest.testTableFlush Exception Caught ===> " + e.toString());
+          "FTableFlushToTierDUnitTest.testTableFlush Exception Caught ===> " + e.toString());
       e1.printStackTrace();
       e = e1;
     }
@@ -196,7 +196,7 @@ public class ForceEvictFTableDUnitTest extends MTableDUnitHelper {
 
     verifyRecordCountOnClient(tableName, numOfRecords);
     assertEquals("EvictionCount should match number of evicted entries.", numOfRecords,
-            getTotalEvictedCount(tableName));
+        getTotalEvictedCount(tableName));
   }
 
   private void asyncStartVm(final VM vm) {
@@ -214,7 +214,7 @@ public class ForceEvictFTableDUnitTest extends MTableDUnitHelper {
 
     FTableDescriptor fd = new FTableDescriptor();
     fd.setRedundantCopies(2).setTotalNumOfSplits(1)
-            .setEvictionPolicy(MEvictionPolicy.OVERFLOW_TO_TIER).setBlockSize(100);
+        .setEvictionPolicy(MEvictionPolicy.OVERFLOW_TO_TIER).setBlockSize(100);
     for (int i = 0; i < NUM_COLS; i++) {
       fd.addColumn("COL_" + i);
     }
@@ -243,7 +243,7 @@ public class ForceEvictFTableDUnitTest extends MTableDUnitHelper {
     Thread.sleep(5_000);
 
     assertEquals("Incorrect total-size after restart.", totalSizeBeforeRestart,
-            getTotalSize(tableName));
+        getTotalSize(tableName));
 
     try {
       MClientCacheFactory.getAnyInstance().getAdmin().forceFTableEviction(tableName);
@@ -264,7 +264,7 @@ public class ForceEvictFTableDUnitTest extends MTableDUnitHelper {
         assertNotNull(region);
         long count = 0;
         for (BucketRegion br : ((PartitionedRegion) region).getDataStore()
-                .getAllLocalBucketRegions()) {
+            .getAllLocalBucketRegions()) {
           count += br.getEvictions();
         }
         return count;
@@ -281,7 +281,7 @@ public class ForceEvictFTableDUnitTest extends MTableDUnitHelper {
         assertNotNull(region);
         long size = 0;
         for (BucketRegion br : ((PartitionedRegion) region).getDataStore()
-                .getAllLocalBucketRegions()) {
+            .getAllLocalBucketRegions()) {
           size += br.getBytesInMemory();
         }
         return size;
@@ -307,17 +307,17 @@ public class ForceEvictFTableDUnitTest extends MTableDUnitHelper {
 
   public int getCountFromWalScan(String ftable) {
     return (getCountFromWal(vm0, ftable) + getCountFromWal(vm1, ftable)
-            + getCountFromWal(vm2, ftable));
+        + getCountFromWal(vm2, ftable));
   }
 
   private static int getRegionCountOnServer(final VM vm, final String regionName)
-          throws RMIException {
+      throws RMIException {
     return (int) vm.invoke(new SerializableCallable() {
       @Override
 
       public Object call() throws Exception {
         final PartitionedRegion pr =
-                (PartitionedRegion) MCacheFactory.getAnyInstance().getRegion(regionName);
+            (PartitionedRegion) MCacheFactory.getAnyInstance().getRegion(regionName);
         assertNotNull(pr);
         return (getTotalEntryCount(pr));
       }

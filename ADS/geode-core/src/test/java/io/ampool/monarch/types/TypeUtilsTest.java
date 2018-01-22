@@ -91,9 +91,9 @@ public class TypeUtilsTest {
    * Table schema to be used for populating/testing JSON.
    */
   private static final String[] COLUMN_TYPES = {"BINARY", "INT", "LONG", "FLOAT", "DOUBLE",
-          "STRING", "BIG_DECIMAL(13,13)", "BYTE", "SHORT", "BOOLEAN", "CHAR", "VARCHAR", "DATE",
-          "TIMESTAMP", "CHARS", "array<INT>", "map<STRING,DOUBLE>", "struct<c1:DATE,c2:SHORT,c3:FLOAT>",
-          "union<BOOLEAN,BYTE,BIG_DECIMAL>",};
+      "STRING", "BIG_DECIMAL(13,13)", "BYTE", "SHORT", "BOOLEAN", "CHAR", "VARCHAR", "DATE",
+      "TIMESTAMP", "CHARS", "array<INT>", "map<STRING,DOUBLE>", "struct<c1:DATE,c2:SHORT,c3:FLOAT>",
+      "union<BOOLEAN,BYTE,BIG_DECIMAL>",};
 
   /**
    * Helper method to populate the value-map for the specified schema.
@@ -104,7 +104,7 @@ public class TypeUtilsTest {
    * @throws JSONException
    */
   private Map<String, Object> populateValues(final Map<String, String> expectedMap,
-                                             final boolean isNull) throws JSONException {
+      final boolean isNull) throws JSONException {
     StringBuilder sb = new StringBuilder(100);
     final MTableDescriptor td = new MTableDescriptor();
     sb.append('{');
@@ -140,7 +140,7 @@ public class TypeUtilsTest {
   public void testGetValueMap_Simple() throws JSONException {
     final String[][] COLUMNS = {{"ID", "LONG"}, {"MY_MAP", "map<STRING,array<DOUBLE>>"}};
     final String[] VALUES = {"{'ID': '11', 'MY_MAP': {'ABC' : ['11.111', '11.222']}}",
-            "{'ID': '22', 'MY_MAP': {'PQR' : ['22.111', '22.222']}}",};
+        "{'ID': '22', 'MY_MAP': {'PQR' : ['22.111', '22.222']}}",};
     MTableDescriptor td = new MTableDescriptor();
     TypeUtils.addColumnsFromJson(TypeUtils.getJsonSchema(COLUMNS), td);
 
@@ -156,9 +156,9 @@ public class TypeUtilsTest {
   @Test
   public void testGetValueMap_Invalid() throws JSONException {
     final String[][] COLUMNS = {{"c1", "INT"}, {"c2", "array<LONG>"}, {"c3", "array<INT>"},
-            {"c4", "DOUBLE"}, {"c5", "map<STRING,LONG>"},};
+        {"c4", "DOUBLE"}, {"c5", "map<STRING,LONG>"},};
     final String[][] DATA = {{"{'c1': 'abc'}", "column=c1"}, {"{'c2': ['abc']}", "column=c2"},
-            {"{'c3': 'abc'}", "column=c3"},};
+        {"{'c3': 'abc'}", "column=c3"},};
     MTableDescriptor td = new MTableDescriptor();
     TypeUtils.addColumnsFromJson(TypeUtils.getJsonSchema(COLUMNS), td);
 
@@ -216,7 +216,7 @@ public class TypeUtilsTest {
     Map<String, Object> ret1 = TypeUtils.getValueMap(td, VALUES[0]);
     assertEquals("Incorrect value for: ID", 11L, ret1.get("ID"));
     assertEquals("Incorrect value for: MY_MAP", "{ABC=[11.111, 11.222]}",
-            TypeHelper.deepToString(ret1.get("MY_MAP")));
+        TypeHelper.deepToString(ret1.get("MY_MAP")));
 
     /** get and assert on single column **/
     Map<String, Object> ret2 = TypeUtils.getValueMap(td, "{'ID': '33'}");
@@ -225,10 +225,10 @@ public class TypeUtilsTest {
 
     /** get and assert on the other column **/
     Map<String, Object> ret3 =
-            TypeUtils.getValueMap(td, "{'MY_MAP': {'PQR' : ['22.111', '22.222']}}");
+        TypeUtils.getValueMap(td, "{'MY_MAP': {'PQR' : ['22.111', '22.222']}}");
     assertNull("Expected null for: ID", ret3.get("ID"));
     assertEquals("Incorrect value for: MY_MAP", "{PQR=[22.111, 22.222]}",
-            TypeHelper.deepToString(ret3.get("MY_MAP")));
+        TypeHelper.deepToString(ret3.get("MY_MAP")));
   }
 
   @Test
@@ -244,7 +244,7 @@ public class TypeUtilsTest {
   @Test
   public void testAddColumnsFromJson_1() {
     final String[][] columns = new String[][] {{"c1", "STRING"}, {"c2", "INT"},
-            {"c3", "map<INT,struct<A:BINARY,B:array<DOUBLE>,C:BIG_DECIMAL>>"}, {"c4", "DATE"},};
+        {"c3", "map<INT,struct<A:BINARY,B:array<DOUBLE>,C:BIG_DECIMAL>>"}, {"c4", "DATE"},};
     /** create JSON string for this schema **/
     final String schema = TypeUtils.getJsonSchema(columns);
 
@@ -266,16 +266,16 @@ public class TypeUtilsTest {
     final DataType[] types = {getTypeFromString(typeStr[0]), getTypeFromString(typeStr[1])};
 
     final Object[] values =
-            {"abcdefghijklmnop", new BigDecimal("12345.6789123456", new MathContext(10))};
+        {"abcdefghijklmnop", new BigDecimal("12345.6789123456", new MathContext(10))};
     final Object[] expected = {"abcdefghij", new BigDecimal("12345.67891")};
 
     final Map<DataType, Supplier<Object>> map =
-            Collections.unmodifiableMap(new HashMap<DataType, Supplier<Object>>(15) {
-              {
-                put(BasicTypes.VARCHAR, () -> values[0]);
-                put(BasicTypes.BIG_DECIMAL, () -> values[1]);
-              }
-            });
+        Collections.unmodifiableMap(new HashMap<DataType, Supplier<Object>>(15) {
+          {
+            put(BasicTypes.VARCHAR, () -> values[0]);
+            put(BasicTypes.BIG_DECIMAL, () -> values[1]);
+          }
+        });
 
     /* replace the map that generates random values by this map */
     final String field = "RANDOM_DATA_TYPE_MAP";
@@ -290,6 +290,6 @@ public class TypeUtilsTest {
     /* just make sure that original random value generator function are reset */
     assertNotEquals("Incorrect value: VARCHAR", expected[0], TypeUtils.getRandomValue(types[0]));
     assertNotEquals("Incorrect value: BIG_DECIMAL", expected[1],
-            TypeUtils.getRandomValue(types[1]));
+        TypeUtils.getRandomValue(types[1]));
   }
 }

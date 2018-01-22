@@ -17,7 +17,7 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 
 import io.ampool.monarch.table.client.MClientCacheFactory;
-import io.ampool.monarch.table.internal.ProxyMTableRegion;
+import io.ampool.monarch.table.internal.MTableImpl;
 import io.ampool.monarch.types.DataTypeFactory;
 import org.apache.geode.cache.snapshot.SnapshotOptions.SnapshotFormat;
 import org.apache.geode.internal.logging.LogService;
@@ -86,18 +86,16 @@ public class MTableDataRecoveryDUnitTest extends MTableDUnitHelper {
   }
 
   private void verifyMTableData(boolean isClient) {
-    ProxyMTableRegion mTable_ordered = null;
-    ProxyMTableRegion mTable_unordered = null;
+    MTableImpl mTable_ordered = null;
+    MTableImpl mTable_unordered = null;
 
     if (!isClient) {
-      mTable_ordered = (ProxyMTableRegion) MCacheFactory.getAnyInstance().getTable(MTABLE_ORDERED);
-      mTable_unordered =
-          (ProxyMTableRegion) MCacheFactory.getAnyInstance().getTable(MTABLE_UNORDERED);
+      mTable_ordered = (MTableImpl) MCacheFactory.getAnyInstance().getTable(MTABLE_ORDERED);
+      mTable_unordered = (MTableImpl) MCacheFactory.getAnyInstance().getTable(MTABLE_UNORDERED);
     } else {
-      mTable_ordered =
-          (ProxyMTableRegion) MClientCacheFactory.getAnyInstance().getTable(MTABLE_ORDERED);
+      mTable_ordered = (MTableImpl) MClientCacheFactory.getAnyInstance().getTable(MTABLE_ORDERED);
       mTable_unordered =
-          (ProxyMTableRegion) MClientCacheFactory.getAnyInstance().getTable(MTABLE_UNORDERED);
+          (MTableImpl) MClientCacheFactory.getAnyInstance().getTable(MTABLE_UNORDERED);
     }
 
     final Iterator<Row> mResultIterator = mTable_ordered.getScanner(new Scan()).iterator();
@@ -181,14 +179,14 @@ public class MTableDataRecoveryDUnitTest extends MTableDUnitHelper {
     vm1.invoke(new SerializableCallable() {
       @Override
       public Object call() throws Exception {
-        final ProxyMTableRegion mTable_ordered =
-            (ProxyMTableRegion) MCacheFactory.getAnyInstance().getTable(MTABLE_ORDERED);
+        final MTableImpl mTable_ordered =
+            (MTableImpl) MCacheFactory.getAnyInstance().getTable(MTABLE_ORDERED);
         File snpOrdered = new File(this.getClass().getResource(mtableOrderedSnaphost).getPath());
         mTable_ordered.getTableRegion().getSnapshotService().load(snpOrdered,
             SnapshotFormat.GEMFIRE);
 
-        final ProxyMTableRegion mTable_unordered =
-            (ProxyMTableRegion) MCacheFactory.getAnyInstance().getTable(MTABLE_UNORDERED);
+        final MTableImpl mTable_unordered =
+            (MTableImpl) MCacheFactory.getAnyInstance().getTable(MTABLE_UNORDERED);
         File snpUnOrdered =
             new File(this.getClass().getResource(mtableUnOrderedSnaphost).getPath());
         mTable_unordered.getTableRegion().getSnapshotService().load(snpUnOrdered,
@@ -202,15 +200,15 @@ public class MTableDataRecoveryDUnitTest extends MTableDUnitHelper {
     vm1.invoke(new SerializableCallable() {
       @Override
       public Object call() throws Exception {
-        final ProxyMTableRegion mTable_ordered =
-            (ProxyMTableRegion) MCacheFactory.getAnyInstance().getTable(MTABLE_ORDERED);
+        final MTableImpl mTable_ordered =
+            (MTableImpl) MCacheFactory.getAnyInstance().getTable(MTABLE_ORDERED);
         File snpOrdered =
             new File(this.getClass().getResource(mtableOrderedSnaphost_v11).getPath());
         mTable_ordered.getTableRegion().getSnapshotService().load(snpOrdered,
             SnapshotFormat.GEMFIRE);
 
-        final ProxyMTableRegion mTable_unordered =
-            (ProxyMTableRegion) MCacheFactory.getAnyInstance().getTable(MTABLE_UNORDERED);
+        final MTableImpl mTable_unordered =
+            (MTableImpl) MCacheFactory.getAnyInstance().getTable(MTABLE_UNORDERED);
         File snpUnOrdered =
             new File(this.getClass().getResource(mtableUnOrderedSnaphost_v11).getPath());
         mTable_unordered.getTableRegion().getSnapshotService().load(snpUnOrdered,

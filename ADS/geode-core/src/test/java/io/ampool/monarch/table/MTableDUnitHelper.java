@@ -180,7 +180,7 @@ public class MTableDUnitHelper extends AMPLJUnit4CacheTestCase {
     String testName = getTestMethodName();
     String logFileName = testName + "-client.log";
     mClientCache = new MClientCacheFactory().addPoolLocator("127.0.0.1", getLocatorPort())
-            .set("log-file", logFileName).create();
+        .set("log-file", logFileName).create();
     assertNotNull(mClientCache);
   }
 
@@ -481,15 +481,15 @@ public class MTableDUnitHelper extends AMPLJUnit4CacheTestCase {
    * one would required for each partition.
    */
   public Map<Integer, List<byte[]>> getKeysForAllBuckets(int numOfPartitions,
-                                                         int numOfKeysEachPartition) {
+      int numOfKeysEachPartition) {
     Map<Integer, Pair<byte[], byte[]>> splitsMap =
-            MTableUtils.getUniformKeySpaceSplit(numOfPartitions);
+        MTableUtils.getUniformKeySpaceSplit(numOfPartitions);
     assertEquals(numOfPartitions, splitsMap.size());
     Map<Integer, List<byte[]>> bucket2KeysMap = new HashMap<>();
 
     splitsMap.forEach((K, V) -> {
       List<byte[]> keysInRange =
-              getKeysInRange(V.getFirst(), V.getSecond(), numOfKeysEachPartition);
+          getKeysInRange(V.getFirst(), V.getSecond(), numOfKeysEachPartition);
       assertEquals(numOfKeysEachPartition, keysInRange.size());
       // keysInRange.forEach((B) -> allKeys.add(B));
       bucket2KeysMap.put(K, keysInRange);
@@ -513,14 +513,14 @@ public class MTableDUnitHelper extends AMPLJUnit4CacheTestCase {
    * @return Returns the map of partition id to generate keys
    */
   public Map<Integer, List<byte[]>> getBucketToKeysForAllBuckets(int numOfPartitions,
-                                                                 int numOfKeysEachPartition) {
+      int numOfKeysEachPartition) {
     Map<Integer, List<byte[]>> bucketIdToKeys = new HashMap<>();
     Map<Integer, Pair<byte[], byte[]>> splitsMap =
-            MTableUtils.getUniformKeySpaceSplit(numOfPartitions);
+        MTableUtils.getUniformKeySpaceSplit(numOfPartitions);
     assertEquals(numOfPartitions, splitsMap.size());
     splitsMap.forEach((K, V) -> {
       List<byte[]> keysInRange =
-              getKeysInRange(V.getFirst(), V.getSecond(), numOfKeysEachPartition);
+          getKeysInRange(V.getFirst(), V.getSecond(), numOfKeysEachPartition);
       assertEquals(numOfKeysEachPartition, keysInRange.size());
       bucketIdToKeys.put(K, keysInRange);
       // keysInRange.forEach((B) -> bucketIdToKeys.put(K, B);
@@ -589,7 +589,7 @@ public class MTableDUnitHelper extends AMPLJUnit4CacheTestCase {
   public List<byte[]> putDataInEachBucket(MTable mtable, int rowsPerBucket) {
     final MTableDescriptor mtableDesc = mtable.getTableDescriptor();
     Map<Integer, Pair<byte[], byte[]>> splitsMap =
-            MTableUtils.getUniformKeySpaceSplit(mtableDesc.getTotalNumOfSplits());
+        MTableUtils.getUniformKeySpaceSplit(mtableDesc.getTotalNumOfSplits());
     List<byte[]> keysInRange = new ArrayList<>();
     for (int bucketId = 0; bucketId < mtableDesc.getTotalNumOfSplits(); bucketId++) {
       Pair<byte[], byte[]> pair = splitsMap.get(bucketId);

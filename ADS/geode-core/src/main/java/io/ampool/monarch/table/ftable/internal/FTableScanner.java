@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -27,11 +26,6 @@ import io.ampool.conf.Constants;
 import io.ampool.internal.MPartList;
 import io.ampool.monarch.table.Bytes;
 import io.ampool.monarch.table.Scan;
-import io.ampool.monarch.table.filter.Filter;
-import io.ampool.monarch.table.filter.FilterList;
-import io.ampool.monarch.table.filter.FilterList.Operator;
-import io.ampool.monarch.table.filter.SingleColumnValueFilter;
-import io.ampool.monarch.table.filter.internal.BlockKeyFilter;
 import io.ampool.monarch.table.ftable.FTableDescriptor;
 import io.ampool.monarch.table.internal.Encoding;
 import io.ampool.monarch.table.internal.IMKey;
@@ -41,7 +35,6 @@ import io.ampool.monarch.table.internal.ServerScanStatus;
 import io.ampool.monarch.table.region.ScanContext;
 import io.ampool.monarch.table.region.ScanUtils;
 import io.ampool.monarch.table.region.map.RowTupleConcurrentSkipListMap;
-import io.ampool.monarch.types.CompareOp;
 import io.ampool.orc.OrcUtils;
 import io.ampool.store.StoreHandler;
 import io.ampool.store.StoreRecord;
@@ -92,7 +85,7 @@ public class FTableScanner implements Iterator {
    * @param fTableDescriptor table descriptor
    */
   public FTableScanner(Region region, Scan scan, ServerConnection servConn,
-                       FTableDescriptor fTableDescriptor) {
+      FTableDescriptor fTableDescriptor) {
     this.region = region;
     this.scan = scan;
     this.serverConnection = servConn;
@@ -149,8 +142,8 @@ public class FTableScanner implements Iterator {
     final byte[] stopRow = scan.getStopRow();
     final boolean includeStartRow = scan.getIncludeStartRow();
     final SortedMap rangeMap = ScanUtils.getRangeMap(iMap.getInternalMap(),
-            startRow == null ? null : new MKeyBase(startRow),
-            stopRow == null ? null : new MKeyBase(stopRow), includeStartRow);
+        startRow == null ? null : new MKeyBase(startRow),
+        stopRow == null ? null : new MKeyBase(stopRow), includeStartRow);
     this.blockIterator = rangeMap.entrySet().iterator();
   }
 
@@ -166,10 +159,10 @@ public class FTableScanner implements Iterator {
     try {
       PartitionedRegion tableRegionPR = (PartitionedRegion) region;
       BucketRegion bucket =
-              tableRegionPR.getDataStore().getLocalBucketById(this.scan.getBucketId());
+          tableRegionPR.getDataStore().getLocalBucketById(this.scan.getBucketId());
       if (bucket != null && bucket.getBucketAdvisor().isHosting()) {
         RowTupleConcurrentSkipListMap internalMap =
-                (RowTupleConcurrentSkipListMap) bucket.getRegionMap().getInternalMap();
+            (RowTupleConcurrentSkipListMap) bucket.getRegionMap().getInternalMap();
         if (internalMap == null) {
           return;
         }
@@ -180,8 +173,8 @@ public class FTableScanner implements Iterator {
         boolean includeStartRow = scan.getIncludeStartRow();
 
         SortedMap<IMKey, RegionEntry> rangeMap =
-                ScanUtils.getRangeMap(realMap, startRow == null ? null : new MKeyBase(startRow),
-                        stopRow == null ? null : new MKeyBase(stopRow), includeStartRow);
+            ScanUtils.getRangeMap(realMap, startRow == null ? null : new MKeyBase(startRow),
+                stopRow == null ? null : new MKeyBase(stopRow), includeStartRow);
         this.blockIterator = rangeMap.entrySet().iterator();
       } else {
         if (logger.isDebugEnabled()) {
@@ -228,7 +221,7 @@ public class FTableScanner implements Iterator {
    * @return the actual entry value
    */
   public static Object getValue(final ServerConnection conn, final Region region,
-                                final Entry<IMKey, RegionEntry> entry) {
+      final Entry<IMKey, RegionEntry> entry) {
     Object data;
     synchronized (entry.getValue()) {
       data = entry.getValue()._getValue();
@@ -309,7 +302,7 @@ public class FTableScanner implements Iterator {
     /* else it is tierIndex == 1 */
     this.blockEncoding = fTableDescriptor.getEncoding();
     valueIterator =
-            sh.getStoreScanner(region.getName(), scan.getBucketId(), readerOptions).iterator();
+        sh.getStoreScanner(region.getName(), scan.getBucketId(), readerOptions).iterator();
     return valueIterator.hasNext();
   }
 
@@ -326,8 +319,8 @@ public class FTableScanner implements Iterator {
     /* log the scanned-counts, per tier, at the end of scanner */
     if (!b) {
       logger.debug("Scanned rows for table= {}, bucketId= {}: memory= {}, wal= {}, tier= {}",
-              region.getName(), scan.getBucketId(), scannedCounts[0], scannedCounts[1],
-              scannedCounts[2]);
+          region.getName(), scan.getBucketId(), scannedCounts[0], scannedCounts[1],
+          scannedCounts[2]);
     }
     return b;
   }
@@ -404,7 +397,7 @@ public class FTableScanner implements Iterator {
         OrcUtils.DummyRow dr = (OrcUtils.DummyRow) next;
         final InternalRow row = sc.getInternalRow();
         row.reset(currentBlockKeyBytes, dr.getBytes(), this.blockEncoding, dr.getOffset(),
-                dr.getLength());
+            dr.getLength());
         entry.reset(DummyKey.D_KEY, row);
       } else if (next instanceof byte[]) {
         bytes = (byte[]) next;
@@ -429,7 +422,7 @@ public class FTableScanner implements Iterator {
   }
 
   public void handleBucketMoved(Region region, Scan scan, ServerConnection servConn)
-          throws IOException {
+      throws IOException {
     boolean bucketMoveHandled = false;
 
     MPartList values = new MPartList(1, true);
@@ -438,7 +431,7 @@ public class FTableScanner implements Iterator {
     // Search for the server hosting scan.getBucketId() and send it in exception
     PartitionedRegion tableRegionPR = (PartitionedRegion) region;
     Set<BucketAdvisor.ServerBucketProfile> clientBucketProfiles =
-            tableRegionPR.getRegionAdvisor().getClientBucketProfiles(scan.getBucketId());
+        tableRegionPR.getRegionAdvisor().getClientBucketProfiles(scan.getBucketId());
 
     if (clientBucketProfiles != null && clientBucketProfiles.size() > 0) {
 
@@ -451,17 +444,17 @@ public class FTableScanner implements Iterator {
       }
 
       if (targetServerBucketProfile != null
-              && targetServerBucketProfile.getBucketServerLocations().size() > 0) {
+          && targetServerBucketProfile.getBucketServerLocations().size() > 0) {
         Set<? extends ServerLocation> bucketServerLocations =
-                targetServerBucketProfile.getBucketServerLocations();
+            targetServerBucketProfile.getBucketServerLocations();
 
         // Getting only first server location from the serverlocation list
         if (bucketServerLocations != null && bucketServerLocations.size() > 0) {
           ServerLocation location = bucketServerLocations.iterator().next();
           if (location != null) {
             byte[][] serverStatusMarker =
-                    {serverScanStatus.getStatusBytes(), Bytes.toBytes(location.getHostName()
-                            + Constants.General.SERVER_NAME_SEPARATOR + location.getPort())};
+                {serverScanStatus.getStatusBytes(), Bytes.toBytes(location.getHostName()
+                    + Constants.General.SERVER_NAME_SEPARATOR + location.getPort())};
             values.addObjectPart(EMPTY_BYTES, serverStatusMarker, true, null);
             bucketMoveHandled = true;
           }
@@ -486,7 +479,7 @@ public class FTableScanner implements Iterator {
    * @throws IOException
    */
   private void sendSendResponseChunk(Region region, MPartList list, boolean lastChunk,
-                                     ServerConnection servConn) throws IOException {
+      ServerConnection servConn) throws IOException {
     long l = System.nanoTime();
     ChunkedStreamMessage chunkedResponseMsg = servConn.getChunkedStreamResponseMessage();
     chunkedResponseMsg.setNumberOfParts(1);
@@ -496,8 +489,8 @@ public class FTableScanner implements Iterator {
 
     if (logger.isDebugEnabled()) {
       logger.debug("{}: Sending {} mscan response chunk for region={}{}", servConn.getName(),
-              (lastChunk ? " last " : " "), region.getFullPath(), (logger.isTraceEnabled()
-                      ? " values=" + list + " chunk=<" + chunkedResponseMsg + ">" : ""));
+          (lastChunk ? " last " : " "), region.getFullPath(), (logger.isTraceEnabled()
+              ? " values=" + list + " chunk=<" + chunkedResponseMsg + ">" : ""));
     }
 
     l = System.nanoTime();

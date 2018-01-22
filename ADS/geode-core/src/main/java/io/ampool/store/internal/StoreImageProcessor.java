@@ -63,8 +63,8 @@ class StoreImageProcessor extends ReplyProcessor21 {
 
 
   public StoreImageProcessor(final InternalDistributedSystem system,
-                             InternalDistributedMember member, final int tier, final String tableName,
-                             final int partitionId) {
+      InternalDistributedMember member, final int tier, final String tableName,
+      final int partitionId) {
     super(system, member);
     this.tier = tier;
     this.tableName = tableName;
@@ -73,7 +73,7 @@ class StoreImageProcessor extends ReplyProcessor21 {
   }
 
   public StoreImageProcessor(InternalDistributedSystem system, final int tier, Set members,
-                             final String tableName, final int partitionId) {
+      final String tableName, final int partitionId) {
     super(system, members);
     this.tier = tier;
     this.tableName = tableName;
@@ -92,8 +92,8 @@ class StoreImageProcessor extends ReplyProcessor21 {
      * to be deleted before moveStore starts sending any data.
      */
     logger.info(
-            "StoreImageProcessor: Deleting WAL/TierStore data for tableName= {}, partitionId= {}",
-            tableName, partitionId);
+        "StoreImageProcessor: Deleting WAL/TierStore data for tableName= {}, partitionId= {}",
+        tableName, partitionId);
     WriteAheadLog.getInstance().deleteBucket(tableName, partitionId);
     final TierStore store = StoreHandler.getInstance().getTierStore(tableName, tier);
     store.deletePartition(tableName, partitionId);
