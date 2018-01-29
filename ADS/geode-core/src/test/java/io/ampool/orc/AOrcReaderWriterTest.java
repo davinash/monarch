@@ -18,11 +18,15 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.lang.reflect.Array;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.sql.Date;
+import java.util.*;
 import java.util.function.BiFunction;
 
+import io.ampool.monarch.table.MColumnDescriptor;
+import io.ampool.monarch.table.Row;
 import io.ampool.monarch.table.Schema;
 import io.ampool.monarch.table.filter.Filter;
 import io.ampool.monarch.table.filter.FilterList;
@@ -30,9 +34,7 @@ import io.ampool.monarch.table.filter.SingleColumnValueFilter;
 import io.ampool.monarch.table.ftable.FTableDescriptor;
 import io.ampool.monarch.table.ftable.Record;
 import io.ampool.monarch.table.ftable.internal.BlockValue;
-import io.ampool.monarch.types.CompareOp;
-import io.ampool.monarch.types.DataTypeFactory;
-import io.ampool.monarch.types.StructType;
+import io.ampool.monarch.types.*;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.apache.commons.io.FileUtils;
@@ -314,7 +316,6 @@ public class AOrcReaderWriterTest {
       record1.add(BLOCK_VALUE_TD.getColumnDescriptorByIndex(i).getColumnName(), VALUES_1[i]);
     }
     BLOCK_VALUE.addAndUpdateStats(record1, BLOCK_VALUE_TD);
-    System.out.println(BLOCK_VALUE.getColumnStatistics().toString());
   }
 
   public static Object[] dataIsBlockNeeded() {
@@ -341,5 +342,101 @@ public class AOrcReaderWriterTest {
   public void testIsBlockNeeded(final Filter f, final boolean expected) {
     assertEquals("Incorrect status for isBlockNeeded.", expected,
         OrcUtils.isBlockNeeded(new OrcUtils.OrcOptions(f, BLOCK_VALUE_TD), BLOCK_VALUE));
+  }
+
+  @Test
+  public void testConvertOrcBytes() {
+    final String str =
+        "struct<col_tinyint:BYTE,col_smallint:SHORT,col_int:INT,col_bigint:LONG,col_boolean:BOOLEAN,col_float:FLOAT,col_double:DOUBLE,col_string:STRING,col_int_array:array<INT>,col_string_array:array<STRING>,col_map:map<INT,STRING>,col_struct:struct<id:STRING,name:STRING,val:INT>,col_timestamp:TIMESTAMP,col_binary:BINARY,col_decimal:BIG_DECIMAL(10,5),col_char:CHARS(10),col_varchar:VARCHAR(26),col_date:DATE,__INSERTION_TIMESTAMP__:LONG>";
+    final String orcSchema =
+        "struct<col_tinyint:tinyint,col_smallint:smallint,col_int:int,col_bigint:bigint,col_boolean:boolean,col_float:float,col_double:double,col_string:string,col_int_array:array<int>,col_string_array:array<string>,col_map:map<int,string>,col_struct:struct<id:string,name:string,val:int>,col_timestamp:timestamp,col_binary:binary,col_decimal:decimal(10,5),col_char:string(10),col_varchar:varchar(26),col_date:date,__INSERTION_TIMESTAMP__:bigint>";
+    final FTableDescriptor td = new FTableDescriptor();
+    td.setSchema(Schema.fromString(str));
+    td.setBlockSize(1);
+    td.setBlockFormat(FTableDescriptor.BlockFormat.ORC_BYTES);
+    assertEquals("Incorrect ORC schema.", orcSchema, td.getOrcSchema());
+
+    Record record = new Record();
+    final Object[][] expectedValues = new Object[2][];
+    final BlockValue bv = new BlockValue(1);
+    expectedValues[0] = addToRecord(td, record);
+    bv.addAndUpdateStats(record, td);
+    record.clear();
+    expectedValues[1] = addToRecord(td, record);
+    bv.addAndUpdateStats(record, td);
+    bv.close(td);
+
+    final Iterator<Object> iterator = bv.iterator();
+    int rId = 0;
+    while (iterator.hasNext()) {
+      final Row row = (Row) iterator.next();
+      final Object[] values = expectedValues[rId++];
+      assertEquals("Incorrect number of column returned.", td.getNumOfColumns(), row.size());
+      for (int j = 0; j < td.getNumOfColumns(); j++) {
+        final Object value = row.getValue(j);
+        final Object expected = values[j];
+        if (expected == null || value == null) {
+          continue;
+        }
+        if (expected.getClass().isArray()) {
+          assertEquals("Incorrect value.length for columnId= " + j, Array.getLength(expected),
+              Array.getLength(value));
+          for (int k = 0; k < Array.getLength(value); k++) {
+            assertEquals("Incorrect value.length for columnId= " + j + ", at index= " + k,
+                Array.get(expected, k), Array.get(value, k));
+          }
+        } else {
+          if (td.getColumnDescriptorByIndex(j).getColumnType().equals(BasicTypes.VARCHAR)) {
+            assertEquals("Incorrect value for columnId= " + j, ((String) expected).substring(0, 26),
+                value);
+          } else if (td.getColumnDescriptorByIndex(j).getColumnType() instanceof MapType) {
+            assertEquals("Incorrect value for columnId= " + j, MAP_STRING, value.toString());
+          } else if (value instanceof BigDecimal) {
+            BigDecimal e = ((BigDecimal) expected).stripTrailingZeros();
+            BigDecimal a = ((BigDecimal) value).stripTrailingZeros();
+            assertEquals("Incorrect value for columnId= " + j, e, a);
+          } else {
+            assertEquals("Incorrect value for columnId= " + j, expected, value);
+          }
+        }
+      }
+    }
+  }
+
+  /* ORC reader gives HashMap and not LinkedHashMap.. need to update if fixed in ORC-reader */
+  private static final String MAP_STRING = "{20=val2, 10=val1}";
+
+  private Object[] addToRecord(FTableDescriptor td, Record record) {
+    Object[] values = new Object[td.getNumOfColumns()];
+    int i = 0;
+    for (MColumnDescriptor cd : td.getSchema().getColumnDescriptors()) {
+      values[i++] = TypeUtils.getRandomValue(cd.getColumnType());
+      if (cd.getColumnType().equals(BasicTypes.BIG_DECIMAL)) {
+        BigDecimal bd = (BigDecimal) values[i - 1];
+        values[i - 1] = new BigDecimal(bd.toBigInteger(), 5, new MathContext(10));
+      } else if (cd.getColumnType().equals(BasicTypes.VARCHAR)) {
+        final String s = (String) values[i - 1];
+        final StringBuilder ns = new StringBuilder(s);
+        final int len = s.length();
+        int al = len;
+        while (true) {
+          ns.append(s);
+          al += len;
+          if (al > 40) {
+            break;
+          }
+        }
+        values[i - 1] = ns.toString();
+      } else if (cd.getColumnType().equals(BasicTypes.DATE)) {
+        values[i - 1] = Date.valueOf(values[i - 1].toString());
+      } else if (cd.getColumnType() instanceof MapType) {
+        Map<Integer, String> map = new LinkedHashMap<>(2);
+        map.put(10, "val1");
+        map.put(20, "val2");
+        values[i - 1] = map;
+      }
+      record.add(cd.getColumnNameAsString(), values[i - 1]);
+    }
+    return values;
   }
 }

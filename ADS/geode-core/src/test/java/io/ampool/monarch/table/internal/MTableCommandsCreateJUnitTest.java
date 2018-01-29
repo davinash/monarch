@@ -24,26 +24,27 @@ import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 import java.util.stream.Stream;
 
+import org.apache.geode.cache.execute.ResultCollector;
 import org.apache.geode.distributed.DistributedMember;
 import org.apache.geode.internal.cache.DescMTableFunction;
 import org.apache.geode.internal.cache.DiskStoreAttributes;
 import org.apache.geode.management.cli.Result;
 import org.apache.geode.management.internal.cli.CliUtil;
 import org.apache.geode.management.internal.cli.commands.MTableCommands;
+import org.apache.geode.management.internal.cli.domain.DiskStoreDetails;
+import org.apache.geode.management.internal.cli.functions.CliFunctionResult;
 import org.apache.geode.management.internal.cli.functions.CreateDiskStoreFunction;
+import org.apache.geode.management.internal.cli.functions.DescribeDiskStoreFunction;
 import org.apache.geode.management.internal.cli.functions.DestroyDiskStoreFunction;
 import org.apache.geode.management.internal.cli.i18n.CliStrings;
 import org.apache.geode.management.internal.cli.json.GfJsonArray;
 import org.apache.geode.management.internal.cli.json.GfJsonException;
 import org.apache.geode.management.internal.cli.json.GfJsonObject;
 import org.apache.geode.management.internal.cli.result.CommandResult;
+import org.apache.geode.management.internal.configuration.domain.XmlEntity;
 import org.apache.geode.test.junit.categories.MonarchTest;
 import io.ampool.monarch.table.MCache;
 import io.ampool.monarch.table.MCacheFactory;
@@ -565,6 +566,32 @@ public class MTableCommandsCreateJUnitTest {
     assertProperty("disk-store-name", dsName);
 
     CliUtil.executeFunction(new DestroyDiskStoreFunction(), new Object[] {dsName}, dm);
+  }
+
+
+  /**
+   * Test for disk store attributes
+   */
+  @Test
+  public void testDiskStoreWithDiskAttributes() {
+    final String dsName = "disk_store_abc";
+    DistributedMember dm = cache.getDistributedSystem().getDistributedMember();
+    DiskStoreAttributes dsa = new DiskStoreAttributes();
+    dsa.enableDeltaPersistence = true;
+    dsa.queueSize = 99;
+    dsa.autoCompact = false;
+    ResultCollector<?, ?> resultCollector =
+        CliUtil.executeFunction(new CreateDiskStoreFunction(), new Object[] {dsName, dsa}, dm);
+    ArrayList resultList = ((ArrayList) resultCollector.getResult());
+    XmlEntity xmlEntity = ((CliFunctionResult) resultList.get(0)).getXmlEntity();
+    System.out.println(xmlEntity.getXmlDefinition());
+    assertTrue(xmlEntity.getXmlDefinition().contains("enable-delta-persistence=\"true\""));
+    assertTrue(xmlEntity.getXmlDefinition().contains("queue-size=\"99\""));
+
+    resultCollector = CliUtil.executeFunction(new DescribeDiskStoreFunction(), dsName, dm);
+    DiskStoreDetails diskStoreDetails =
+        (DiskStoreDetails) ((ArrayList) resultCollector.getResult()).get(0);
+    assertTrue(diskStoreDetails.getEnableDeltaPersistence());
   }
 
   /**

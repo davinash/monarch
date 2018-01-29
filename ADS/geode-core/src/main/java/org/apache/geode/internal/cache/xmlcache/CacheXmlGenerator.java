@@ -869,7 +869,7 @@ public class CacheXmlGenerator extends CacheXml implements XMLReader {
 
   /**
    * Generates the <code>serializer-registration</code> element.
-   * 
+   *
    * @throws SAXException
    */
   private void generateSerializerRegistration() throws SAXException {
@@ -924,9 +924,9 @@ public class CacheXmlGenerator extends CacheXml implements XMLReader {
 
   /**
    * Generates XML for the client-subscription tag
-   * 
+   *
    * @param bridge instance of <code>CacheServer</code>
-   * 
+   *
    * @since GemFire 5.7
    */
 
@@ -1150,6 +1150,14 @@ public class CacheXmlGenerator extends CacheXml implements XMLReader {
             atts.addAttribute("", "", DISK_USAGE_CRITICAL_PERCENTAGE, "",
                 String.valueOf(ds.getDiskUsageCriticalPercentage()));
         }
+
+        if ((!(ds instanceof DiskStoreAttributesCreation)
+            || ((DiskStoreAttributesCreation) ds).hasEnableDeltaPersistence())) {
+          if (generateDefaults() || ds
+              .getEnableDeltaPersistence() != DiskStoreFactory.DEFAULT_ENABLE_DELTA_PERSISTENCE)
+            atts.addAttribute("", "", ENABLE_DELTA_PERSISTENCE, "",
+                String.valueOf(ds.getEnableDeltaPersistence()));
+        }
       }
     } finally {
       handler.startElement("", DISK_STORE, DISK_STORE, atts);
@@ -1184,7 +1192,7 @@ public class CacheXmlGenerator extends CacheXml implements XMLReader {
 
   /**
    * Compare regions by name
-   * 
+   *
    *
    */
   class RegionComparator implements Comparator {

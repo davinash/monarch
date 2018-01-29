@@ -259,10 +259,6 @@ public class MTableDUnitHelper extends AMPLJUnit4CacheTestCase {
     }
   }
 
-  public String getLocatorPortAsStr() {
-    return DUnitLauncher.getLocatorPortString();
-  }
-
   /**
    *
    * @return
@@ -510,8 +506,8 @@ public class MTableDUnitHelper extends AMPLJUnit4CacheTestCase {
 
   /**
    * Function to generate keys which which spawns on given number of partitions.
-   * 
-   * 
+   *
+   *
    * @param numOfPartitions
    * @param numOfKeysEachPartition
    * @return Returns the map of partition id to generate keys
@@ -586,7 +582,7 @@ public class MTableDUnitHelper extends AMPLJUnit4CacheTestCase {
 
   /**
    * Puts rowsPerBucket rows into each bucket
-   * 
+   *
    * @param mtable
    * @param rowsPerBucket
    */
@@ -621,7 +617,7 @@ public class MTableDUnitHelper extends AMPLJUnit4CacheTestCase {
 
   /**
    * Deletes given table
-   * 
+   *
    * @param tableName
    */
   public void deleteMTable(String tableName) {
@@ -630,4 +626,22 @@ public class MTableDUnitHelper extends AMPLJUnit4CacheTestCase {
     admin.deleteTable(tableName);
   }
 
+  /**
+   * Restart the servers on the specified VMs. It stops all VMs and then restarts the server on
+   * respective VMs asynchronously.
+   *
+   * @param vms server VMs to be restarted
+   */
+  public void restartServers(final List<VM> vms) {
+    for (VM vm : vms) {
+      stopServerOn(vm);
+    }
+    vms.parallelStream().forEach(vm -> {
+      try {
+        asyncStartServerOn(vm, DUnitLauncher.getLocatorString()).join();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    });
+  }
 }

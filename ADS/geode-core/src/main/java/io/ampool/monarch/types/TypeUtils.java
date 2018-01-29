@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -60,6 +61,8 @@ public class TypeUtils {
    * Instantiate the random number generator..
    **/
   private static final SecureRandom RANDOM = new SecureRandom();
+
+  private static final AtomicInteger intCounter = new AtomicInteger(0);
 
   /**
    * the date-range
@@ -99,9 +102,7 @@ public class TypeUtils {
               () -> new BigInteger(getRandomInt(MAX_STRING_LEN) * 8, RANDOM).toString(32));
           put(BasicTypes.VARCHAR,
               () -> new BigInteger(getRandomInt(MAX_STRING_LEN) * 8, RANDOM).toString(32));
-          put(BasicTypes.BIG_DECIMAL,
-              () -> new BigDecimal(new BigInteger(MAX_DECIMAL_LEN * 8, RANDOM), 13,
-                  new MathContext(13)));
+          put(BasicTypes.BIG_DECIMAL, () -> getBigDecimal(13, 13));
           put(BasicTypes.CHAR, () -> CHARS.charAt(RANDOM.nextInt(CHARS.length())));
           put(BasicTypes.CHARS,
               () -> new BigInteger(getRandomInt(MAX_CHARS_LEN) * 8, RANDOM).toString(32));
@@ -182,6 +183,27 @@ public class TypeUtils {
   }
 
   /**
+   * Get a random big-decimal of specified scale and precision.
+   *
+   * @param scale the scale
+   * @param precision the precision
+   * @return the random big-decimal value
+   */
+  public static BigDecimal getBigDecimal(final int scale, final int precision) {
+    final BigInteger bi = new BigInteger(MAX_DECIMAL_LEN * 8, RANDOM);
+    return new BigDecimal(new BigDecimal(bi, new MathContext(precision)).unscaledValue(), scale);
+  }
+
+  public static Object getRandomValue(final DataType inType, boolean autoincrementInt) {
+    if (inType.toString().equals("INT")) {
+      return intCounter.getAndIncrement();
+    } else {
+      return getRandomValue(inType);
+    }
+  }
+
+
+  /**
    * Get the random value for the specified type.
    *
    * @param inType the object type
@@ -197,6 +219,26 @@ public class TypeUtils {
         throw new IllegalArgumentException("Unsupported type: " + type.toString());
       }
       retValue = supplier.get();
+      /* use arguments, if any, to generate the random value. */
+      if (inType instanceof WrapperType) {
+        final WrapperType wType = (WrapperType) inType;
+        if (type.equals(BasicTypes.BIG_DECIMAL)) {
+          final String[] s = wType.getArgs().replaceAll("[()\\s]", "").split(",");
+          final int precision = Integer.parseInt(s[0]);
+          final int scale = Integer.parseInt(s[1]);
+          BigDecimal bd = (BigDecimal) retValue;
+          if (scale == bd.scale() && precision == bd.precision()) {
+            retValue = bd;
+          } else {
+            retValue = getBigDecimal(scale, precision);
+          }
+        } else if (type.equals(BasicTypes.VARCHAR)) {
+          final int len = Integer.parseInt(wType.getArgs());
+          final String s = (String) retValue;
+          final int end = s.length() > len ? len : s.length();
+          retValue = new String(s.substring(0, end));
+        }
+      }
     } else if (type instanceof ListType) {
       final int size = getRandomInt(MAX_LIST_LEN);
       List<Object> list = new ArrayList<>(size);

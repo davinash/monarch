@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 
+import io.ampool.monarch.table.ftable.FTableDescriptor;
+import io.ampool.monarch.table.ftable.exceptions.FTableExistsException;
 import org.apache.geode.CopyHelper;
 import org.apache.geode.GemFireException;
 import org.apache.geode.cache.Region;
@@ -113,7 +115,10 @@ public final class CreateMTableControllerFunction extends FunctionAdapter
           metaRegion.put(tableName, CopyHelper.copy(tableDescriptor));
         }
       } else {
-        throw new MTableExistsException("MTable " + tableName + " already exists");
+        if (existingDesc instanceof FTableDescriptor) {
+          throw new FTableExistsException("Table " + tableName + " already exists");
+        }
+        throw new MTableExistsException("Table " + tableName + " already exists");
       }
     } catch (GemFireException | MException re) {
       ex = re;

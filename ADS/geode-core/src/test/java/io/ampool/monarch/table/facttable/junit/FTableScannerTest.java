@@ -28,21 +28,17 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.ampool.monarch.table.Bytes;
 import io.ampool.monarch.table.Row;
 import io.ampool.monarch.table.Scan;
 import io.ampool.monarch.table.Schema;
 import io.ampool.monarch.table.TableDescriptor;
 import io.ampool.monarch.table.filter.Filter;
 import io.ampool.monarch.table.filter.FilterList;
-import io.ampool.monarch.table.filter.FilterList.Operator;
 import io.ampool.monarch.table.filter.SingleColumnValueFilter;
-import io.ampool.monarch.table.filter.internal.BlockKeyFilter;
 import io.ampool.monarch.table.ftable.FTableDescriptor;
 import io.ampool.monarch.table.ftable.Record;
 import io.ampool.monarch.table.ftable.TierStoreConfiguration;
@@ -88,76 +84,6 @@ import org.junit.runner.RunWith;
 @Category(FTableTest.class)
 @RunWith(JUnitParamsRunner.class)
 public class FTableScannerTest {
-
-  @Test
-  public void handleSpecialColumnFilters() throws Exception {
-    Filter filter1 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, 1000l);
-    Filter filter2 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, 2000l);
-    FilterList list = new FilterList(FilterList.Operator.MUST_PASS_ALL, filter1, filter2);
-
-    Filter filter3 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.GREATER, 5000l);
-    Filter filter4 = new SingleColumnValueFilter(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME,
-        CompareOp.LESS, 6000l);
-
-    FilterList list1 = new FilterList(FilterList.Operator.MUST_PASS_ALL, filter3, filter4);
-
-    FilterList list2 = new FilterList(FilterList.Operator.MUST_PASS_ONE, list, list1);
-
-    Scan scan = new Scan();
-    scan.setFilter(list2);
-
-    FTableScanner scanner = new FTableScanner();
-    final FilterList newFilter = scanner.handleSpecialColumnFilters(scan.getFilter());
-
-
-    // verify now the return list
-
-    assertTrue(newFilter.getOperator() == Operator.MUST_PASS_ONE);
-    final List<Filter> filters = newFilter.getFilters();
-    assertEquals(filters.size(), 2);
-    for (int i = 0; i < filters.size(); i++) {
-      final Filter filter = filters.get(i);
-      assertTrue(filter instanceof FilterList);
-      final FilterList filterList = (FilterList) filter;
-      assertTrue(filterList.getOperator() == Operator.MUST_PASS_ALL);
-      final List<Filter> filterss = filterList.getFilters();
-      assertEquals(filterss.size(), 2);
-      if (i == 0) {
-        // first filter
-        for (int j = 0; j < filterss.size(); j++) {
-          final Filter singleFilter = filterss.get(j);
-          assertTrue(singleFilter instanceof BlockKeyFilter);
-          final BlockKeyFilter sFilter = (BlockKeyFilter) singleFilter;
-          if (j == 0) {
-            assertTrue(sFilter.getOperator() == CompareOp.GREATER);
-            assertTrue(Bytes.toLong(((byte[]) (sFilter.getValue()))) == 1000l);
-          } else {
-            assertTrue(sFilter.getOperator() == CompareOp.LESS);
-            assertTrue(Bytes.toLong(((byte[]) (sFilter.getValue()))) == 2000l);
-          }
-        }
-      } else {
-        // second filter
-        for (int j = 0; j < filterss.size(); j++) {
-          final Filter singleFilter = filterss.get(j);
-          assertTrue(singleFilter instanceof BlockKeyFilter);
-          final BlockKeyFilter sFilter = (BlockKeyFilter) singleFilter;
-          if (j == 0) {
-            assertTrue(sFilter.getOperator() == CompareOp.GREATER);
-            assertTrue(Bytes.toLong(((byte[]) (sFilter.getValue()))) == 5000l);
-          } else {
-            assertTrue(sFilter.getOperator() == CompareOp.LESS);
-            assertTrue(Bytes.toLong(((byte[]) (sFilter.getValue()))) == 6000l);
-          }
-        }
-      }
-
-    }
-  }
-
   /* helper methods to mock the required objects and ingest the data in various tiers */
 
   /**

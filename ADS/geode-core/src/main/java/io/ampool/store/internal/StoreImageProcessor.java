@@ -24,6 +24,7 @@ import io.ampool.store.StoreRecord;
 import io.ampool.tierstore.ConverterDescriptor;
 import io.ampool.tierstore.TierStore;
 import io.ampool.tierstore.TierStoreWriter;
+import io.ampool.tierstore.wal.WriteAheadLog;
 import org.apache.geode.distributed.internal.DistributionMessage;
 import org.apache.geode.distributed.internal.InternalDistributedSystem;
 import org.apache.geode.distributed.internal.ReplyProcessor21;
@@ -90,7 +91,10 @@ class StoreImageProcessor extends ReplyProcessor21 {
      * currently the store-data movement supports only full data movement.. hence current data needs
      * to be deleted before moveStore starts sending any data.
      */
-    logger.info("Deleting store-data for tableName= {}, partitionId= {}", tableName, partitionId);
+    logger.info(
+        "StoreImageProcessor: Deleting WAL/TierStore data for tableName= {}, partitionId= {}",
+        tableName, partitionId);
+    WriteAheadLog.getInstance().deleteBucket(tableName, partitionId);
     final TierStore store = StoreHandler.getInstance().getTierStore(tableName, tier);
     store.deletePartition(tableName, partitionId);
     writer = store.getWriter(tableName, partitionId);
@@ -129,13 +133,14 @@ class StoreImageProcessor extends ReplyProcessor21 {
 
   private void processChunk(StoreImageReplyMessage storeImageReplyMessage) {
     final List<StoreRecord> storeRecords = storeImageReplyMessage.getEntries();
+    logger.debug("StoreImageProcessor: processChunk: replyMessage= {}", storeImageReplyMessage);
     if (storeRecords == null && storeImageReplyMessage.getNumOfChunks() >= 0) {
       chunksToProcess.compareAndSet(-1, storeImageReplyMessage.getNumOfChunks());
     } else if (storeRecords != null && storeRecords.size() > 0) {
       try {
         writer.write(writer.getProperties(), storeRecords);
       } catch (IOException e) {
-        e.printStackTrace();
+        logger.warn("Failed to process chunk: {}", storeImageReplyMessage, e);
       }
       // TODO To be done when handling bucket movement with new tierstore impl.
       // store.append(this.tableName, this.partitionId, storeRecords);

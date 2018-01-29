@@ -52,6 +52,8 @@ public class DiskStoreAttributes implements Serializable, DiskStore {
   private volatile float diskUsageWarningPct;
   private volatile float diskUsageCriticalPct;
 
+  public boolean enableDeltaPersistence;
+
   public DiskStoreAttributes() {
     // set all to defaults
     this.autoCompact = DiskStoreFactory.DEFAULT_AUTO_COMPACT;
@@ -65,6 +67,7 @@ public class DiskStoreAttributes implements Serializable, DiskStore {
     this.diskDirSizes = DiskStoreFactory.DEFAULT_DISK_DIR_SIZES;
     this.diskUsageWarningPct = DiskStoreFactory.DEFAULT_DISK_USAGE_WARNING_PERCENTAGE;
     this.diskUsageCriticalPct = DiskStoreFactory.DEFAULT_DISK_USAGE_CRITICAL_PERCENTAGE;
+    this.enableDeltaPersistence = DiskStoreFactory.DEFAULT_ENABLE_DELTA_PERSISTENCE;
   }
 
   public UUID getDiskStoreUUID() {
@@ -73,7 +76,7 @@ public class DiskStoreAttributes implements Serializable, DiskStore {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.geode.cache.DiskStore#getAllowForceCompaction()
    */
   public boolean getAllowForceCompaction() {
@@ -82,7 +85,7 @@ public class DiskStoreAttributes implements Serializable, DiskStore {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.geode.cache.DiskStore#getAutoCompact()
    */
   public boolean getAutoCompact() {
@@ -91,7 +94,7 @@ public class DiskStoreAttributes implements Serializable, DiskStore {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.geode.cache.DiskStore#getCompactionThreshold()
    */
   public int getCompactionThreshold() {
@@ -100,7 +103,7 @@ public class DiskStoreAttributes implements Serializable, DiskStore {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.geode.cache.DiskStore#getDiskDirSizes()
    */
   public int[] getDiskDirSizes() {
@@ -111,7 +114,7 @@ public class DiskStoreAttributes implements Serializable, DiskStore {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.geode.cache.DiskStore#getDiskDirs()
    */
   public File[] getDiskDirs() {
@@ -122,7 +125,7 @@ public class DiskStoreAttributes implements Serializable, DiskStore {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.geode.cache.DiskStore#getMaxOplogSize()
    */
   public long getMaxOplogSize() {
@@ -139,7 +142,7 @@ public class DiskStoreAttributes implements Serializable, DiskStore {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.geode.cache.DiskStore#getName()
    */
   public String getName() {
@@ -148,7 +151,7 @@ public class DiskStoreAttributes implements Serializable, DiskStore {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.geode.cache.DiskStore#getQueueSize()
    */
   public int getQueueSize() {
@@ -157,7 +160,7 @@ public class DiskStoreAttributes implements Serializable, DiskStore {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.geode.cache.DiskStore#getTimeInterval()
    */
   public long getTimeInterval() {
@@ -166,7 +169,7 @@ public class DiskStoreAttributes implements Serializable, DiskStore {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.geode.cache.DiskStore#getWriteBufferSize()
    */
   public int getWriteBufferSize() {
@@ -201,6 +204,11 @@ public class DiskStoreAttributes implements Serializable, DiskStore {
   }
 
   @Override
+  public boolean getEnableDeltaPersistence() {
+    return enableDeltaPersistence;
+  }
+
+  @Override
   public void setDiskUsageWarningPercentage(float warningPercent) {
     DiskStoreMonitor.checkWarning(warningPercent);
     diskUsageWarningPct = warningPercent;
@@ -211,4 +219,5 @@ public class DiskStoreAttributes implements Serializable, DiskStore {
     DiskStoreMonitor.checkCritical(criticalPercent);
     diskUsageCriticalPct = criticalPercent;
   }
+
 }

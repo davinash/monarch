@@ -274,4 +274,12 @@ public class DiskStoreMBeanBridge {
   public void setDiskUsageCriticalPercentage(float criticalPercent) {
     diskStore.setDiskUsageCriticalPercentage(criticalPercent);
   }
+
+  public long getDeltaWrites() {
+    return getDiskStoreStatistic(StatsKey.DELTA_WRITES).longValue();
+  }
+
+  public long getDeltaReads() {
+    return getDiskStoreStatistic(StatsKey.DELTA_READS).longValue();
+  }
 }

@@ -23,6 +23,7 @@ import java.util.*;
 import java.util.function.Function;
 
 import io.ampool.monarch.table.Scanner;
+import io.ampool.monarch.table.internal.MTableImpl;
 import org.apache.geode.cache.execute.FunctionException;
 import org.apache.geode.cache.execute.FunctionService;
 import org.apache.geode.distributed.internal.ServerLocation;
@@ -37,7 +38,6 @@ import io.ampool.monarch.table.filter.SingleColumnValueFilter;
 import io.ampool.monarch.table.ftable.FTable;
 import io.ampool.monarch.table.ftable.FTableDescriptor;
 import io.ampool.monarch.table.ftable.Record;
-import io.ampool.monarch.table.internal.ProxyMTableRegion;
 import io.ampool.monarch.table.internal.MTableUtils;
 import io.ampool.monarch.types.CompareOp;
 import io.ampool.monarch.types.BasicTypes;
@@ -477,7 +477,7 @@ public class MCountFunctionTest {
   @Test(expected = FunctionException.class)
   public void testArgs_1() {
     MTable mTable = testBase.getClientCache().getTable(regionNameUnOrdered);
-    FunctionService.onServers(((ProxyMTableRegion) mTable).getTableRegion().getRegionService())
+    FunctionService.onServers(((MTableImpl) mTable).getTableRegion().getRegionService())
         .withArgs(null).execute(MCountFunction.COUNT_FUNCTION).getResult();
   }
 
@@ -485,7 +485,7 @@ public class MCountFunctionTest {
   public void testArgs_2() {
     MTable mTable = testBase.getClientCache().getTable(regionNameUnOrdered);
     MCountFunction.Args args = new MCountFunction.Args(null, null, true);
-    FunctionService.onServers(((ProxyMTableRegion) mTable).getTableRegion().getRegionService())
+    FunctionService.onServers(((MTableImpl) mTable).getTableRegion().getRegionService())
         .withArgs(args).execute(MCountFunction.COUNT_FUNCTION).getResult();
   }
 }

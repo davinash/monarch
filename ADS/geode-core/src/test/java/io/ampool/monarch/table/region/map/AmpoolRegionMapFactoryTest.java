@@ -13,8 +13,9 @@ import io.ampool.monarch.table.Put;
 import io.ampool.monarch.table.ftable.FTable;
 import io.ampool.monarch.table.ftable.FTableDescriptor;
 import io.ampool.monarch.table.ftable.Record;
+import io.ampool.monarch.table.ftable.internal.FTableImpl;
 import io.ampool.monarch.table.ftable.internal.ProxyFTableRegion;
-import io.ampool.monarch.table.internal.ProxyMTableRegion;
+import io.ampool.monarch.table.internal.MTableImpl;
 import io.ampool.monarch.types.BasicTypes;
 import org.apache.geode.cache.Cache;
 import org.apache.geode.cache.CacheFactory;
@@ -64,11 +65,11 @@ public class AmpoolRegionMapFactoryTest {
 
     // check the region map and internal map
     RegionMap regionMap =
-        ((LocalRegion) ((ProxyMTableRegion) mTable_ordered).getTableRegion()).getRegionMap();
+        ((LocalRegion) ((MTableImpl) mTable_ordered).getTableRegion()).getRegionMap();
     assertNotNull(regionMap);
     assertTrue(regionMap instanceof RowTupleLRURegionMap);
     Set<BucketRegion> allLocalBucketRegions =
-        ((PartitionedRegion) ((ProxyMTableRegion) mTable_ordered).getTableRegion()).getDataStore()
+        ((PartitionedRegion) ((MTableImpl) mTable_ordered).getTableRegion()).getDataStore()
             .getAllLocalBucketRegions();
     allLocalBucketRegions.forEach((BR) -> {
       assertTrue(BR.entries instanceof RowTupleLRURegionMap);
@@ -88,13 +89,11 @@ public class AmpoolRegionMapFactoryTest {
     mTable_unordered.put(put);
 
     // check the region map and internal map
-    regionMap =
-        ((LocalRegion) ((ProxyMTableRegion) mTable_unordered).getTableRegion()).getRegionMap();
+    regionMap = ((LocalRegion) ((MTableImpl) mTable_unordered).getTableRegion()).getRegionMap();
     assertNotNull(regionMap);
     assertTrue(regionMap instanceof RowTupleLRURegionMap);
-    allLocalBucketRegions =
-        ((PartitionedRegion) ((ProxyMTableRegion) mTable_unordered).getTableRegion()).getDataStore()
-            .getAllLocalBucketRegions();
+    allLocalBucketRegions = ((PartitionedRegion) ((MTableImpl) mTable_unordered).getTableRegion())
+        .getDataStore().getAllLocalBucketRegions();
     allLocalBucketRegions.forEach((BR) -> {
       assertTrue(BR.entries instanceof RowTupleLRURegionMap);
       assertTrue(BR.entries.getInternalMap() instanceof RowTupleConcurrentHashMap);
@@ -112,10 +111,10 @@ public class AmpoolRegionMapFactoryTest {
     fTable.append(record);
 
     // check the region map and internal map
-    regionMap = ((LocalRegion) ((ProxyFTableRegion) fTable).getTableRegion()).getRegionMap();
+    regionMap = ((LocalRegion) ((FTableImpl) fTable).getTableRegion()).getRegionMap();
     assertNotNull(regionMap);
     assertTrue(regionMap instanceof RowTupleLRURegionMap);
-    allLocalBucketRegions = ((PartitionedRegion) ((ProxyFTableRegion) fTable).getTableRegion())
+    allLocalBucketRegions = ((PartitionedRegion) ((FTableImpl) fTable).getTableRegion())
         .getDataStore().getAllLocalBucketRegions();
     allLocalBucketRegions.forEach((BR) -> {
       assertTrue(BR.entries instanceof RowTupleLRURegionMap);
@@ -139,11 +138,11 @@ public class AmpoolRegionMapFactoryTest {
 
     // check the region map and internal map
     RegionMap regionMap =
-        ((LocalRegion) ((ProxyMTableRegion) mTable_ordered).getTableRegion()).getRegionMap();
+        ((LocalRegion) ((MTableImpl) mTable_ordered).getTableRegion()).getRegionMap();
     assertNotNull(regionMap);
     assertTrue(regionMap instanceof RowTupleLRURegionMap);
     Set<BucketRegion> allLocalBucketRegions =
-        ((PartitionedRegion) ((ProxyMTableRegion) mTable_ordered).getTableRegion()).getDataStore()
+        ((PartitionedRegion) ((MTableImpl) mTable_ordered).getTableRegion()).getDataStore()
             .getAllLocalBucketRegions();
     allLocalBucketRegions.forEach((BR) -> {
       assertTrue(BR.entries instanceof RowTupleLRURegionMap);
@@ -159,13 +158,11 @@ public class AmpoolRegionMapFactoryTest {
     MTable mTable_unordered = mCache.getMTable("MTable_Unordered");
 
     // check the region map and internal map
-    regionMap =
-        ((LocalRegion) ((ProxyMTableRegion) mTable_unordered).getTableRegion()).getRegionMap();
+    regionMap = ((LocalRegion) ((MTableImpl) mTable_unordered).getTableRegion()).getRegionMap();
     assertNotNull(regionMap);
     assertTrue(regionMap instanceof RowTupleLRURegionMap);
-    allLocalBucketRegions =
-        ((PartitionedRegion) ((ProxyMTableRegion) mTable_unordered).getTableRegion()).getDataStore()
-            .getAllLocalBucketRegions();
+    allLocalBucketRegions = ((PartitionedRegion) ((MTableImpl) mTable_unordered).getTableRegion())
+        .getDataStore().getAllLocalBucketRegions();
     allLocalBucketRegions.forEach((BR) -> {
       assertTrue(BR.entries instanceof RowTupleLRURegionMap);
       assertTrue(BR.entries.getInternalMap() instanceof RowTupleConcurrentHashMap);
@@ -178,10 +175,10 @@ public class AmpoolRegionMapFactoryTest {
     FTable fTable = mCache.getFTable("FTable");
 
     // check the region map and internal map
-    regionMap = ((LocalRegion) ((ProxyFTableRegion) fTable).getTableRegion()).getRegionMap();
+    regionMap = ((LocalRegion) ((FTableImpl) fTable).getTableRegion()).getRegionMap();
     assertNotNull(regionMap);
     assertTrue(regionMap instanceof RowTupleLRURegionMap);
-    allLocalBucketRegions = ((PartitionedRegion) ((ProxyFTableRegion) fTable).getTableRegion())
+    allLocalBucketRegions = ((PartitionedRegion) ((FTableImpl) fTable).getTableRegion())
         .getDataStore().getAllLocalBucketRegions();
     allLocalBucketRegions.forEach((BR) -> {
       assertTrue(BR.entries instanceof RowTupleLRURegionMap);
@@ -212,11 +209,11 @@ public class AmpoolRegionMapFactoryTest {
 
     // check the region map and internal map
     RegionMap regionMap =
-        ((LocalRegion) ((ProxyMTableRegion) mTable_ordered).getTableRegion()).getRegionMap();
+        ((LocalRegion) ((MTableImpl) mTable_ordered).getTableRegion()).getRegionMap();
     assertNotNull(regionMap);
     assertTrue(regionMap instanceof RowTupleRegionMap);
     Set<BucketRegion> allLocalBucketRegions =
-        ((PartitionedRegion) ((ProxyMTableRegion) mTable_ordered).getTableRegion()).getDataStore()
+        ((PartitionedRegion) ((MTableImpl) mTable_ordered).getTableRegion()).getDataStore()
             .getAllLocalBucketRegions();
     allLocalBucketRegions.forEach((BR) -> {
       assertTrue(BR.entries instanceof RowTupleRegionMap);
@@ -238,13 +235,11 @@ public class AmpoolRegionMapFactoryTest {
     mTable_unordered.put(put);
 
     // check the region map and internal map
-    regionMap =
-        ((LocalRegion) ((ProxyMTableRegion) mTable_unordered).getTableRegion()).getRegionMap();
+    regionMap = ((LocalRegion) ((MTableImpl) mTable_unordered).getTableRegion()).getRegionMap();
     assertNotNull(regionMap);
     assertTrue(regionMap instanceof RowTupleRegionMap);
-    allLocalBucketRegions =
-        ((PartitionedRegion) ((ProxyMTableRegion) mTable_unordered).getTableRegion()).getDataStore()
-            .getAllLocalBucketRegions();
+    allLocalBucketRegions = ((PartitionedRegion) ((MTableImpl) mTable_unordered).getTableRegion())
+        .getDataStore().getAllLocalBucketRegions();
     allLocalBucketRegions.forEach((BR) -> {
       assertTrue(BR.entries instanceof RowTupleRegionMap);
       assertTrue(BR.entries.getInternalMap() instanceof RowTupleConcurrentHashMap);
@@ -265,11 +260,11 @@ public class AmpoolRegionMapFactoryTest {
 
     // check the region map and internal map
     RegionMap regionMap =
-        ((LocalRegion) ((ProxyMTableRegion) mTable_ordered).getTableRegion()).getRegionMap();
+        ((LocalRegion) ((MTableImpl) mTable_ordered).getTableRegion()).getRegionMap();
     assertNotNull(regionMap);
     assertTrue(regionMap instanceof RowTupleRegionMap);
     Set<BucketRegion> allLocalBucketRegions =
-        ((PartitionedRegion) ((ProxyMTableRegion) mTable_ordered).getTableRegion()).getDataStore()
+        ((PartitionedRegion) ((MTableImpl) mTable_ordered).getTableRegion()).getDataStore()
             .getAllLocalBucketRegions();
     allLocalBucketRegions.forEach((BR) -> {
       assertTrue(BR.entries instanceof RowTupleRegionMap);
@@ -285,13 +280,11 @@ public class AmpoolRegionMapFactoryTest {
     MTable mTable_unordered = mCache.getMTable("MTable_Unordered_NOEviction");
 
     // check the region map and internal map
-    regionMap =
-        ((LocalRegion) ((ProxyMTableRegion) mTable_unordered).getTableRegion()).getRegionMap();
+    regionMap = ((LocalRegion) ((MTableImpl) mTable_unordered).getTableRegion()).getRegionMap();
     assertNotNull(regionMap);
     assertTrue(regionMap instanceof RowTupleRegionMap);
-    allLocalBucketRegions =
-        ((PartitionedRegion) ((ProxyMTableRegion) mTable_unordered).getTableRegion()).getDataStore()
-            .getAllLocalBucketRegions();
+    allLocalBucketRegions = ((PartitionedRegion) ((MTableImpl) mTable_unordered).getTableRegion())
+        .getDataStore().getAllLocalBucketRegions();
     allLocalBucketRegions.forEach((BR) -> {
       assertTrue(BR.entries instanceof RowTupleRegionMap);
       assertTrue(BR.entries.getInternalMap() instanceof RowTupleConcurrentHashMap);

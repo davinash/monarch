@@ -40,8 +40,8 @@ import io.ampool.monarch.table.exceptions.MTableNotExistsException;
 import io.ampool.monarch.table.ftable.FTable;
 import io.ampool.monarch.table.ftable.FTableDescriptor;
 import io.ampool.monarch.table.ftable.exceptions.FTableNotExistsException;
+import io.ampool.monarch.table.internal.MTableImpl;
 import io.ampool.monarch.table.internal.MTableKey;
-import io.ampool.monarch.table.internal.ProxyMTableRegion;
 import io.ampool.monarch.table.internal.Table;
 import io.ampool.monarch.types.BasicTypes;
 import io.ampool.monarch.types.interfaces.DataType;
@@ -579,7 +579,7 @@ public class MonarchUtils {
   public static Collection<Object> getWithFilter(final MTable mTable, final Set<MTableKey> keySet,
                                                  final Object[] args) {
     Object output = FunctionService
-      .onRegion(((ProxyMTableRegion) mTable).getTableRegion())
+      .onRegion(((MTableImpl) mTable).getTableRegion())
       .withCollector(new NonNullResultCollector())
       .withFilter(keySet)
       .withArgs(args)

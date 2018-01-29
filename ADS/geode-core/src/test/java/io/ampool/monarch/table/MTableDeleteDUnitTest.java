@@ -13,6 +13,7 @@
  */
 package io.ampool.monarch.table;
 
+import io.ampool.monarch.table.internal.MTableUtils;
 import org.apache.geode.test.junit.categories.MonarchTest;
 import io.ampool.monarch.table.client.MClientCache;
 import io.ampool.monarch.table.client.MClientCacheFactory;
@@ -70,7 +71,7 @@ public class MTableDeleteDUnitTest {
     for (int colmnIndex = 0; colmnIndex < NUM_OF_COLUMNS; colmnIndex++) {
       tableDescriptor = tableDescriptor.addColumn(Bytes.toBytes(COLUMN_NAME_PREFIX + colmnIndex));
     }
-    tableDescriptor.setRedundantCopies(1);
+    tableDescriptor.setRedundantCopies(2);
     tableDescriptor.setMaxVersions(5);
 
     Admin admin = clientCache.getAdmin();
@@ -171,12 +172,15 @@ public class MTableDeleteDUnitTest {
         assertTrue(result.isEmpty());
       } else {
         assertFalse(result.isEmpty());
-        assertEquals(NUM_OF_COLUMNS, result.size());
+        assertEquals(NUM_OF_COLUMNS + 1, result.size());
       }
 
       int columnIndex = 0;
       List<Cell> row = result.getCells();
       for (Cell cell : row) {
+        if (MTableUtils.KEY_COLUMN_NAME.equalsIgnoreCase(Bytes.toString(cell.getColumnName()))) {
+          continue;
+        }
         Assert.assertNotEquals(10, columnIndex);
         byte[] expectedColumnName = Bytes.toBytes(COLUMN_NAME_PREFIX + columnIndex);
         if (deletedCells.contains(rowIndex + "-" + columnIndex)) {

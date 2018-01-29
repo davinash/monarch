@@ -15,6 +15,7 @@ package io.ampool.tierstore.wal;
 
 import static io.ampool.tierstore.wal.WriteAheadLog.*;
 
+import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -29,20 +30,31 @@ import org.apache.geode.internal.GemFireVersion;
 
 public class WALWriter {
   private Path file;
-  private FileOutputStream fos;
+  private DataOutputStream fos;
   private AtomicInteger numRecords;
   private int recordLimit;
+  private final String tableName;
+  private final int partitionId;
 
-  public WALWriter(Path file, int recordLimit) throws IOException {
+  public WALWriter(String tableName, int partitionId, Path file, int recordLimit)
+      throws IOException {
+    this.tableName = tableName;
+    this.file = file;
+    this.partitionId = partitionId;
     numRecords = new AtomicInteger(0);
     initWriter(file, recordLimit);
   }
 
   private void initWriter(Path file, int recordLimit) throws IOException {
-    this.file = file;
+    if (file == null) {
+      this.file = Paths.get(WriteAheadLog.getInstance().getWalDirectory() + "/" + tableName + "_"
+          + partitionId + "_" + WriteAheadLog.getInstance().getNextSeqNo(tableName, partitionId)
+          + WAL_INPROGRESS_SUFFIX);
+    }
+
     this.recordLimit = recordLimit;
     numRecords.set(0);
-    fos = new FileOutputStream(file.toFile());
+    fos = new DataOutputStream(new FileOutputStream(this.file.toFile()));
     fos.write(WriteAheadLog.getNodeId());
     String ampoolVersion = GemFireVersion.getAmpoolVersion();
     fos.write(new byte[4]); /* reserved */
@@ -55,7 +67,7 @@ public class WALWriter {
 
   /**
    * Return the path associted with the opened file.
-   * 
+   *
    * @return path
    */
   public Path getPath() {
@@ -64,40 +76,40 @@ public class WALWriter {
 
   /**
    * Write one Row to WAL file
-   * 
+   *
    * @return number of rows written
    */
   public int write(IMKey blockKey, BlockValue blockValue) throws IOException {
-    synchronized (this) {
-      if (this.numRecords.get() >= this.recordLimit) {
-        fos.close();
-        WriteAheadLog.getInstance().markFileDone(this.file.toString(), false);
-        String currentFileName = file.getFileName().toString();
-        String tableName = WriteAheadLog.getInstance().getTableName(currentFileName);
-        int partitionId = WriteAheadLog.getInstance().getPartitionId(currentFileName);
-        Path newPath = Paths
-            .get(WriteAheadLog.getInstance().getWalDirectory() + "/" + tableName + "_" + partitionId
-                + "_" + WriteAheadLog.getInstance().getNextSeqNo(tableName, partitionId)
-                + WAL_INPROGRESS_SUFFIX);
-        initWriter(newPath, recordLimit);
+    if (this.numRecords.get() >= this.recordLimit) {
+      close();
+      WriteAheadLog.getInstance().markFileDone(this.file.toString(), false);
+      synchronized (this) {
+        /* make sure that only one threads creates new file */
+        if (this.fos == null) {
+          initWriter(null, recordLimit);
+        }
       }
-      WALRecord record = new WALRecord(blockKey, blockValue);
-      writeOneRecord(record);
     }
+    WALRecord record = new WALRecord(blockKey, blockValue);
+    writeOneRecord(record);
     return 0;
   }
 
   /**
    * Write one WALRecord to WAL file
-   * 
+   *
    * @param record
    * @throws IOException
    */
   private void writeOneRecord(WALRecord record) throws IOException {
-    byte[] bytes = record.getWALBytes();
-    fos.write(bytes);
-    numRecords.incrementAndGet();
-    fos.flush();
+    synchronized (this) {
+      if (this.fos == null) {
+        initWriter(null, recordLimit);
+      }
+      record.toData(fos);
+      numRecords.incrementAndGet();
+      fos.flush();
+    }
   }
 
   /**
@@ -118,7 +130,7 @@ public class WALWriter {
 
   /**
    * Get number of records written by current WAL writer.
-   * 
+   *
    * @return get number of records written by this writer.
    */
   public int getNumRecords() {

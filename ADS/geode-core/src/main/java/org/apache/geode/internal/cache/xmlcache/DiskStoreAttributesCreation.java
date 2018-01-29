@@ -50,7 +50,7 @@ public class DiskStoreAttributesCreation extends UserSpecifiedDiskStoreAttribute
    * NOTE: Currently attrs will not be an instance of DiskStoreAttributesCreation. If it could be
    * then this code should be changed to use attrs' hasXXX methods to initialize the has booleans
    * when defaults is false.
-   * 
+   *
    * @param attrs the attributes to initialize this guy with.
    */
   public DiskStoreAttributesCreation(DiskStoreAttributes attrs) {
@@ -64,6 +64,7 @@ public class DiskStoreAttributesCreation extends UserSpecifiedDiskStoreAttribute
     this.queueSize = attrs.getQueueSize();
     this.diskDirs = attrs.getDiskDirs();
     this.diskDirSizes = attrs.getDiskDirSizes();
+    this.enableDeltaPersistence = attrs.getEnableDeltaPersistence();
 
     setDiskUsageWarningPercentage(attrs.getDiskUsageWarningPercentage());
     setDiskUsageCriticalPercentage(attrs.getDiskUsageCriticalPercentage());
@@ -101,7 +102,7 @@ public class DiskStoreAttributesCreation extends UserSpecifiedDiskStoreAttribute
 
   /**
    * returns true if two long[] are equal
-   * 
+   *
    * @param array1
    * @param array2
    * @return true if equal
@@ -121,7 +122,7 @@ public class DiskStoreAttributesCreation extends UserSpecifiedDiskStoreAttribute
 
   /**
    * returns true if two int[] are equal
-   * 
+   *
    * @param array1
    * @param array2
    * @return true if equal
@@ -236,6 +237,12 @@ public class DiskStoreAttributesCreation extends UserSpecifiedDiskStoreAttribute
           LocalizedStrings.DiskStoreAttributesCreation_DISK_USAGE_CRITICAL_ARE_NOT_THE_SAME
               .toLocalizedString(name));
     }
+    if (this.enableDeltaPersistence != other.getEnableDeltaPersistence()) {
+      throw new RuntimeException(
+          LocalizedStrings.DiskStoreAttributesCreation_ENABLEDELTAPERSISTENCE_OF_0_IS_NOT_THE_SAME_THIS_1_OTHER_2
+              .toLocalizedString(new Object[] {name, this.enableDeltaPersistence,
+                  other.getEnableDeltaPersistence()}));
+    }
     return true;
   }
 
@@ -312,9 +319,14 @@ public class DiskStoreAttributesCreation extends UserSpecifiedDiskStoreAttribute
     this.setHasDiskUsageCriticalPercentage(true);
   }
 
+  public void setEnableDeltaPersistence(boolean enableDeltaPersistence) {
+    this.enableDeltaPersistence = enableDeltaPersistence;
+    this.setHasEnableDeltaPersistence(true);
+  }
+
   /**
    * Checks if directories exist
-   * 
+   *
    * @param disk_dirs
    */
   private void checkIfDirectoriesExist(File[] disk_dirs) {

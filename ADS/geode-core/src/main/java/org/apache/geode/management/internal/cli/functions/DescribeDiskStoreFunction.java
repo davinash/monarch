@@ -114,6 +114,7 @@ public class DescribeDiskStoreFunction extends FunctionAdapter implements Intern
           diskStoreDetails.setDiskUsageWarningPercentage(diskStore.getDiskUsageWarningPercentage());
           diskStoreDetails
               .setDiskUsageCriticalPercentage(diskStore.getDiskUsageCriticalPercentage());
+          diskStoreDetails.setEnableDeltaPersistence(diskStore.getEnableDeltaPersistence());
 
           setDiskDirDetails(diskStore, diskStoreDetails);
           setRegionDetails(gemfireCache, diskStore, diskStoreDetails);

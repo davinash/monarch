@@ -32,6 +32,8 @@ public class FTableDescriptorHelper {
       }
       tableDescriptor.addColumn(DEFAULT_COL_PREFIX + i);
     }
+    tableDescriptor.setRedundantCopies(1);
+    tableDescriptor.setTotalNumOfSplits(7);
     return tableDescriptor;
   }
 

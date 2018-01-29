@@ -14,17 +14,7 @@
  */
 package org.apache.geode.cache.client.internal;
 
-import org.apache.geode.cache.AttributesFactory;
-import org.apache.geode.cache.CacheListener;
-import org.apache.geode.cache.CustomExpiry;
-import org.apache.geode.cache.EvictionAttributes;
-import org.apache.geode.cache.ExpirationAttributes;
-import org.apache.geode.cache.InterestPolicy;
-import org.apache.geode.cache.Region;
-import org.apache.geode.cache.RegionAttributes;
-import org.apache.geode.cache.RegionExistsException;
-import org.apache.geode.cache.Scope;
-import org.apache.geode.cache.SubscriptionAttributes;
+import org.apache.geode.cache.*;
 import org.apache.geode.cache.client.ClientRegionFactory;
 import org.apache.geode.cache.client.ClientRegionShortcut;
 import org.apache.geode.cache.client.Pool;
@@ -214,6 +204,13 @@ public class ClientRegionFactoryImpl<K, V> implements ClientRegionFactory<K, V> 
   public Region<K, V> createSubregion(Region<?, ?> parent, String name)
       throws RegionExistsException {
     return ((LocalRegion) parent).createSubregion(name, createRegionAttributes());
+  }
+
+  @Override
+  public ClientRegionFactory<K, V> setCustomRegionAttributes(
+      CustomRegionAttributes customRegionAttributes) {
+    this.attrsFactory.setCustomAttributes(customRegionAttributes);
+    return this;
   }
 
   @SuppressWarnings("deprecation")

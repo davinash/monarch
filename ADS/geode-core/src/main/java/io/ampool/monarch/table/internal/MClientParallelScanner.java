@@ -42,7 +42,7 @@ public class MClientParallelScanner extends Scanner {
 
   static Logger logger = LogService.getLogger();
 
-  public MClientParallelScanner(Scan scan, ProxyMTableRegion table, int groupSize) {
+  public MClientParallelScanner(Scan scan, MTableImpl table, int groupSize) {
     if (scan.batchModeEnabled()) {
       throw new IllegalArgumentException("Parallel scanner does not support batch mode");
     }
@@ -62,7 +62,7 @@ public class MClientParallelScanner extends Scanner {
     }
 
     this.isRandomPartitionedOrdered = false; // MTable does not support ordered random partitioned
-                                             // yet
+    // yet
     if (isRandomPartitionedOrdered && !scan.getReturnKeysFlag()) {
       isRandomPartitionedOrdered = false;
     }

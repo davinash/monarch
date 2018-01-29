@@ -40,6 +40,7 @@ import io.ampool.monarch.table.ftable.FTableDescriptor;
 import io.ampool.monarch.table.ftable.TierStoreConfiguration;
 import io.ampool.monarch.table.ftable.exceptions.FTableExistsException;
 import io.ampool.monarch.table.ftable.exceptions.FTableNotExistsException;
+import io.ampool.monarch.table.ftable.internal.FTableImpl;
 import io.ampool.monarch.table.ftable.internal.ProxyFTableRegion;
 import io.ampool.monarch.types.BasicTypes;
 import io.ampool.store.ExternalStoreWriter;
@@ -97,8 +98,8 @@ public class AdminImpl implements Admin {
   public MTable createMTable(final String tableName, final MTableDescriptor tableDescriptor)
       throws MTableExistsException {
     final Table table = createMemoryTable(tableName, tableDescriptor);
-    if (table instanceof MTable || table instanceof ProxyMTableRegion) {
-      return (ProxyMTableRegion) table;
+    if (table instanceof MTable || table instanceof MTableImpl) {
+      return (MTableImpl) table;
     }
     // TODO Confirm if this what expected
     return null;
@@ -113,8 +114,8 @@ public class AdminImpl implements Admin {
       throws FTableExistsException {
     validateFTableDescriptor(tableDescriptor);
     final Table table = createMemoryTable(tableName, tableDescriptor);
-    if (table instanceof FTable || table instanceof ProxyFTableRegion) {
-      return (ProxyFTableRegion) table;
+    if (table instanceof FTable || table instanceof FTableImpl) {
+      return (FTableImpl) table;
     }
     // TODO Confirm if this what expected
     return null;
@@ -527,9 +528,9 @@ public class AdminImpl implements Admin {
       }
       if (tableRegion != null) {
         if (!isFTable) {
-          ProxyMTableRegion table = null;
+          MTableImpl table = null;
           try {
-            table = new ProxyMTableRegion(tableRegion, (MTableDescriptor) tableDescriptor,
+            table = new MTableImpl(tableRegion, (MTableDescriptor) tableDescriptor,
                 this.monarchCacheImpl);
           } catch (GemFireException ge) {
             // Removing entry from metaregion in case of failure
@@ -541,9 +542,9 @@ public class AdminImpl implements Admin {
           return table;
         } else {
           // FTable related
-          ProxyFTableRegion table = null;
+          FTableImpl table = null;
           try {
-            table = new ProxyFTableRegion(tableRegion, (FTableDescriptor) tableDescriptor,
+            table = new FTableImpl(tableRegion, (FTableDescriptor) tableDescriptor,
                 this.monarchCacheImpl);
           } catch (GemFireException ge) {
             // Removing entry from metaregion in case of failure
@@ -779,7 +780,7 @@ public class AdminImpl implements Admin {
     } catch (Exception e) {
       logger.error("Exception while flushing table: " + tableName, e);
       MTableUtils.checkSecurityException(e);
-      ex = e;
+      throw e;
     }
 
   }

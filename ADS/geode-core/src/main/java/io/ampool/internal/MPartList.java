@@ -27,6 +27,7 @@ import io.ampool.monarch.table.internal.InternalRow;
 import io.ampool.monarch.table.region.ScanContext;
 import org.apache.geode.DataSerializer;
 import org.apache.geode.internal.DataSerializableFixedID;
+import org.apache.geode.internal.InternalDataSerializer;
 import org.apache.geode.internal.Version;
 import org.apache.geode.internal.cache.tier.sockets.CacheServerHelper;
 import org.apache.geode.internal.cache.versions.VersionTag;
@@ -160,11 +161,6 @@ public class MPartList implements DataSerializableFixedID, Externalizable, Relea
   @Override
   public void toData(DataOutput out) throws IOException {
     out.writeBoolean(this.hasKeys);
-    /**
-     * TODO: need to change length-type dynamically for key and value.. currently byte and short are
-     * used as these would be sufficient for normal cases. Need to identify the max-length of key
-     * and value and send one extra-byte for that.
-     */
     if (this.typeArray != null) {
       byte[] bytes;
       out.writeInt(index);
@@ -173,10 +169,10 @@ public class MPartList implements DataSerializableFixedID, Externalizable, Relea
         byte objectType = this.typeArray[i];
         if (this.hasKeys) {
           if (keyArray[i] == null) {
-            out.writeByte(-1);
+            MPartList.writeLength(-1, out);
           } else {
             bytes = (byte[]) keyArray[i];
-            out.writeByte(bytes.length);
+            MPartList.writeLength(bytes.length, out);
             out.write(bytes);
           }
         }
@@ -206,12 +202,34 @@ public class MPartList implements DataSerializableFixedID, Externalizable, Relea
     }
   }
 
+  /**
+   * Write an integer row length to the provided output.
+   *
+   * @param length row length
+   * @param out the data-output
+   * @throws IOException if failed to write to the output
+   */
+  public static void writeLength(final long length, final DataOutput out) throws IOException {
+    InternalDataSerializer.writeSignedVL(length, out);
+  }
+
+  /**
+   * Read an integer row length from the provided input.
+   *
+   * @param in the data input
+   * @return row length
+   * @throws IOException if failed to read from the input
+   */
+  public static long readLength(final DataInput in) throws IOException {
+    return InternalDataSerializer.readSignedVL(in);
+  }
+
   private static void writeBytes(final DataOutput out, final Object value) throws IOException {
     if (value == null) {
-      out.writeShort(-1);
+      MPartList.writeLength(-1, out);
     } else {
       final byte[] bytes = (byte[]) value;
-      out.writeShort(bytes.length);
+      MPartList.writeLength(bytes.length, out);
       out.write(bytes);
     }
   }
@@ -233,14 +251,14 @@ public class MPartList implements DataSerializableFixedID, Externalizable, Relea
     byte[] bytes;
     for (int i = 0; i < this.index; i++) {
       if (this.hasKeys) {
-        length = in.readByte();
+        length = (int) MPartList.readLength(in);
         bytes = new byte[length];
         in.readFully(bytes, 0, length);
         this.keyArray[i] = bytes;
       }
       objectType = in.readByte();
       if (objectType == BYTES) {
-        length = in.readShort();
+        length = (int) MPartList.readLength(in);
         if (length >= 0) {
           bytes = new byte[length];
           in.readFully(bytes, 0, length);

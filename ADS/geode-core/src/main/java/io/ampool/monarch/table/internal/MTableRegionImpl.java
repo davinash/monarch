@@ -30,14 +30,14 @@ public class MTableRegionImpl implements MTableRegion {
   private byte[] endKey = null;
   private final String name;
   private int targetBucketId = -1;
-  private final ProxyMTableRegion table;
+  private final MTableImpl table;
 
 
   public MTableRegionImpl(String name, int targetBucketId) {
     this.name = name;
     this.targetBucketId = targetBucketId;
 
-    this.table = (ProxyMTableRegion) MCacheFactory.getAnyInstance().getTable(name);
+    this.table = (MTableImpl) MCacheFactory.getAnyInstance().getTable(name);
     if (table == null) {
       throw new MCoprocessorException("Table " + table + " Not Found");
     }
@@ -55,8 +55,7 @@ public class MTableRegionImpl implements MTableRegion {
 
   @Override
   public Scanner getScanner(Scan scan) throws Exception {
-    ProxyMTableRegion table =
-        (ProxyMTableRegion) MCacheFactory.getAnyInstance().getTable(this.name);
+    MTableImpl table = (MTableImpl) MCacheFactory.getAnyInstance().getTable(this.name);
     scan.setBucketId(this.targetBucketId);
     return new ScannerServerImpl(scan, table);
   }

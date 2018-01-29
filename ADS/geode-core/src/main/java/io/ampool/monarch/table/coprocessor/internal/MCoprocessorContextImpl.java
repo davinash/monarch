@@ -20,7 +20,7 @@ import io.ampool.monarch.table.MTableRegion;
 import io.ampool.monarch.table.coprocessor.MCoprocessorContext;
 import io.ampool.monarch.table.coprocessor.MExecutionRequest;
 import io.ampool.monarch.table.coprocessor.MResultSender;
-import io.ampool.monarch.table.internal.ProxyMTableRegion;
+import io.ampool.monarch.table.internal.MTableImpl;
 import org.apache.geode.internal.cache.MonarchCacheImpl;
 import org.apache.geode.LogWriter;
 import org.apache.geode.cache.Region;
@@ -76,8 +76,8 @@ public class MCoprocessorContextImpl implements MCoprocessorContext {
   @Override
   public MTable getTable() {
     RegionFunctionContextImpl rfci = (RegionFunctionContextImpl) this.context;
-    ProxyMTableRegion inernalTableImpl =
-        (ProxyMTableRegion) MCacheFactory.getAnyInstance().getTable(rfci.getDataSet().getName());
+    MTableImpl inernalTableImpl =
+        (MTableImpl) MCacheFactory.getAnyInstance().getTable(rfci.getDataSet().getName());
     // GEN-639 Removed setting bucketid since we are anyway not using this API
     // and it should be handled by other stuff
     // inernalTableImpl.setScannerBucketId(rfci.getTargetBucketId());

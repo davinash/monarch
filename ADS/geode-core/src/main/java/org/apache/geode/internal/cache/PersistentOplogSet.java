@@ -144,7 +144,15 @@ public class PersistentOplogSet implements OplogSet {
 
   }
 
-  private TreeSet<Oplog> getSortedOplogs() {
+  protected Oplog getOplog(long oplogID, PersistentOplogSet oplogSet) {
+    return new Oplog(oplogID, oplogSet);
+  }
+
+  protected Oplog getOplog(long oplogId, PersistentOplogSet parent, DirectoryHolder dirHolder) {
+    return new Oplog(oplogId, parent, dirHolder);
+  }
+
+  protected TreeSet<Oplog> getSortedOplogs() {
     TreeSet<Oplog> result = new TreeSet<Oplog>(new Comparator() {
       public int compare(Object arg0, Object arg1) {
         return Long.signum(((Oplog) arg1).getOplogId() - ((Oplog) arg0).getOplogId());
@@ -261,7 +269,7 @@ public class PersistentOplogSet implements OplogSet {
 
       Oplog oplog = getChild(oplogId);
       if (oplog == null) {
-        oplog = new Oplog(oplogId, this);
+        oplog = getOplog(oplogId, this);
         // oplogSet.add(oplog);
         addRecoveredOplog(oplog);
       }
@@ -545,7 +553,7 @@ public class PersistentOplogSet implements OplogSet {
       // This fixes bug 41822.
     }
     if (force || maxRecoveredOplogId > 0) {
-      setChild(new Oplog(maxRecoveredOplogId + 1, this, getNextDir()));
+      setChild(getOplog(maxRecoveredOplogId + 1, this, getNextDir()));
     }
   }
 
@@ -580,7 +588,7 @@ public class PersistentOplogSet implements OplogSet {
    * Creates and returns a new oplogEntryId for the given key. An oplogEntryId is needed when
    * storing a key/value pair on disk. A new one is only needed if the key is new. Otherwise the
    * oplogEntryId already allocated for a key can be reused for the same key.
-   * 
+   *
    * @return A disk id that can be used to access this key/value pair on disk
    */
   final long newOplogEntryId() {
@@ -591,7 +599,7 @@ public class PersistentOplogSet implements OplogSet {
   /**
    * Returns the next available DirectoryHolder which has space. If no dir has space then it will
    * return one anyway if compaction is enabled.
-   * 
+   *
    * @param minAvailableSpace the minimum amount of space we need in this directory.
    */
   DirectoryHolder getNextDir(int minAvailableSpace, boolean checkForWarning) {
@@ -914,7 +922,7 @@ public class PersistentOplogSet implements OplogSet {
 
   /**
    * Removes the oplog from the map given the oplogId
-   * 
+   *
    * @param id id of the oplog to be removed from the list
    * @return oplog Oplog which has been removed
    */
@@ -1036,7 +1044,7 @@ public class PersistentOplogSet implements OplogSet {
 
   /**
    * Add compactable oplogs to the list, up to the maximum size.
-   * 
+   *
    * @param l
    * @param max
    */

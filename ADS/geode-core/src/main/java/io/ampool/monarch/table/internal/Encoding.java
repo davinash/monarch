@@ -4,6 +4,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
 
+import io.ampool.internal.MPartList;
 import io.ampool.monarch.table.Bytes;
 import io.ampool.monarch.table.MColumnDescriptor;
 import io.ampool.monarch.table.TableDescriptor;
@@ -42,7 +43,7 @@ public interface Encoding {
   default void writeDesRow(final DataOutput out, final TableDescriptor td,
       final DeSerializedRow row, final List<Integer> columns) throws IOException {
     if (row == null) {
-      out.writeShort(-1);
+      MPartList.writeLength(-1, out);
     } else if (columns.isEmpty() || columns.size() == td.getNumOfColumns()) {
       byte[] bytes;
       byte[][] data = new byte[td.getNumOfColumns()][];
@@ -68,7 +69,7 @@ public interface Encoding {
         }
       }
 
-      out.writeShort(length);
+      MPartList.writeLength(length, out);
       int offset = 0;
       for (int i = 0; i < flIdx; i++) {
         out.write(data[i]);
@@ -96,7 +97,7 @@ public interface Encoding {
         vlColumns += type.isFixedLength() ? 0 : 1;
       }
       length += (vlColumns * Bytes.SIZEOF_INT);
-      out.writeShort(length);
+      MPartList.writeLength(length, out);
       for (int i = 0; i < columns.size(); i++) {
         type = cds.get(columns.get(i)).getColumnType();
         if (!type.isFixedLength()) {

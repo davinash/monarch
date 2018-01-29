@@ -13,6 +13,7 @@
  */
 package io.ampool.tierstore.wal;
 
+import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -25,18 +26,20 @@ import org.apache.geode.internal.cache.EntryEventImpl;
 
 public class WALReader implements AutoCloseable {
   private Path file;
-  private FileInputStream fis = null;
+  private DataInputStream fis = null;
 
   public WALReader(Path file) throws IOException {
     this.file = file;
-    fis = new FileInputStream(file.toFile());
-    WALUtils.verifyIntegrity(file, fis, true);
+    final FileInputStream fs = new FileInputStream(file.toFile());
+    fis = new DataInputStream(fs);
+    WALUtils.verifyIntegrity(file, fs, true);
   }
 
   public WALReader(Path file, Boolean verifyIntegrity) throws IOException {
     this.file = file;
-    fis = new FileInputStream(file.toFile());
-    WALUtils.verifyIntegrity(file, fis, verifyIntegrity);
+    final FileInputStream fs = new FileInputStream(file.toFile());
+    fis = new DataInputStream(fs);
+    WALUtils.verifyIntegrity(file, fs, verifyIntegrity);
   }
 
   public Path getFile() {
@@ -45,39 +48,16 @@ public class WALReader implements AutoCloseable {
 
   /**
    * Read the next WAL record from a WAL file
-   * 
+   *
    * @return WALRecord or null if there are no more records
    */
   public WALRecord readNext() throws IOException {
-    // 1. Read total record size of type int
-    byte[] totalSize = new byte[Bytes.SIZEOF_INT];
-    int numberOfBytesRead = fis.read(totalSize);
-    if (numberOfBytesRead == -1) {
-      return null;
-    }
-
-
-    // 2. Read complete WAL record
-    byte[] recordBytes = new byte[Bytes.toInt(totalSize) - Bytes.SIZEOF_INT];
-    numberOfBytesRead = fis.read(recordBytes);
-    if (numberOfBytesRead == -1) {
-      return null;
-    }
-
-    // read WALRecordHeader and BlockKey
-    byte[] headerBytes = Arrays.copyOfRange(recordBytes, 0, WALRecordHeader.SIZE);
-    final WALRecordHeader walRecordHeader = WALRecordHeader.getWALRecordHeader(headerBytes);
-    BlockKey blockKey = walRecordHeader.getBlockKey();
-
-    // Read Block Value
-    byte[] valueBytes = Arrays.copyOfRange(recordBytes, WALRecordHeader.SIZE, recordBytes.length);
-    BlockValue blockValue = (BlockValue) EntryEventImpl.deserialize(valueBytes);
-    return new WALRecord(blockKey, blockValue);
+    return WALRecord.fromData(fis);
   }
 
   /**
    * Read next N WAL record from a WAL file
-   * 
+   *
    * @param numRecords
    * @return Number of records read, null if there are no more records
    */
@@ -104,7 +84,7 @@ public class WALReader implements AutoCloseable {
 
   /**
    * Read the previous WAL record from a WAL file
-   * 
+   *
    * @return WALRecord or null if there are no more records
    */
   public WALRecord readPrev() {
@@ -114,7 +94,7 @@ public class WALReader implements AutoCloseable {
 
   /**
    * Read previous N WAL record from a WAL file
-   * 
+   *
    * @param numRecords
    * @return Number of records read, null if there are no more records
    */

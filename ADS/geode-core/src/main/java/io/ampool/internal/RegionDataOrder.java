@@ -88,5 +88,9 @@ public class RegionDataOrder implements Serializable {
   protected Object readResolve() {
     return RegionDataOrder.ORDERS[this.id];
   }
+
+  public static RegionDataOrder fromId(final int id) {
+    return RegionDataOrder.ORDERS[id];
+  }
 }
 

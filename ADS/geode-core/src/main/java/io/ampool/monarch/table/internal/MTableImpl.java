@@ -17,19 +17,7 @@ import io.ampool.classification.InterfaceAudience;
 import io.ampool.classification.InterfaceStability;
 import io.ampool.internal.ServerTableRegionProxy;
 import io.ampool.internal.functions.DeleteWithFilterFunction;
-import io.ampool.monarch.table.Bytes;
-import io.ampool.monarch.table.Cell;
-import io.ampool.monarch.table.Delete;
-import io.ampool.monarch.table.Get;
-import io.ampool.monarch.table.MColumnDescriptor;
-import io.ampool.monarch.table.MTable;
-import io.ampool.monarch.table.MTableDescriptor;
-import io.ampool.monarch.table.MTableType;
-import io.ampool.monarch.table.MultiVersionValueWrapper;
-import io.ampool.monarch.table.Pair;
-import io.ampool.monarch.table.Put;
-import io.ampool.monarch.table.Row;
-import io.ampool.monarch.table.Scan;
+import io.ampool.monarch.table.*;
 import io.ampool.monarch.table.Scanner;
 import io.ampool.monarch.table.coprocessor.MCoprocessor;
 import io.ampool.monarch.table.coprocessor.MExecutionRequest;
@@ -37,29 +25,17 @@ import io.ampool.monarch.table.coprocessor.internal.MCoprocessorService;
 import io.ampool.monarch.table.coprocessor.internal.MCoprocessorUtils;
 import io.ampool.monarch.table.coprocessor.internal.MResultCollector;
 import io.ampool.monarch.table.coprocessor.internal.MResultCollectorImpl;
-import io.ampool.monarch.table.exceptions.IllegalColumnNameException;
-import io.ampool.monarch.table.exceptions.MCacheInternalErrorException;
-import io.ampool.monarch.table.exceptions.MCacheLowMemoryException;
-import io.ampool.monarch.table.exceptions.MCheckOperationFailException;
-import io.ampool.monarch.table.exceptions.MCoprocessorException;
-import io.ampool.monarch.table.exceptions.MException;
-import io.ampool.monarch.table.exceptions.RowKeyDoesNotExistException;
-import io.ampool.monarch.table.exceptions.RowKeyOutOfRangeException;
+import io.ampool.monarch.table.exceptions.*;
 import io.ampool.monarch.table.filter.Filter;
 import io.ampool.monarch.table.results.FormatAwareRow;
 import io.ampool.monarch.types.MPredicateHolder;
 import org.apache.geode.CopyHelper;
 import org.apache.geode.GemFireException;
-import org.apache.geode.cache.CacheClosedException;
-import org.apache.geode.cache.EntryNotFoundException;
-import org.apache.geode.cache.LowMemoryException;
-import org.apache.geode.cache.Region;
-import org.apache.geode.cache.RegionDestroyedException;
+import org.apache.geode.cache.*;
 import org.apache.geode.cache.execute.Execution;
 import org.apache.geode.cache.execute.Function;
 import org.apache.geode.cache.execute.FunctionService;
 import org.apache.geode.cache.execute.ResultCollector;
-import org.apache.geode.distributed.DistributedMember;
 import org.apache.geode.distributed.internal.ServerLocation;
 import org.apache.geode.internal.cache.MonarchCacheImpl;
 import org.apache.geode.internal.cache.PartitionedRegion;
@@ -68,18 +44,7 @@ import org.apache.geode.internal.cache.execute.DefaultResultCollector;
 import org.apache.geode.internal.logging.LogService;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.function.Predicate;
 
@@ -87,7 +52,7 @@ import static io.ampool.monarch.table.internal.MTableUtils.checkSecurityExceptio
 
 @InterfaceAudience.Private
 @InterfaceStability.Stable
-public class ProxyMTableRegion implements MTable, InternalTable {
+public class MTableImpl implements MTable, InternalTable {
   private static final Logger logger = LogService.getLogger();
 
   // TODO: This should be a instance of ServerTableRegionProxy which will support scan
@@ -98,7 +63,7 @@ public class ProxyMTableRegion implements MTable, InternalTable {
   private final MonarchCacheImpl amplCache;
   private final MTableLocationInfo mTableLocationInfo;
 
-  public ProxyMTableRegion(Region<Object, Object> tableRegion, MTableDescriptor tableDescriptor,
+  public MTableImpl(Region<Object, Object> tableRegion, MTableDescriptor tableDescriptor,
       MonarchCacheImpl cache) {
     this.tableRegion = tableRegion;
     this.tableDescriptor = tableDescriptor;
@@ -215,7 +180,7 @@ public class ProxyMTableRegion implements MTable, InternalTable {
         handleLowMemoryException(ge);
       }
 
-      logger.error("ProxyMTableRegion::put::Internal Error ", ge);
+      logger.error("MTableImpl::put::Internal Error ", ge);
       throw new MCacheInternalErrorException("Put operation failed", ge);
     }
   }
@@ -274,7 +239,7 @@ public class ProxyMTableRegion implements MTable, InternalTable {
       if (ge.getRootCause() instanceof RowKeyDoesNotExistException) {
         throw (RowKeyDoesNotExistException) ge.getRootCause();
       }
-      logger.error("ProxyMTableRegion::put::Internal Error ", ge);
+      logger.error("MTableImpl::put::Internal Error ", ge);
       throw new MCacheInternalErrorException("Put operation failed", ge);
     }
     return true;
@@ -372,7 +337,7 @@ public class ProxyMTableRegion implements MTable, InternalTable {
       if (ge.getRootCause() instanceof LowMemoryException) {
         handleLowMemoryException(ge);
       }
-      logger.error("ProxyMTableRegion::BatchPut::Internal Error ", ge);
+      logger.error("MTableImpl::BatchPut::Internal Error ", ge);
       throw new MCacheInternalErrorException("BatchPut operation failed", ge);
     }
   }
@@ -446,7 +411,7 @@ public class ProxyMTableRegion implements MTable, InternalTable {
 
     } catch (GemFireException ge) {
       checkSecurityException(ge);
-      logger.error("ProxyMTableRegion::get::Internal Error ", ge);
+      logger.error("MTableImpl::get::Internal Error ", ge);
       throw new MCacheInternalErrorException("Get operation failed", ge);
     }
   }
@@ -519,7 +484,7 @@ public class ProxyMTableRegion implements MTable, InternalTable {
       }
 
     } catch (GemFireException ge) {
-      logger.error("ProxyMTableRegion::batchGet::Internal Error ", ge);
+      logger.error("MTableImpl::batchGet::Internal Error ", ge);
       throw new MCacheInternalErrorException("BatchGet operation failed", ge);
     }
 
@@ -684,7 +649,7 @@ public class ProxyMTableRegion implements MTable, InternalTable {
             handleLowMemoryException(ge);
           }
 
-          logger.error("ProxyMTableRegion::delete::Internal Error ", ge);
+          logger.error("MTableImpl::delete::Internal Error ", ge);
           throw new MCacheInternalErrorException("Delete operation failed", ge);
         }
         return true;
@@ -695,7 +660,7 @@ public class ProxyMTableRegion implements MTable, InternalTable {
       } catch (GemFireException ge) {
         checkSecurityException(ge);
         if (ge.getRootCause() instanceof RegionDestroyedException) {
-          logger.error("ProxyMTableRegion::delete::Internal Error ", ge);
+          logger.error("MTableImpl::delete::Internal Error ", ge);
           throw new MCacheInternalErrorException("Delete operation failed",
               (GemFireException) ge.getRootCause());
         }
@@ -817,7 +782,7 @@ public class ProxyMTableRegion implements MTable, InternalTable {
    * across buckets by key, and this is not the case for range
    * <p>
    * partitioned tables.
-   * 
+   *
    * @param scan the {@link Scan} object that defined the scan.
    * @return the parallel scanner
    */
@@ -851,7 +816,7 @@ public class ProxyMTableRegion implements MTable, InternalTable {
    * across buckets by key, and this is not the case for range
    * <p>
    * partitioned tables.
-   * 
+   *
    * @param scan the {@link Scan} object that defined the scan.
    * @return the parallel scanner
    */
@@ -862,7 +827,7 @@ public class ProxyMTableRegion implements MTable, InternalTable {
 
   /**
    * Retrieves Client Scanner instance for Mash cli
-   * 
+   *
    * @return returns the client side scanner
    */
   public Scanner getClientScanner(Scan scan) throws MException {
@@ -917,10 +882,10 @@ public class ProxyMTableRegion implements MTable, InternalTable {
             coprocessorExecutionOnBucketId(function, bucketId, rc, request);
         return (ArrayList<Object>) mResultCollector.getResult();
       } catch (GemFireException fe) {
-        logger.error("ProxyMTableRegion::coprocessorService::Internal Error ", fe);
+        logger.error("MTableImpl::coprocessorService::Internal Error ", fe);
         throw new MCoprocessorException("coprocessor execution failed!");
       } catch (MCoprocessorException mce) {
-        logger.error("ProxyMTableRegion::coprocessorService::Internal Error ", mce);
+        logger.error("MTableImpl::coprocessorService::Internal Error ", mce);
         throw new MCoprocessorException("coprocessor execution failed!" + mce.getMessage());
       }
     } else {
@@ -972,10 +937,10 @@ public class ProxyMTableRegion implements MTable, InternalTable {
 
     } catch (GemFireException fe) {
       checkSecurityException(fe);
-      logger.error("ProxyMTableRegion::coprocessorService::Internal Error ", fe);
+      logger.error("MTableImpl::coprocessorService::Internal Error ", fe);
       throw new MCoprocessorException("coprocessor execution failed!");
     } catch (MCoprocessorException mce) {
-      logger.error("ProxyMTableRegion::coprocessorService::Internal Error ", mce);
+      logger.error("MTableImpl::coprocessorService::Internal Error ", mce);
       // throw new MCoprocessorException("coprocessor execution failed!");
       throw mce;
     }
@@ -993,7 +958,7 @@ public class ProxyMTableRegion implements MTable, InternalTable {
 
   /**
    * Does get operation using the Scan Object
-   * 
+   *
    * @return Number of results returned
    */
   @Override
@@ -1004,19 +969,12 @@ public class ProxyMTableRegion implements MTable, InternalTable {
 
   // GEN-983
   private void handleLowMemoryException(final GemFireException ge) {
-    Set<DistributedMember> criticalMembers =
-        ((LowMemoryException) ge.getRootCause()).getCriticalMembers();
-    ArrayList<String> criticalMembersList = new ArrayList<>();
-    criticalMembers.forEach(DM -> {
-      criticalMembersList.add(DM.getName());
-    });
-    String errorMessage = "Members on Low Memory are " + criticalMembersList.toString();
-    throw new MCacheLowMemoryException(errorMessage);
+    throw new MCacheLowMemoryException(ge.getRootCause());
   }
 
   /**
    * Provide the internal region.
-   * 
+   *
    * @return the internal Geode region
    */
   @Override

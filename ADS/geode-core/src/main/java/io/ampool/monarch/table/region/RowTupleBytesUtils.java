@@ -37,7 +37,9 @@ import io.ampool.monarch.table.internal.MTableUtils;
 import io.ampool.monarch.table.internal.MValue;
 import io.ampool.monarch.table.internal.StorageFormatter;
 import io.ampool.monarch.types.CompareOp;
+import org.apache.geode.cache.EntryNotFoundException;
 import org.apache.geode.internal.cache.EntryEventImpl;
+import org.apache.geode.internal.cache.LocalRegion;
 import org.apache.geode.internal.cache.VMCachedDeserializable;
 import org.apache.geode.internal.logging.LogService;
 import org.apache.logging.log4j.Logger;
@@ -134,7 +136,7 @@ public class RowTupleBytesUtils {
 
   /**
    * Get the appropriate new value for replicated table (i.e. not user-table).
-   * 
+   *
    * @param event the current put event
    * @return null if the operation is successful; the appropriate exception otherwise
    */
@@ -165,7 +167,7 @@ public class RowTupleBytesUtils {
    * Returns the following exceptions, if the operation is unsuccessful: -
    * {@link RowKeyDoesNotExistException} if the specified key does not exist -
    * {@link MCheckOperationFailException} if the specified check does not pass
-   * 
+   *
    * @param event the current put event
    * @param td the table descriptor
    * @return null if the operation is successful; the appropriate exception otherwise
@@ -203,7 +205,7 @@ public class RowTupleBytesUtils {
    * Returns the following exceptions, if the operation is unsuccessful: -
    * {@link RowKeyDoesNotExistException} if the specified key does not exist -
    * {@link MCheckOperationFailException} if the specified check does not pass
-   * 
+   *
    * @param event the current put event
    * @param tableDescriptor the tabledescriptor
    * @return null if successful; the respective exception otherwise
@@ -311,16 +313,26 @@ public class RowTupleBytesUtils {
 
   /**
    * Additional destroy mechanism for Ampool tables.
-   * 
-   * @param td the table descriptor
-   * @param oldValueBytes old valuebytes
-   * @param opInfo the operation info
+   *
+   * @param region the LocalRegion handle
+   * @param event the EntryEventImpl
    */
-  public static void destroy_0(final MTableDescriptor td, final Object oldValueBytes,
-      final MOpInfo opInfo) {
-    // Throw RowKeyDoesNotExistException if OldValue is null.
-    if (oldValueBytes == null) {
-      throw new RowKeyDoesNotExistException("Row Id does not exists");
+  public static void destroy_0(final LocalRegion region, EntryEventImpl event) {
+    MOpInfo opInfo = event.getOpInfo();
+    MTableDescriptor td =
+        MCacheFactory.getAnyInstance().getMTableDescriptor(region.getDisplayName());
+    Object getVal = event.getOldValue();
+    if (getVal == null) {
+      try {
+        getVal = region.getValueOnDisk(event.getKey());// this is evicted or it is non existent
+        // key See GEN-1759
+      } catch (EntryNotFoundException ex) {
+        throw new RowKeyDoesNotExistException("Row Id does not exists");
+      }
+
+      if (getVal == null) {
+        throw new RowKeyDoesNotExistException("Row Id does not exists");
+      }
     }
 
     StorageFormatter storageFormatter = MTableUtils.getStorageFormatter(td);
@@ -331,8 +343,8 @@ public class RowTupleBytesUtils {
       if (condition == null) {
         throw new MCheckOperationFailException("No check-condition specified.");
       }
-      boolean checkPassed = ((MTableStorageFormatter) storageFormatter).checkValue(td,
-          oldValueBytes, (byte[]) condition.getColumnValue(), condition.getColumnId());
+      boolean checkPassed = ((MTableStorageFormatter) storageFormatter).checkValue(td, getVal,
+          (byte[]) condition.getColumnValue(), condition.getColumnId());
       if (!checkPassed) {
         throw new MCheckOperationFailException("delete check failed");
       }
@@ -344,7 +356,7 @@ public class RowTupleBytesUtils {
         if (opInfo.getTimestamp() != 0) {
           // In case of single version table we should only delete if timestamp matches.
           boolean matches = ((MTableStorageFormatter) storageFormatter)
-              .matchesTimestamp(CompareOp.EQUAL, (byte[]) oldValueBytes, opInfo.getTimestamp());
+              .matchesTimestamp(CompareOp.EQUAL, (byte[]) getVal, opInfo.getTimestamp());
 
           if (!matches) {
             // we should not delete
@@ -374,12 +386,8 @@ public class RowTupleBytesUtils {
   public static Object prepareValueForAmpoolCache(final EntryEventImpl event) {
     Object val = null;
     if (event != null
-        && AmpoolTableRegionAttributes.isAmpoolTable(event.getRegion().getCustomAttributes())) {
-      final TableDescriptor td =
-          MCacheFactory.getAnyInstance().getTableDescriptor(event.getRegion().getDisplayName());
-      if (td instanceof MTableDescriptor) {
-        val = RowTupleBytesUtils.adjustValueForAmpool(event);
-      }
+        && AmpoolTableRegionAttributes.isAmpoolMTable(event.getRegion().getCustomAttributes())) {
+      val = RowTupleBytesUtils.adjustValueForAmpool(event);
     }
     return val;
   }

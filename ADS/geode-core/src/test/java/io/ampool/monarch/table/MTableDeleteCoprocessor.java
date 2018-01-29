@@ -19,10 +19,7 @@ import java.util.List;
 import io.ampool.monarch.table.coprocessor.MCoprocessor;
 import io.ampool.monarch.table.coprocessor.MCoprocessorContext;
 import io.ampool.monarch.table.coprocessor.MExecutionRequest;
-import io.ampool.monarch.table.exceptions.IllegalColumnNameException;
-import io.ampool.monarch.table.exceptions.TableInvalidConfiguration;
-import io.ampool.monarch.table.exceptions.RowKeyDoesNotExistException;
-import io.ampool.monarch.table.exceptions.RowKeyOutOfRangeException;
+import io.ampool.monarch.table.exceptions.*;
 import org.junit.Assert;
 
 public class MTableDeleteCoprocessor extends MCoprocessor {
@@ -518,20 +515,7 @@ public class MTableDeleteCoprocessor extends MCoprocessor {
       if (table.getTableDescriptor().getTableType() == MTableType.UNORDERED) {
         Assert.assertTrue(expectedException instanceof TableInvalidConfiguration);
       } else {
-        Assert.fail("Should not get exception here.");
-      }
-    }
-
-    get = new Get(keys_version[2]);
-    try {
-      result1 = table.get(get);
-      Assert.assertTrue(result1.isEmpty());
-    } catch (Exception ex) {
-      expectedException = ex;
-      if (table.getTableDescriptor().getTableType() == MTableType.UNORDERED) {
-        Assert.assertTrue(expectedException instanceof TableInvalidConfiguration);
-      } else {
-        Assert.fail("Should not get exception here.");
+        Assert.assertTrue(expectedException instanceof MCheckOperationFailException);
       }
     }
 
@@ -563,37 +547,20 @@ public class MTableDeleteCoprocessor extends MCoprocessor {
       for (int i = 0; i < maxVersions; i++) {
         put = new Put(keys_version[3]);
         put.setTimeStamp(i + 1);
-        table.put(put);
+        try {
+          table.put(put);
+        } catch (Exception ex) {
+          Assert.assertTrue(ex instanceof IllegalArgumentException);
+        }
       }
 
       System.out.println("MTableDeleteCoprocessor.doDelete 13.99");
       delete1 = new Delete(keys_version[3]);
       delete1.setTimestamp(3);
-      table.delete(delete1);
-      System.out.println("MTableDeleteCoprocessor.doDelete 13.99.1");
-
-      for (int i = 0; i < maxVersions; i++) {
-        get = new Get(keys_version[3]);
-        get.setTimeStamp(i + 1);
-        try {
-          result1 = table.get(get);
-          if (i <= 2) {
-            Assert.assertTrue(result1.isEmpty());
-          } else {
-            Assert.assertFalse(result1.isEmpty());
-            System.out.println("result1.size() = " + result1.size());
-            Assert.assertEquals(result1.size(), 5 + 1);
-            System.out.println("MTableDeleteCoprocessor.doDelete 13.99.2");
-          }
-        } catch (Exception ex) {
-          ex.printStackTrace();
-          expectedException = ex;
-          if (table.getTableDescriptor().getTableType() == MTableType.UNORDERED) {
-            Assert.assertTrue(expectedException instanceof TableInvalidConfiguration);
-          } else {
-            Assert.fail("Should not get exception here.");
-          }
-        }
+      try {
+        table.delete(delete1);
+      } catch (Exception ex) {
+        Assert.assertTrue(ex instanceof RowKeyDoesNotExistException);
       }
 
       System.out.println("MTableDeleteCoprocessor.doDelete 14");

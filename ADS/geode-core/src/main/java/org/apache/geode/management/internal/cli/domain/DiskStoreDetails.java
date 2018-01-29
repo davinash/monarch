@@ -61,6 +61,7 @@ public class DiskStoreDetails implements Comparable<DiskStoreDetails>, MutableId
 
   private Boolean allowForceCompaction;
   private Boolean autoCompact;
+  private Boolean enableDeltaPersistence;
   private Boolean offline;
   private Boolean pdxSerializationMetaDataStored;
 
@@ -147,6 +148,18 @@ public class DiskStoreDetails implements Comparable<DiskStoreDetails>, MutableId
 
   public void setAutoCompact(final Boolean autoCompact) {
     this.autoCompact = autoCompact;
+  }
+
+  public Boolean getEnableDeltaPersistence() {
+    return enableDeltaPersistence;
+  }
+
+  public boolean isEnableDeltaPersistence() {
+    return getEnableDeltaPersistence();
+  }
+
+  public void setEnableDeltaPersistence(final Boolean enableDeltaPersistence) {
+    this.enableDeltaPersistence = enableDeltaPersistence;
   }
 
   public Integer getCompactionThreshold() {

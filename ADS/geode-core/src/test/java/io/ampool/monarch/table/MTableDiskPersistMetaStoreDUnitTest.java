@@ -90,7 +90,7 @@ public class MTableDiskPersistMetaStoreDUnitTest extends MTableDUnitHelper {
   private void verifyDataAfterRestart(String tableName) {
 
     Region actualTableRegion = MCacheFactory.getAnyInstance().getRegion(tableName);
-    assertEquals(MTableUtils.DEFAULT_DISK_STORE_NAME,
+    assertEquals(MTableUtils.DEFAULT_MTABLE_DISK_STORE_NAME,
         actualTableRegion.getAttributes().getDiskStoreName());
     assertEquals(DataPolicy.PERSISTENT_PARTITION,
         actualTableRegion.getAttributes().getDataPolicy());
@@ -157,7 +157,7 @@ public class MTableDiskPersistMetaStoreDUnitTest extends MTableDUnitHelper {
       Region<Object, Object> actualTableRegion = mCache.getRegion(tableName);
       assertNotNull(actualTableRegion);
 
-      assertEquals(MTableUtils.DEFAULT_DISK_STORE_NAME,
+      assertEquals(MTableUtils.DEFAULT_MTABLE_DISK_STORE_NAME,
           actualTableRegion.getAttributes().getDiskStoreName());
       assertEquals(DataPolicy.PERSISTENT_PARTITION,
           actualTableRegion.getAttributes().getDataPolicy());

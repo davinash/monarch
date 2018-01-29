@@ -17,7 +17,7 @@ package org.apache.geode.internal.cache.execute;
 import java.util.Set;
 
 import io.ampool.monarch.table.MTable;
-import io.ampool.monarch.table.internal.ProxyMTableRegion;
+import io.ampool.monarch.table.internal.MTableImpl;
 import org.apache.geode.cache.LowMemoryException;
 import org.apache.geode.cache.Region;
 import org.apache.geode.cache.TransactionDataNotColocatedException;
@@ -432,8 +432,9 @@ public class DistributedRegionFunctionExecutor extends AbstractExecution {
     }
   }
 
+  // AMPOOL SPECIFIC CHANGES START FROM HERE
   public DistributedRegionFunctionExecutor(MTable table) {
-    this.region = (LocalRegion) ((ProxyMTableRegion) table).getTableRegion();
+    this.region = (LocalRegion) ((MTableImpl) table).getTableRegion();
     throw new RuntimeException(this.getClass().getName());
   }
 
@@ -456,5 +457,6 @@ public class DistributedRegionFunctionExecutor extends AbstractExecution {
   public Execution forCoProcessor() {
     throw new UnsupportedOperationException();
   }
+  // AMPOOL SPECIFIC CHANGES ENDS HERE
 
 }

@@ -15,6 +15,7 @@
 package org.apache.geode.internal.cache;
 
 import io.ampool.internal.RegionDataOrder;
+import io.ampool.monarch.table.ftable.PersistenceDelta;
 import io.ampool.monarch.table.region.AmpoolTableRegionAttributes;
 import org.apache.geode.cache.CacheClosedException;
 import org.apache.geode.cache.DiskAccessException;
@@ -70,7 +71,7 @@ import java.nio.ByteBuffer;
 public interface DiskEntry extends RegionEntry {
   /**
    * Sets the value with a {@link RegionEntryContext}.
-   * 
+   *
    * @param context the value's context.
    * @param value an entry value.
    */
@@ -79,7 +80,7 @@ public interface DiskEntry extends RegionEntry {
   /**
    * In some cases we need to do something just before we drop the value from a DiskEntry that is
    * being moved (i.e. overflowed) to disk.
-   * 
+   *
    * @param context
    */
   public void handleValueOverflow(RegionEntryContext context);
@@ -131,7 +132,7 @@ public interface DiskEntry extends RegionEntry {
     /**
      * Testing purpose only Get the value of an entry that is on disk without faulting it in and
      * without looking in the io buffer.
-     * 
+     *
      * @since GemFire 3.2.1
      */
     static Object getValueOnDisk(DiskEntry entry, DiskRegion dr) {
@@ -159,7 +160,7 @@ public interface DiskEntry extends RegionEntry {
      * Get the serialized value directly from disk. Returned object may be a
      * {@link CachedDeserializable}. Goes straight to disk without faulting into memory. Only looks
      * at the disk storage, not at heap storage.
-     * 
+     *
      * @param entry the entry used to identify the value to fetch
      * @param dr the persistent storage from which to fetch the value
      * @return either null, byte array, or CacheDeserializable
@@ -190,8 +191,7 @@ public interface DiskEntry extends RegionEntry {
     /**
      * Get the value of an entry that is on disk without faulting it in . It checks for the presence
      * in the buffer also. This method is used for concurrent map operations and CQ processing
-     * 
-     * @throws DiskAccessException
+     *
      * @since GemFire 5.1
      */
     static Object getValueOnDiskOrBuffer(DiskEntry entry, DiskRegion dr,
@@ -225,7 +225,7 @@ public interface DiskEntry extends RegionEntry {
           if (did != null && did.isPendingAsync()) {
             @Retained
             Object v = entry._getValueRetain(context, true); // TODO:KIRK:OK Rusty had Object v =
-                                                             // entry.getValueWithContext(context);
+            // entry.getValueWithContext(context);
             if (Token.isRemovedFromDisk(v)) {
               v = null;
             }
@@ -286,7 +286,7 @@ public interface DiskEntry extends RegionEntry {
 
     /**
      * Get the value of an entry that is on disk without faulting it in.
-     * 
+     *
      * @since GemFire 3.2.1
      */
     static boolean fillInValue(DiskEntry de, InitialImageOperation.Entry entry, DiskRegion dr,
@@ -311,8 +311,8 @@ public interface DiskEntry extends RegionEntry {
 
           ReferenceCountHelper.setReferenceCountOwner(entry);
           v = de._getValueRetain(context, true); // OFFHEAP copied to heap entry; todo allow entry
-                                                 // to refer to offheap since it will be copied to
-                                                 // network.
+          // to refer to offheap since it will be copied to
+          // network.
           ReferenceCountHelper.setReferenceCountOwner(null);
           if (v == null) {
             if (did == null) {
@@ -493,11 +493,32 @@ public interface DiskEntry extends RegionEntry {
 
       public String getBytesAsString();
     }
+
     public static interface Flushable {
       public void flush() throws IOException;
 
       public void flush(ByteBuffer bb, ByteBuffer chunkbb) throws IOException;
     }
+
+    public static class DeltaByteArrayValueWrapper extends ByteArrayValueWrapper {
+      private final boolean isPersistenceDeltaObject;
+
+      public DeltaByteArrayValueWrapper(boolean isSerializedObject, byte[] bytes,
+          boolean isPersistenceDelta) {
+        super(isSerializedObject, bytes);
+        isPersistenceDeltaObject = isPersistenceDelta;
+      }
+
+      @Override
+      public byte getUserBits() {
+        byte userBits = super.getUserBits();
+        if (isPersistenceDeltaObject) {
+          userBits = EntryBits.setPersistenceDelta(userBits, true);
+        }
+        return userBits;
+      }
+    }
+
     public static class ByteArrayValueWrapper implements ValueWrapper {
       public final boolean isSerializedObject;
       public final byte[] bytes;
@@ -716,6 +737,84 @@ public interface DiskEntry extends RegionEntry {
       return false;
     }
 
+    public static ValueWrapper createDeltaValueWrapper(Object value, EntryEventImpl event,
+        LocalRegion region, DiskEntry entry) {
+      if (value == Token.INVALID) {
+        // even though it is not serialized we say it is because
+        // bytes will never be an empty array when it is serialized
+        // so that gives us a way to specify the invalid value
+        // given a byte array and a boolean flag.
+        return INVALID_VW;
+      } else if (value == Token.LOCAL_INVALID) {
+        // even though it is not serialized we say it is because
+        // bytes will never be an empty array when it is serialized
+        // so that gives us a way to specify the local-invalid value
+        // given a byte array and a boolean flag.
+        return LOCAL_INVALID_VW;
+      } else if (value == Token.TOMBSTONE) {
+        return TOMBSTONE_VW;
+      } else {
+        boolean isSerializedObject = true;
+        boolean isPersistenceDelta = false;
+        byte[] bytes;
+        if (value instanceof CachedDeserializable) {
+          CachedDeserializable proxy = (CachedDeserializable) value;
+          final Object temp = proxy.getDeserializedValue(region, null);
+          PersistenceDelta delta = null;
+          if (temp instanceof PersistenceDelta) {
+            delta = (PersistenceDelta) temp;
+          }
+          synchronized (entry.getKey()) {
+            if (delta != null && delta.hasPersistenceDelta()) {
+              HeapDataOutputStream heapDataOutputStream = new HeapDataOutputStream(Version.CURRENT);
+              delta.toPersistenceDelta(heapDataOutputStream);
+              bytes = heapDataOutputStream.toByteArray();
+              isPersistenceDelta = true;
+            } else {
+              if (wrapOffHeapReference(proxy)) {
+                return new OffHeapValueWrapper((StoredObject) proxy);
+              }
+              isSerializedObject = proxy.isSerialized();
+              if (delta != null) {
+                delta.resetPersistenceDelta();
+              }
+
+              if (isSerializedObject) {
+                bytes = proxy.getSerializedValue();
+              } else {
+                bytes = (byte[]) proxy.getDeserializedForReading();
+              }
+
+              // AMPOOL SPECIFIC CHANGES STARTS HERE
+              if (event != null && isSerializedObject && !AmpoolTableRegionAttributes
+                  .isAmpoolMTable(event.getRegion().getCustomAttributes())) {
+                event.setCachedSerializedNewValue(bytes);
+                // AMPOOL SPECIFIC CHANGES STARTS HERE
+              }
+            }
+          }
+        } else if (value instanceof byte[]) {
+          isSerializedObject = false;
+          bytes = (byte[]) value;
+        } else {
+          Assert.assertTrue(!Token.isRemovedFromDisk(value));
+          if (event != null && event.getCachedSerializedNewValue() != null) {
+            bytes = event.getCachedSerializedNewValue();
+          } else {
+            bytes = EntryEventImpl.serialize(value);
+            if (bytes.length == 0) {
+              throw new IllegalStateException(
+                  "serializing <" + value + "> produced empty byte array");
+            }
+            if (event != null) {
+              event.setCachedSerializedNewValue(bytes);
+            }
+          }
+        }
+        return new DeltaByteArrayValueWrapper(isSerializedObject, bytes, isPersistenceDelta);
+      }
+    }
+
     public static ValueWrapper createValueWrapper(Object value, EntryEventImpl event) {
       if (value == Token.INVALID) {
         // even though it is not serialized we say it is because
@@ -746,9 +845,11 @@ public interface DiskEntry extends RegionEntry {
 
             bytes = (byte[]) proxy.getDeserializedForReading();
           }
+          // AMPOOL SPECIFIC CHANGES STARTS HERE
           if (event != null && isSerializedObject && !AmpoolTableRegionAttributes
               .isAmpoolMTable(event.getRegion().getCustomAttributes())) {
             event.setCachedSerializedNewValue(bytes);
+            // AMPOOL SPECIFIC CHANGES STARTS HERE
           }
         } else if (value instanceof byte[]) {
           isSerializedObject = false;
@@ -791,13 +892,16 @@ public interface DiskEntry extends RegionEntry {
           return new ByteArrayValueWrapper(true, event.getCachedSerializedNewValue());
         }
         if (rawValue != null) {
-          return createValueWrapper(rawValue, event);
+          return !region.getDiskStore().getEnableDeltaPersistence()
+              ? createValueWrapper(rawValue, event)
+              : createDeltaValueWrapper(rawValue, event, region, entry);
         }
       }
       @Retained
       Object value = entry._getValueRetain(region, true);
       try {
-        return createValueWrapper(value, event);
+        return !region.getDiskStore().getEnableDeltaPersistence() ? createValueWrapper(value, event)
+            : createDeltaValueWrapper(value, event, region, entry);
       } finally {
         OffHeapHelper.release(value);
       }
@@ -810,9 +914,9 @@ public interface DiskEntry extends RegionEntry {
 
     /**
      * Writes the key/value object stored in the given entry to disk
-     * 
+     *
      * @throws RegionClearedException
-     * 
+     *
      * @see DiskRegion#put
      */
     private static void writeToDisk(DiskEntry entry, LocalRegion region, boolean async,
@@ -836,7 +940,7 @@ public interface DiskEntry extends RegionEntry {
     /**
      * Updates the value of the disk entry with a new value. This allows us to free up disk space in
      * the non-backup case.
-     * 
+     *
      * @throws RegionClearedException
      */
     public static void update(DiskEntry entry, LocalRegion region, Object newValue,
@@ -898,7 +1002,7 @@ public interface DiskEntry extends RegionEntry {
             // Asif Ensure that the value is rightly set despite clear so
             // that it can be distributed correctly
             entry.setValueWithContext(region, newValue); // OFFHEAP newValue was already
-                                                         // preparedForCache
+            // preparedForCache
           }
         }
       } else if (newValue instanceof RecoveredEntry) {
@@ -987,10 +1091,14 @@ public interface DiskEntry extends RegionEntry {
               // newValue is prepared and compressed. We can't write compressed values to disk.
               writeToDisk(entry, region, false, event);
             } else {
-              writeBytesToDisk(entry, region, false, createValueWrapper(newValue, event));
-              entry.setValueWithContext(region, newValue); // OFFHEAP newValue already prepared
+              synchronized (entry.getKey()) {
+                writeBytesToDisk(entry, region, false,
+                    dr.getDiskStore().getEnableDeltaPersistence()
+                        ? createDeltaValueWrapper(newValue, event, region, entry)
+                        : createValueWrapper(newValue, event));
+                entry.setValueWithContext(region, newValue); // OFFHEAP newValue already prepared
+              }
             }
-
           } else {
             // If we have concurrency checks enabled for a persistent region, we need
             // to add an entry to the async queue for every update to maintain the RVV
@@ -1131,11 +1239,11 @@ public interface DiskEntry extends RegionEntry {
     public static Object getValueOffHeapOrDiskWithoutFaultIn(DiskEntry entry, LocalRegion region) {
       @Retained
       Object v = entry._getValueRetain(region, true); // TODO:KIRK:OK Object v =
-                                                      // entry.getValueWithContext(region);
+      // entry.getValueWithContext(region);
       if (v == null || Token.isRemovedFromDisk(v) && !region.isIndexCreationThread()) {
         synchronized (entry) {
           v = entry._getValueRetain(region, true); // TODO:KIRK:OK v =
-                                                   // entry.getValueWithContext(region);
+          // entry.getValueWithContext(region);
           if (v == null) {
             v = Helper.getOffHeapValueOnDiskOrBuffer(entry, region.getDiskRegion(), region);
           }
@@ -1156,7 +1264,7 @@ public interface DiskEntry extends RegionEntry {
     }
 
     /**
-     * 
+     *
      * @param entry
      * @param region
      * @return Value
@@ -1179,7 +1287,7 @@ public interface DiskEntry extends RegionEntry {
       DiskRegion dr = region.getDiskRegion();
       @Retained
       Object v = entry._getValueRetain(region, true); // TODO:KIRK:OK Object v =
-                                                      // entry.getValueWithContext(region);
+      // entry.getValueWithContext(region);
       boolean lruFaultedIn = false;
       boolean done = false;
       try {
@@ -1207,7 +1315,7 @@ public interface DiskEntry extends RegionEntry {
         if (!done && (v == null || Token.isRemovedFromDisk(v) && !region.isIndexCreationThread())) {
           synchronized (entry) {
             v = entry._getValueRetain(region, true); // TODO:KIRK:OK v =
-                                                     // entry.getValueWithContext(region);
+            // entry.getValueWithContext(region);
             if (v == null) {
               v = readValueFromDisk(entry, region);
               if (entry instanceof LRUEntry) {
@@ -1299,8 +1407,10 @@ public interface DiskEntry extends RegionEntry {
           } else if (EntryBits.isTombstone(bb.getBits())) {
             value = Token.TOMBSTONE;
           } else if (EntryBits.isSerialized(bb.getBits())) {
+            // AMPOOL SPECIFIC CHANGES STARTS HERE
             if (AmpoolTableRegionAttributes.isAmpoolTable(dr.getCustomAttributes())) {
               value = readSerializedValue(bb.getBytes(), bb.getVersion(), in, true);
+              // AMPOOL SPECIFIC CHANGES ENDS HERE
             } else {
               value = readSerializedValue(bb.getBytes(), bb.getVersion(), in, false);
             }
@@ -1358,8 +1468,9 @@ public interface DiskEntry extends RegionEntry {
       try {
         synchronized (did) {
           Object value = getValueFromDisk(dr, did, null);
-          if (value == null)
+          if (value == null) {
             return null;
+          }
           setValueOnFaultIn(value, did, entry, dr, region);
           return value;
         }
@@ -1370,7 +1481,7 @@ public interface DiskEntry extends RegionEntry {
 
     /**
      * Caller must have "entry" and "did" synced and "dr" readLocked.
-     * 
+     *
      * @return the unretained result must be used by the caller before it releases the sync on
      *         "entry".
      */
@@ -1447,9 +1558,9 @@ public interface DiskEntry extends RegionEntry {
      * Note that if the value had already been written to disk, it is not written again.
      * <p>
      * Caller must synchronize on entry and it is assumed the entry is evicted
-     * 
+     *
      * see #writeToDisk
-     * 
+     *
      * @throws RegionClearedException
      */
     public static int overflowToDisk(DiskEntry entry, LocalRegion region, EnableLRU ccHelper)
@@ -1529,8 +1640,9 @@ public interface DiskEntry extends RegionEntry {
     }
 
     public static void doAsyncFlush(VersionTag tag, LocalRegion region) {
-      if (region.isThisRegionBeingClosedOrDestroyed())
+      if (region.isThisRegionBeingClosedOrDestroyed()) {
         return;
+      }
       DiskRegion dr = region.getDiskRegion();
       if (!dr.isBackup()) {
         return;
@@ -1546,7 +1658,7 @@ public interface DiskEntry extends RegionEntry {
 
     /**
      * Flush an entry that was previously scheduled to be written to disk.
-     * 
+     *
      * @since GemFire prPersistSprint1
      */
     public static void doAsyncFlush(DiskEntry entry, LocalRegion region, VersionTag tag) {
@@ -1556,14 +1668,15 @@ public interface DiskEntry extends RegionEntry {
     /**
      * Does a synchronous write to disk for a region that uses async. This method is used by both
      * doAsyncFlush and handleFullAsyncQueue to fix GEODE-1700.
-     * 
+     *
      * @param asyncQueueWasFull true if caller wanted to put this entry in the queue but could not
      *        do so because it was full
      */
     private static void writeEntryToDisk(DiskEntry entry, LocalRegion region, VersionTag tag,
         boolean asyncQueueWasFull) {
-      if (region.isThisRegionBeingClosedOrDestroyed())
+      if (region.isThisRegionBeingClosedOrDestroyed()) {
         return;
+      }
       DiskRegion dr = region.getDiskRegion();
       if (!asyncQueueWasFull) {
         dr.setClearCountReference();
@@ -1586,8 +1699,9 @@ public interface DiskEntry extends RegionEntry {
                 final int entryValSize = region.calculateRegionEntryValueSize(entry);
                 try {
                   if (Token.isRemovedFromDisk(entryVal)) {
-                    if (region.isThisRegionBeingClosedOrDestroyed())
+                    if (region.isThisRegionBeingClosedOrDestroyed()) {
                       return;
+                    }
                     dr.remove(region, entry, true, false);
                     if (dr.isBackup()) {
                       did.setKeyId(DiskRegion.INVALID_ID); // fix for bug 41340
@@ -1779,10 +1893,14 @@ public interface DiskEntry extends RegionEntry {
    */
   public static class RecoveredEntry {
 
-    /** The disk id of the entry being recovered */
+    /**
+     * The disk id of the entry being recovered
+     */
     private final long recoveredKeyId;
 
-    /** The value of the recovered entry */
+    /**
+     * The value of the recovered entry
+     */
     private final Object value;
 
     private final long offsetInOplog;
@@ -1828,7 +1946,6 @@ public interface DiskEntry extends RegionEntry {
     }
 
     /**
-     * 
      * @return byte indicating the user bits. The correct value is returned only in the specific
      *         case of entry recovered from oplog ( & not rolled to Htree) & the RECOVER_VALUES flag
      *         is false . In other cases the exact value is not needed

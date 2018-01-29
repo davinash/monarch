@@ -56,6 +56,7 @@ public class DiskStoreFactoryImpl implements DiskStoreFactory {
     setDiskDirsAndSizes(cloneArray(attrs.getDiskDirs()), cloneArray(attrs.getDiskDirSizes()));
     setDiskUsageWarningPercentage(attrs.getDiskUsageWarningPercentage());
     setDiskUsageCriticalPercentage(attrs.getDiskUsageCriticalPercentage());
+    setEnableDeltaPersistence(attrs.getEnableDeltaPersistence());
     this.cache = cache;
   }
 
@@ -75,6 +76,12 @@ public class DiskStoreFactoryImpl implements DiskStoreFactory {
       System.arraycopy(o, 0, result, 0, o.length);
     }
     return result;
+  }
+
+  @Override
+  public DiskStoreFactory setEnableDeltaPersistence(boolean enableDeltaPersistence) {
+    this.attrs.enableDeltaPersistence = enableDeltaPersistence;
+    return this;
   }
 
   public DiskStoreFactory setAutoCompact(boolean autoCompact) {
@@ -207,7 +214,7 @@ public class DiskStoreFactoryImpl implements DiskStoreFactory {
 
   /**
    * Checks if directories exist, if they don't then create those directories
-   * 
+   *
    * @param diskDirs
    */
   public static void checkIfDirectoriesExist(File[] diskDirs) {
@@ -225,7 +232,7 @@ public class DiskStoreFactoryImpl implements DiskStoreFactory {
 
   /**
    * Verify all directory sizes are positive
-   * 
+   *
    * @param sizes
    */
   public static void verifyNonNegativeDirSize(int[] sizes) {

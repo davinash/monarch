@@ -3,7 +3,7 @@ package io.ampool.monarch.table.perf;
 import io.ampool.monarch.table.*;
 import io.ampool.monarch.table.client.MClientCache;
 import io.ampool.monarch.table.client.MClientCacheFactory;
-import io.ampool.monarch.table.internal.ProxyMTableRegion;
+import io.ampool.monarch.table.internal.MTableImpl;
 import io.ampool.monarch.types.BasicTypes;
 
 import java.io.BufferedReader;
@@ -63,7 +63,7 @@ public class MTablePerfEsgyn {
       long time = System.nanoTime();
       table.put(listOfPuts);
       totalElapsedTime += (System.nanoTime() - time);
-      ((ProxyMTableRegion) table).resetByteArraySizeBatchPut();
+      ((MTableImpl) table).resetByteArraySizeBatchPut();
     }
 
     System.out.println("-------------------    doBatchPuts MTABLE   --------------------- ");

@@ -14,8 +14,7 @@
 package io.ampool.utils;
 
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
+import java.lang.reflect.*;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -137,6 +136,33 @@ public class ReflectionUtils {
   }
 
   /**
+   * Set the value of static final field. The original value is returned to the caller in case it
+   * needs to be reset afterwards.
+   *
+   * @param clazz the class
+   * @param fieldName the instance field name
+   * @param value the value to be set
+   * @return the original value of the field before setting the specified value
+   */
+  public static Object setStaticFinalFieldValue(final Class<?> clazz, final String fieldName,
+      final Object value) {
+    try {
+      Field field = clazz.getDeclaredField(fieldName);
+      field.setAccessible(true);
+      Field modifiers = field.getClass().getDeclaredField("modifiers");
+      modifiers.setAccessible(true);
+      modifiers.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+      final Object oldValue = field.get(null);
+      field.set(null, value);
+      return oldValue;
+    } catch (NoSuchFieldException | IllegalAccessException e) {
+      e.printStackTrace();
+    }
+    return null;
+  }
+
+
+  /**
    * Set the value of an instance field in the provided object.
    *
    * @param clazz the class
@@ -172,5 +198,18 @@ public class ReflectionUtils {
         e.printStackTrace();
       }
     }
+  }
+
+  public static void invokeMethod(final Object object, final String methodName) {
+    if (object != null) {
+      try {
+        Method field = object.getClass().getDeclaredMethod(methodName);
+        field.setAccessible(true);
+        field.invoke(object);
+      } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+        e.printStackTrace();
+      }
+    }
+
   }
 }

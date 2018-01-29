@@ -25,11 +25,16 @@ public abstract class EntryBits {
   private static final byte LOCAL_INVALID = 0x4; // persistent bit
   private static final byte RECOVERED_FROM_DISK = 0x8; // used by DiskId; transient bit
   private static final byte PENDING_ASYNC = 0x10; // used by DiskId; transient bit
+  private static final byte DELTA_RECORD = 0x20; // used by delta persistence
   private static final byte TOMBSTONE = 0x40;
   private static final byte WITH_VERSIONS = (byte) 0x80; // oplog entry contains versions
 
   public static boolean isSerialized(byte b) {
     return (b & SERIALIZED) != 0;
+  }
+
+  public static boolean isPersistenceDelta(byte b) {
+    return (b & DELTA_RECORD) != 0;
   }
 
   public static boolean isInvalid(byte b) {
@@ -71,6 +76,10 @@ public abstract class EntryBits {
     return isSerialized ? (byte) (b | SERIALIZED) : (byte) (b & ~SERIALIZED);
   }
 
+  public static byte setPersistenceDelta(byte b, boolean isDelta) {
+    return isDelta ? (byte) (b | DELTA_RECORD) : (byte) (b & ~DELTA_RECORD);
+  }
+
   public static byte setInvalid(byte b, boolean isInvalid) {
     return isInvalid ? (byte) (b | INVALID) : (byte) (b & ~INVALID);
   }
@@ -100,6 +109,7 @@ public abstract class EntryBits {
    * Returns a byte whose bits are those that need to be written to disk
    */
   public static byte getPersistentBits(byte b) {
-    return (byte) (b & (SERIALIZED | INVALID | LOCAL_INVALID | TOMBSTONE | WITH_VERSIONS));
+    return (byte) (b
+        & (SERIALIZED | INVALID | LOCAL_INVALID | TOMBSTONE | WITH_VERSIONS | DELTA_RECORD));
   }
 }

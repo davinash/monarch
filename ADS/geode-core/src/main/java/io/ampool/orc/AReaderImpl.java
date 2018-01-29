@@ -211,7 +211,8 @@ public class AReaderImpl extends org.apache.hadoop.hive.ql.io.orc.ReaderImpl {
   }
 
   @Override
-  public RecordReader rowsOptions(Options options) throws IOException {
+  public RecordReader rowsOptions(Options opts) throws IOException {
+    final Options options = opts.clone();
     // LOG.info("Reading ORC rows from " + path + " with " + options);
     boolean[] include = options.getInclude();
     // if included columns is null, then include all columns

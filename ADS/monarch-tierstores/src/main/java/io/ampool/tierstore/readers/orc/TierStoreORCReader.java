@@ -45,7 +45,7 @@ public class TierStoreORCReader extends AbstractTierStoreReader {
 
   /**
    * Returns an iterator over elements of type {@code T}.
-   * 
+   *
    * @return an Iterator.
    */
   @Override
@@ -61,8 +61,8 @@ public class TierStoreORCReader extends AbstractTierStoreReader {
           if (fileList == null) {
             // initialize file list
             fileList = getFilesToScan(tableName, partitionId, scan.getRanges(), Crc);
-            logger.debug("OrcFilePath= {}, TimePartRanges= {}, ScannedFiles= {}", partPath,
-                scan.getRanges(), TypeHelper.deepToString(fileList));
+            logger.debug("OrcFilePath= {}, TimePartRanges= {}, ScannedFiles= {}, ReaderOptions= {}",
+                partPath, scan.getRanges(), TypeHelper.deepToString(fileList), getReaderOptions());
             if (fileList == null) {
               return false;
             }
@@ -84,6 +84,7 @@ public class TierStoreORCReader extends AbstractTierStoreReader {
         } catch (IOException e) {
           // move to next file and get next reader
           e.printStackTrace();
+          logger.error("Error in creating the ORC Reader.", e);
         }
         return false;
       }

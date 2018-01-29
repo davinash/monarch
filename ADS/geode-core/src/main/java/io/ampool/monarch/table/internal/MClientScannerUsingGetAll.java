@@ -30,6 +30,7 @@ import org.apache.geode.GemFireException;
 import org.apache.geode.cache.RegionDestroyedException;
 import org.apache.geode.cache.client.ServerConnectivityException;
 import org.apache.geode.distributed.internal.ServerLocation;
+import org.apache.geode.internal.cache.MonarchCacheImpl;
 import org.apache.geode.internal.i18n.LocalizedStrings;
 
 import java.io.EOFException;
@@ -129,6 +130,7 @@ public class MClientScannerUsingGetAll extends Scanner implements Runnable {
           getBucketToServerLocation(table.getName(), scan, this.bucketIdSet);
     } catch (Exception e) {
       MTableUtils.checkSecurityException(e);
+      throw e;
     }
     // if (!this.isStarted()) {
     // start data fetch
@@ -227,7 +229,7 @@ public class MClientScannerUsingGetAll extends Scanner implements Runnable {
   /**
    * Return the next row in a scan. Note: always call {@link #close()} on a scanner object,
    * especially when the scan was ended before finishing.
-   * 
+   *
    * @return {@link Row} for the next row, or null if no more matching rows.
    */
   @SuppressWarnings("unchecked")
@@ -378,7 +380,7 @@ public class MClientScannerUsingGetAll extends Scanner implements Runnable {
    * scan, as defined by {@link Scan#setBatchSize(int)}. The batch may contain less than batch size
    * data if only a partial batch is remaining. Note: always call {@link #close()} on a scanner
    * object, especially in batch mode when the scan was ended before finishing.
-   * 
+   *
    * @return An array containing the next batch of data for the scan.
    */
   @Override
@@ -590,7 +592,9 @@ public class MClientScannerUsingGetAll extends Scanner implements Runnable {
        * region still exists. So no need to throw an exception in such cases.
        */
       try {
-        table.getInternalRegion().get(new MKeyBase("dummy".getBytes()));
+        if (MonarchCacheImpl.isMetaRegionCached()) {
+          table.getInternalRegion().get(new MKeyBase(new byte[] {-31}));
+        }
       } catch (GemFireException e) {
         if (e.getRootCause() instanceof RegionDestroyedException) {
           final String regionName = table.getName();

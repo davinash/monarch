@@ -19,7 +19,7 @@
   <groupId>io.ampool.examples</groupId>
   <artifactId>monarch-spark_2.1-examples</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>2.0.0</version>
   <name>Spark-Monarch Examples</name>
   <url>http://maven.apache.org</url>
 

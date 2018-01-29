@@ -25,6 +25,7 @@ import io.ampool.monarch.table.region.map.RowTupleConcurrentSkipListMap;
 import org.apache.geode.CancelException;
 import org.apache.geode.DeltaSerializationException;
 import org.apache.geode.InternalGemFireError;
+import org.apache.geode.InvalidDeltaException;
 import org.apache.geode.cache.CacheWriterException;
 import org.apache.geode.cache.Region;
 import org.apache.geode.cache.RegionAttributes;
@@ -44,6 +45,7 @@ import org.apache.geode.internal.cache.wan.GatewaySenderEventImpl;
 import org.apache.geode.internal.i18n.LocalizedStrings;
 import org.apache.geode.internal.logging.LogService;
 import org.apache.geode.internal.logging.log4j.LocalizedMessage;
+import org.apache.geode.internal.logging.log4j.LogMarker;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
@@ -59,6 +61,16 @@ public class FTableBucketRegion extends TableBucketRegion {
   public FTableBucketRegion(String regionName, RegionAttributes attrs, LocalRegion parentRegion,
       GemFireCacheImpl cache, InternalRegionArguments internalRegionArgs) {
     super(regionName, attrs, parentRegion, cache, internalRegionArgs);
+  }
+
+  /**
+   * Get the descriptor identifying this table-region.
+   *
+   * @return the descriptor
+   */
+  @Override
+  public FTableDescriptor getDescriptor() {
+    return (FTableDescriptor) super.getDescriptor();
   }
 
   @Override
@@ -110,8 +122,8 @@ public class FTableBucketRegion extends TableBucketRegion {
                     this.cache, internalRegionArgs);
               }
             } else if (regionAttributes.getPartitionAttributes() != null) {
-              newRegion = new FTableRegion(subregionName, regionAttributes, this, this.cache,
-                  internalRegionArgs);
+              newRegion = new FTablePartitionedRegion(subregionName, regionAttributes, this,
+                  this.cache, internalRegionArgs);
             } else {
               boolean local = regionAttributes.getScope().isLocal();
               newRegion = local
@@ -239,68 +251,111 @@ public class FTableBucketRegion extends TableBucketRegion {
       Object expectedOldValue, boolean requireOldValue, long lastModified,
       boolean overwriteDestroyed) throws TimeoutException, CacheWriterException {
 
-    setBlockKeyVal(event);
+    /* synchronize the key generation/merge/put */
+    synchronized (this) {
+      setBlockKeyVal(event);
 
-    return super.virtualPut(event, ifNew, ifOld, expectedOldValue, requireOldValue, lastModified,
-        overwriteDestroyed);
+      beginLocalWrite(event);
 
+      try {
+        if (this.getPartitionedRegion().isParallelWanEnabled()) {
+          handleWANEvent(event);
+        }
+        if (!hasSeenEvent(event)) {
+          forceSerialized(event);
+          RegionEntry oldEntry = this.entries.basicPut(event, lastModified, ifNew, ifOld,
+              expectedOldValue, requireOldValue, overwriteDestroyed);
+          return oldEntry != null;
+        }
+        if (event.getDeltaBytes() != null && event.getRawNewValue() == null
+            && !hasSeenEvent(event)) {
+          // This means that this event has delta bytes but no full value.
+          // Request the full value of this event.
+          // The value in this vm may not be same as this event's value.
+          throw new InvalidDeltaException(
+              "Cache encountered replay of event containing delta bytes for key " + event.getKey());
+        }
+        // Forward the operation and event messages
+        // to members with bucket copies that may not have seen the event. Their
+        // EventTrackers will keep them from applying the event a second time if
+        // they've already seen it.
+        if (logger.isTraceEnabled(LogMarker.DM)) {
+          logger.trace(LogMarker.DM, "BR.virtualPut: this cache has already seen this event {}",
+              event);
+        }
+        if (!getConcurrencyChecksEnabled() || event.hasValidVersionTag()) {
+          distributeUpdateOperation(event, lastModified);
+        }
+        return true;
+      } finally {
+        endLocalWrite(event);
+      }
+    }
   }
 
 
 
   private void setBlockKeyVal(EntryEventImpl entryEvent) {
-    if (!entryEvent.isOriginRemote()) {
+    if (this.getBucketAdvisor().isPrimary()) {
       /** import data case.. nothing to be done **/
       if (entryEvent.getKey() instanceof BlockKey) {
         return;
       }
       final Pair<Object, Object> lastEntry =
           ((RowTupleConcurrentSkipListMap) this.entries.getInternalMap()).lastEntryPair();
-      final FTableDescriptor fTableDescriptor =
-          (FTableDescriptor) MTableUtils.getTableDescriptor((MonarchCacheImpl) this.getCache(),
-              entryEvent.getRegion().getDisplayName());
       BlockKey blockKey = null;
       BlockValue blockValue = null;
       long timestamp = System.currentTimeMillis();
       if (lastEntry == null) { // this is first entry
         blockKey = new BlockKey(timestamp, updateSequenceNumber(1), getId());
-        blockValue = new BlockValue(fTableDescriptor.getBlockSize());
-        blockKey =
-            appendToBlockValue(entryEvent, fTableDescriptor, blockKey, blockValue, timestamp);
+        blockValue = new BlockValue(getDescriptor().getBlockSize());
+        blockKey = appendToBlockValue(entryEvent, getDescriptor(), blockKey, blockValue, timestamp);
       } else { // entries exist in map
         final BlockKey lastEntryKey = (BlockKey) lastEntry.getFirst();
+        /* reset the sequence-number in case bucket was secondary/moved here/recovered.. */
+        if (getSequenceNumber() != lastEntryKey.getBlockSequenceID() + 1) {
+          setSequenceNumber(lastEntryKey.getBlockSequenceID() + 1);
+        }
         /** make sure that the entry being evicted is not used to append the value **/
         synchronized (lastEntryKey) {
-          final Object lastEntryValue = ((RegionEntry) lastEntry.getSecond())._getValue();
+          Object lastEntryValue = ((RegionEntry) lastEntry.getSecond())._getValue();
           boolean blockEvicted =
               lastEntryValue instanceof BlockValue && ((BlockValue) lastEntryValue).isEvicted();
           if (blockEvicted) {
             logger.debug("Block already evicted: region= {}, key= {}", this.getRegion().getName(),
                 lastEntryKey);
           }
+          boolean isDeltaRequired = false;
+          /* recover the value from disk if it is not yet available in map */
+          if (lastEntryValue == null) {
+            lastEntryValue = get(lastEntryKey);
+          }
           if (Token.isInvalidOrRemoved(lastEntryValue) || blockEvicted) { // invalid token
             blockKey = new BlockKey(timestamp, updateSequenceNumber(1), getId());
-            blockValue = new BlockValue(fTableDescriptor.getBlockSize());
+            blockValue = new BlockValue(getDescriptor().getBlockSize());
           } else { // valid entry exists
             BlockValue lastBlockValue = null;
             if (lastEntryValue instanceof VMCachedDeserializable) {
-              lastBlockValue = (BlockValue) ((VMCachedDeserializable) lastEntryValue)
-                  .getDeserializedForReading();
+              lastBlockValue =
+                  (BlockValue) ((VMCachedDeserializable) lastEntryValue).getDeserializedValue(
+                      entryEvent.getRegion(), (RegionEntry) lastEntry.getSecond());
             } else {
               lastBlockValue = (BlockValue) lastEntryValue;
             }
-            if (lastBlockValue.getCurrentIndex() >= fTableDescriptor.getBlockSize()) { // block full
+            if (lastBlockValue.getCurrentIndex() >= getDescriptor().getBlockSize()) { // block full
               blockKey = new BlockKey(timestamp, updateSequenceNumber(1), getId());
-              blockValue = new BlockValue(fTableDescriptor.getBlockSize());
+              blockValue = new BlockValue(getDescriptor().getBlockSize());
             } else { // same block add in the existing entry
               blockKey = lastEntryKey;
               blockValue = lastBlockValue;
+              isDeltaRequired = true;
             }
           }
+          blockValue.resetDelta();
           blockKey =
-              appendToBlockValue(entryEvent, fTableDescriptor, blockKey, blockValue, timestamp);
+              appendToBlockValue(entryEvent, getDescriptor(), blockKey, blockValue, timestamp);
           boolean deltaPropagation = this.getSystem().getConfig().getDeltaPropagation();
-          if (deltaPropagation && blockValue.hasDelta()) {
+          if (isDeltaRequired && deltaPropagation && blockValue.hasDelta()) {
             HeapDataOutputStream hdos = new HeapDataOutputStream(Version.CURRENT);
             try {
               blockValue.toDelta(hdos);
@@ -313,68 +368,35 @@ public class FTableBucketRegion extends TableBucketRegion {
       }
       entryEvent.getKeyInfo().setKey(blockKey);
     } else {
-      final Pair<Object, Object> lastEntry =
-          ((RowTupleConcurrentSkipListMap) this.entries.getInternalMap()).lastEntryPair();
-      if (lastEntry != null) {
-        BlockKey lastKey = (BlockKey) lastEntry.getFirst();
-        if (lastKey.compareTo((BlockKey) entryEvent.getKey()) == 0
-            && lastKey.equals(entryEvent.getKey())) {
-          lastKey.setEndTimeStamp(((BlockKey) entryEvent.getKey()).getEndTimeStamp());
-        } else {
-          /*
-           * If lastEntry is not the entry of our interest i.e a new block is started due to
-           * unordered events for different key then get the RE from the map and update
-           */
-          RegionEntry regionEntry =
-              (RegionEntry) ((RowTupleConcurrentSkipListMap) this.entries.getInternalMap())
-                  .getInternalMap().get(entryEvent.getKey());
-          if (regionEntry != null) {
-            ((BlockKey) regionEntry.getKey())
-                .setEndTimeStamp(((BlockKey) entryEvent.getKey()).getEndTimeStamp());
-          }
-        }
-      }
+      // nothing to be done, at the moment, in case of secondary..
     }
   }
 
   private BlockKey appendToBlockValue(EntryEventImpl entryEvent, FTableDescriptor fTableDescriptor,
       BlockKey blockKey, BlockValue blockValue, long timestamp) {
-    boolean retVal = false;
+    if (hasSeenEvent(entryEvent)) {
+      return blockKey;
+    }
     Object value = entryEvent.getValue();
     int offsetToStoreInsertionTS = fTableDescriptor.getOffsetToStoreInsertionTS();
     if (value instanceof byte[]) {
       System.arraycopy(Bytes.toBytes(timestamp), 0, (byte[]) value, offsetToStoreInsertionTS,
           Bytes.SIZEOF_LONG);
     } else {
-      value = ((VMCachedDeserializable) value).getDeserializedForReading();
+      if (value instanceof VMCachedDeserializable) {
+        value = ((VMCachedDeserializable) value).getDeserializedForReading();
+      }
       for (byte[] bytes : ((BlockValue) value).getRecords()) {
         System.arraycopy(Bytes.toBytes(timestamp), 0, bytes, offsetToStoreInsertionTS,
             Bytes.SIZEOF_LONG);
       }
     }
-    // byte[] record = (byte[]) value;
-    // Adding timestamp in the row
-    do {
-      // checkFor encoding bit to confirm that block with older encoding is closed
-      boolean olderEncodingBlock =
-          isBlockWithOlderEncodingScheme(blockValue.getRowHeader().getEncoding(), fTableDescriptor);
+    blockValue.checkAndAddRecord(value, fTableDescriptor);
 
-      if (olderEncodingBlock) {
-        // close that block and create new
-        blockKey = new BlockKey(timestamp, updateSequenceNumber(1), getId());
-        blockValue = new BlockValue(fTableDescriptor.getBlockSize());
-      }
-      retVal = blockValue.checkAndAddRecord(value);
-      if (!retVal) {
-        blockKey = new BlockKey(timestamp, updateSequenceNumber(1), getId());
-        blockValue = new BlockValue(fTableDescriptor.getBlockSize());
-      }
-    } while (!retVal);
     /* close the block if reached past block-size */
     if (blockValue.size() >= fTableDescriptor.getBlockSize()) {
       blockValue.close(fTableDescriptor);
     }
-    blockKey.setEndTimeStamp(timestamp);
     entryEvent.setNewValue(blockValue);
     return blockKey;
   }
@@ -463,6 +485,24 @@ public class FTableBucketRegion extends TableBucketRegion {
 
   public long updateSequenceNumber(long delta) {
     return this.sequenceNumber.getAndAdd(delta);
+  }
+
+  /**
+   * Get the current incremental sequence id that is used to generate unique key.
+   *
+   * @return the current sequence id
+   */
+  private long getSequenceNumber() {
+    return this.sequenceNumber.get();
+  }
+
+  /**
+   * Set the specified value as current sequence id.
+   *
+   * @param newValue the new value to be assigned as sequence id
+   */
+  private void setSequenceNumber(final long newValue) {
+    this.sequenceNumber.set(newValue);
   }
 
   @Override

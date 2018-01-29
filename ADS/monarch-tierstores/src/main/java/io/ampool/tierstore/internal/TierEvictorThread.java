@@ -225,7 +225,7 @@ public class TierEvictorThread extends Thread {
    * @param unitPath the absolute path for the unit to be moved (table/bucket/time-part)
    * @throws IOException in case there were errors reading or writing
    */
-  private void moveUnitToNextTier(final BucketRegion br, final ConverterDescriptor cd,
+  private synchronized void moveUnitToNextTier(final BucketRegion br, final ConverterDescriptor cd,
       final TierStore nextTierStore, final int batchSize, final FileStatus unitBaseLocation,
       final String... unitPath) throws IOException {
     int movedCount = 0;

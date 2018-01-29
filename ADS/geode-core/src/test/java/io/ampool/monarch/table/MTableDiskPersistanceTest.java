@@ -113,13 +113,13 @@ public class MTableDiskPersistanceTest extends MTableDUnitHelper {
                 region.getAttributes().getDataPolicy().withPersistence());
             if (!persistentEnabled) {
               assertNull(region.getAttributes().getDiskStoreName());
-              assertNotNull(cache.findDiskStore(MTableUtils.DEFAULT_DISK_STORE_NAME));
+              assertNotNull(cache.findDiskStore(MTableUtils.DEFAULT_MTABLE_DISK_STORE_NAME));
             } else {
               assertEquals(region.getAttributes().getDataPolicy(), DataPolicy.PERSISTENT_PARTITION);
               assertNotNull(region.getAttributes().getDiskStoreName());
-              assertNotNull(cache.findDiskStore(MTableUtils.DEFAULT_DISK_STORE_NAME));
+              assertNotNull(cache.findDiskStore(MTableUtils.DEFAULT_MTABLE_DISK_STORE_NAME));
               int filesCount = 0;
-              for (File file : cache.findDiskStore(MTableUtils.DEFAULT_DISK_STORE_NAME)
+              for (File file : cache.findDiskStore(MTableUtils.DEFAULT_MTABLE_DISK_STORE_NAME)
                   .getDiskDirs()) {
                 List<File> files = (List<File>) FileUtils.listFiles(file, TrueFileFilter.INSTANCE,
                     TrueFileFilter.INSTANCE);

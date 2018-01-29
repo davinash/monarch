@@ -20,7 +20,6 @@ import io.ampool.monarch.table.exceptions.TruncateTableException;
 import io.ampool.monarch.table.filter.Filter;
 import io.ampool.monarch.table.filter.FilterList;
 import io.ampool.monarch.table.filter.SingleColumnValueFilter;
-import io.ampool.monarch.table.filter.internal.BlockKeyFilter;
 import io.ampool.monarch.table.ftable.FTableDescriptor;
 import io.ampool.monarch.table.ftable.TierStoreConfiguration;
 import io.ampool.monarch.table.ftable.exceptions.FTableNotExistsException;
@@ -30,6 +29,7 @@ import io.ampool.monarch.table.internal.*;
 import io.ampool.monarch.table.region.ScanUtils;
 import io.ampool.monarch.table.region.map.RowTupleConcurrentSkipListMap;
 import io.ampool.monarch.types.CompareOp;
+import io.ampool.orc.OrcUtils;
 import io.ampool.store.StoreHandler;
 import io.ampool.tierstore.SharedTierStore;
 import io.ampool.tierstore.TierStore;
@@ -47,9 +47,6 @@ import java.util.*;
 public class TruncateTableFunction implements Function, InternalEntity {
   private static final Logger logger = LogService.getLogger();
   private static final long serialVersionUID = 786833738305344287L;
-  private FilterList blockFilters;
-  private BlockKey startKey = null;
-  private BlockKey stopKey = null;
 
   @Override
   public void execute(FunctionContext context) {
@@ -57,7 +54,6 @@ public class TruncateTableFunction implements Function, InternalEntity {
     String tableName = (String) args[0];
     Filter filter = (Filter) args[1];
     boolean preserveOlderVersions = (boolean) args[2];
-    blockFilters = handleSpecialColumnFilters(filter);
     try {
       TableDescriptor td = MCacheFactory.getAnyInstance().getTableDescriptor(tableName);
       if (td instanceof FTableDescriptor) {
@@ -148,7 +144,7 @@ public class TruncateTableFunction implements Function, InternalEntity {
       TierStore store = StoreHandler.getInstance().getTierStore(storeName);
       boolean isShared = store instanceof SharedTierStore;
       for (int i = 0; i < totalBuckets; i++) {
-        BucketRegion br = ((TableRegion) region).getDataStore().getLocalBucketById(i);
+        BucketRegion br = ((TablePartitionedRegion) region).getDataStore().getLocalBucketById(i);
         if (br != null && br.getBucketAdvisor().isHosting()) {
           if (!isShared || br.getBucketAdvisor().isPrimary()) {
             truncateTierBucket(store, tableName, i, filter, td,
@@ -175,16 +171,17 @@ public class TruncateTableFunction implements Function, InternalEntity {
     }
     int totalBuckets = td.getTotalNumOfSplits();
     Region region = CacheFactory.getAnyInstance().getRegion(tableName);
+    final OrcUtils.OrcOptions opts = new OrcUtils.OrcOptions(filter, td);
     for (int i = 0; i < totalBuckets; i++) {
       BucketRegion br = ((PartitionedRegion) region).getDataStore().getLocalBucketById(i);
       if (br != null && br.getBucketAdvisor().isHosting() && br.getBucketAdvisor().isPrimary()) {
-        truncateBucket(region, br, filter, td);
+        truncateBucket(region, br, filter, td, opts);
       }
     }
   }
 
   private void truncateBucket(Region region, final BucketRegion br, final Filter filter,
-      TableDescriptor td) {
+      TableDescriptor td, final OrcUtils.OrcOptions opts) {
     RowTupleConcurrentSkipListMap internalMap =
         (RowTupleConcurrentSkipListMap) br.getRegionMap().getInternalMap();
     Map realMap = internalMap.getInternalMap();
@@ -200,10 +197,6 @@ public class TruncateTableFunction implements Function, InternalEntity {
 
       if (td instanceof FTableDescriptor) {
         lastKey = (BlockKey) blockRegionEntry.getKey();
-        if (filterRowKey(lastKey)) {
-          /* block not of interest */
-          continue;
-        }
         synchronized (lastKey) {
           Object value = blockRegionEntry.getValue()._getValue();
           if (value == null || Token.isInvalidOrRemoved(value)) {
@@ -213,6 +206,10 @@ public class TruncateTableFunction implements Function, InternalEntity {
             value = ((VMCachedDeserializable) value).getDeserializedForReading();
           }
           BlockValue blockValue = (BlockValue) value;
+          /* based on column-statistics, skip the blocks that do not have rows matching filters */
+          if (!OrcUtils.isBlockNeeded(opts, blockValue)) {
+            continue;
+          }
           int oldIdx = blockValue.getCurrentIndex();
           truncateBlock(lastKey, blockValue, filter, td);
           if (blockValue.getCurrentIndex() == 0) {
@@ -310,152 +307,6 @@ public class TruncateTableFunction implements Function, InternalEntity {
   private void truncateBlock(BlockKey lastKey, BlockValue blockValue, final Filter filter,
       TableDescriptor td) {
     blockValue.truncateBlock(lastKey, filter, td);
-  }
-
-  /**
-   * Running RowFilter before fetching value if present
-   *
-   * @param blockKey Block key
-   * @return
-   */
-  private boolean filterRowKey(final BlockKey blockKey) {
-    boolean filterRowKey = false;
-    Filter filter = blockFilters;
-    if (filter instanceof BlockKeyFilter) {
-      filterRowKey = ((BlockKeyFilter) filter).filterBlockKey(blockKey);
-    } else if (filter instanceof FilterList) {
-      List<Filter> filters = ((FilterList) filter).getFilters();
-      for (Filter mFilter : filters) {
-        if (mFilter instanceof BlockKeyFilter) {
-          boolean dofilter = ((BlockKeyFilter) mFilter).filterBlockKey(blockKey);;
-          if (dofilter) {
-            filterRowKey = true;
-            break;
-          }
-        }
-      }
-    }
-    return filterRowKey;
-  }
-
-  public FilterList handleSpecialColumnFilters(Filter filter) {
-    final FilterList blockFiltersList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-    if (filter instanceof FilterList) {
-      final FilterList filterList = (FilterList) filter;
-      filterList.getFilters().forEach(mFilter -> {
-        if (mFilter instanceof FilterList) {
-          // as this contains list either of one should pass so changing operator to
-          // Operator.MUST_PASS_ONE
-          blockFiltersList.setOperator(FilterList.Operator.MUST_PASS_ONE);
-          blockFiltersList.addFilter(transformFilterList((FilterList) mFilter));
-        } else {
-          final BlockKeyFilter blockKeyFilter = getBlockKeyFilter(mFilter);
-          if (blockKeyFilter != null) {
-            blockFiltersList.addFilter(blockKeyFilter);
-          }
-        }
-      });
-    } else {
-      final BlockKeyFilter blockKeyFilter = getBlockKeyFilter(filter);
-      if (blockKeyFilter != null) {
-        blockFiltersList.addFilter(blockKeyFilter);
-      }
-    }
-    return blockFiltersList;
-  }
-
-  public FilterList transformFilterList(FilterList filters) {
-    FilterList newFilterList = new FilterList(filters.getOperator());
-    filters.getFilters().forEach(mFilter -> {
-      if (mFilter instanceof FilterList) {
-        newFilterList.addFilter(transformFilterList((FilterList) mFilter));
-      } else {
-        final BlockKeyFilter blockKeyFilter = getBlockKeyFilter(mFilter);
-        if (blockKeyFilter != null) {
-          newFilterList.addFilter(blockKeyFilter);
-        }
-      }
-    });
-    return newFilterList;
-  }
-
-  BlockKeyFilter getBlockKeyFilter(Filter filter) {
-    BlockKeyFilter blockKeyFilter = null;
-    if (filter instanceof SingleColumnValueFilter && ((SingleColumnValueFilter) filter)
-        .getColumnNameString().equals(FTableDescriptor.INSERTION_TIMESTAMP_COL_NAME)) {
-      final SingleColumnValueFilter columnValueFilter = ((SingleColumnValueFilter) filter);
-      final Object val = columnValueFilter.getValue();
-      if ((val instanceof byte[])) {
-        blockKeyFilter = new BlockKeyFilter(columnValueFilter.getOperator(), (byte[]) val);
-      } else if ((val instanceof Long)) {
-        blockKeyFilter =
-            new BlockKeyFilter(columnValueFilter.getOperator(), Bytes.toBytes((Long) val));
-      }
-      // updateStartStopRow to get correct range map
-      updateStartStopRow(columnValueFilter.getOperator(), val);
-    }
-    return blockKeyFilter;
-  }
-
-  private void updateStartStopRow(final CompareOp operator, final Object val) {
-    long timeStamp = -1l;
-    if ((val instanceof byte[])) {
-      timeStamp = Bytes.toLong((byte[]) val);
-    } else if ((val instanceof Long)) {
-      timeStamp = (Long) val;
-    } else {
-      return;
-    }
-    switch (operator) {
-      case LESS:
-        // update stop key if current key is greater than old one
-        if (stopKey == null) {
-          stopKey = new BlockKey(timeStamp);
-        } else {
-          if (timeStamp > stopKey.getStartTimeStamp()) {
-            stopKey.setStartTimeStamp(timeStamp);
-          }
-        }
-        break;
-      case LESS_OR_EQUAL:
-        // as we want to include stopKey too so will add 1 to current value
-        if (stopKey == null) {
-          stopKey = new BlockKey(timeStamp + 1);
-        } else {
-          if (timeStamp >= stopKey.getStartTimeStamp()) {
-            stopKey.setStartTimeStamp(timeStamp + 1);
-          }
-        }
-        break;
-      case GREATER:
-        // update start key if current key is smaller than old one
-        if (startKey == null) {
-          startKey = new BlockKey(timeStamp);
-        } else {
-          if (timeStamp < startKey.getStartTimeStamp()) {
-            startKey.setStartTimeStamp(timeStamp);
-          }
-        }
-        break;
-      case GREATER_OR_EQUAL:
-        if (startKey == null) {
-          startKey = new BlockKey(timeStamp - 1);
-        } else {
-          if (timeStamp <= startKey.getStartTimeStamp()) {
-            startKey.setStartTimeStamp(timeStamp - 1);
-          }
-        }
-        break;
-      case EQUAL:
-        // if start and/or stopkey not set then set with this value
-        if (startKey == null) {
-          startKey = new BlockKey(timeStamp);
-        }
-        if (stopKey == null) {
-          stopKey = new BlockKey(timeStamp);
-        }
-        break;
-    }
   }
 
   @Override

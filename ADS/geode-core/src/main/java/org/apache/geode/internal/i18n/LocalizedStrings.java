@@ -4773,6 +4773,8 @@ public class LocalizedStrings {
       new StringId(3866, "Transaction cannot be marked for rollback. Transcation status = {0}");
   public static final StringId TransactionManagerImpl_TRANSACTIONMANAGERIMPL_SETTRANSACTIONTIMEOUT_NO_GLOBAL_TRANSACTION_EXISTS =
       new StringId(3867, "no global transaction exists");
+  public static final StringId GemFireCacheImpl_STARTING_GEMFIRE_MEMCACHED_SERVER_ON_PORT_0_FOR_1_PROTOCOL =
+      new StringId(3868, "Starting GemFireMemcachedServer on port {0} for {1} protocol");
   public static final StringId TransactionManagerImpl_TRANSACTIONMANAGERIMPL_SETTRANSACTIONTIMEOUT_TRANSACTION_HAS_EITHER_EXPIRED_OR_ROLLEDBACK_OR_COMITTED =
       new StringId(3869, "Transaction has either expired or rolledback or comitted");
   public static final StringId TransactionManagerImpl_TRANSACTIONMANAGERIMPL_RESUME_CANNOT_RESUME_A_NULL_TRANSACTION =
@@ -5211,6 +5213,8 @@ public class LocalizedStrings {
       new StringId(4113, "Register Instantiator {0} of class {1} that instantiates a {2}");
   public static final StringId TransactionImpl_TRANSACTIONIMPL_SETROLLBACKONLY_NO_GLOBAL_TRANSACTION_EXISTS =
       new StringId(4114, "TransactionImpl::setRollbackOnly: No global transaction exists.");
+  public static final StringId GemFireCacheImpl_MEMCACHED_SERVER_ON_PORT_0_IS_SHUTTING_DOWN =
+      new StringId(4115, "GemFireMemcachedServer on port {0} is shutting down");
   public static final StringId TransactionImpl_SETTRANSACTIONTIMEOUT_IS_NOT_SUPPORTED =
       new StringId(4116, "setTransactionTimeout is not supported.");
   public static final StringId TransactionImpl_TRANSACTIONIMPL_ENLISTRESOURCE_NO_GLOBAL_TRANSACTION_EXISTS =
@@ -5778,6 +5782,8 @@ public class LocalizedStrings {
       new StringId(4457, "Error in redundancy satisfier");
   public static final StringId GroupMembershipService_MEMBERSHIP_EXPIRING_MEMBERSHIP_OF_SURPRISE_MEMBER_0 =
       new StringId(4458, "Membership: expiring membership of surprise member <{0}>");
+  public static final StringId GemFireCacheImpl_STARTING_GEMFIRE_REDIS_SERVER_ON_PORT_0 =
+      new StringId(4459, "Starting GeodeRedisServer on port {0}");
   public static final StringId GroupMembershipService_EXCEPTION_DESERIALIZING_MESSAGE_PAYLOAD_0 =
       new StringId(4460, "Exception deserializing message payload: {0}");
   public static final StringId GroupMembershipService_MEMBERSHIP_SERVICE_FAILURE_0 =
@@ -5885,6 +5891,9 @@ public class LocalizedStrings {
       new StringId(4521, " One of the input keys for the putAll request is null");
   public static final StringId PutAll_ONE_OF_THE_INPUT_VALUES_FOR_THE_PUTALL_REQUEST_IS_NULL =
       new StringId(4522, " One of the input values for the putAll request is null");
+  public static final StringId AbstractDistributionConfig_REDIS_BIND_ADDRESS_0_INVALID_MUST_BE_IN_1 =
+      new StringId(4526,
+          "The redis-bind-address \"{0}\" is not a valid address for this machine.  These are the valid addresses for this machine: {1}");
   public static final StringId CacheServerImpl_CACHESERVER_ERROR_CLOSING_LOAD_MONITOR =
       new StringId(4527, "CacheServer - Error closing load monitor");
   public static final StringId CacheServerImpl_CACHESERVER_ERROR_CLOSING_ADVISOR =
@@ -6406,6 +6415,8 @@ public class LocalizedStrings {
   public static final StringId PartitionedRegion_TX_FUNCTION_EXECUTION_NOT_COLOCATED_0_1 =
       new StringId(4840,
           "Function execution is not colocated with transaction. The transactional data is hosted on node {0}, but you are trying to target node {1}");
+  public static final StringId GemFireCacheImpl_STARTING_GEMFIRE_REDIS_SERVER_ON_BIND_ADDRESS_0_PORT_1 =
+      new StringId(4841, "Starting GeodeRedisServer on bind address {0} on port {1}");
   public static final StringId RemoteFetchEntryMessage_ENTRY_NOT_FOUND =
       new StringId(4842, "entry not found");
   public static final StringId RemoteFetchEntryMessage_FAILED_SENDING_0 =
@@ -6736,6 +6747,8 @@ public class LocalizedStrings {
   public static final StringId FOR_FIXED_PARTITION_REGION_0_PARTITION_1_IS_NOT_YET_INITIALIZED_ON_DATASTORE =
       new StringId(5072,
           "For FixedPartitionedRegion \"{0}\", Partition \"{1}\" is not yet initialized on datastore");
+  public static final StringId AbstractDistributionConfig_MEMCACHED_PROTOCOL_MUST_BE_ASCII_OR_BINARY =
+      new StringId(5073, "memcached-protocol must be \"ASCII\" or \"BINARY\" ");
 
   public static final StringId Disk_Store_Exception_During_Cache_Close =
       new StringId(5074, "Cache close caught an exception during disk store close");
@@ -7437,6 +7450,9 @@ public class LocalizedStrings {
   public static final StringId MEMSCALE_EVICTION_INIT_FAIL = new StringId(5663,
       "Cannot initialize the off-heap evictor.  There is no off-heap memory available for eviction.");
 
+  public static final StringId DiskStoreAttributesCreation_ENABLEDELTAPERSISTENCE_OF_0_IS_NOT_THE_SAME_THIS_1_OTHER_2 =
+      new StringId(5662,
+          "EnableDEltaPersistence of disk store {0} is not the same: this:  {1}  other:  {2}");
 
   // If the text is changed for this StringId, do the same in ConnectionPoolImplJUnitTest.java
   public static final StringId QueueManagerImpl_COULD_NOT_FIND_SERVER_TO_CREATE_PRIMARY_CLIENT_QUEUE =
@@ -7518,6 +7534,13 @@ public class LocalizedStrings {
       "The amount of time, in seconds, to wait for a locator to be available before throwing an exception during startup.  The default is {0}.");
   public static final StringId CliLegacyMessage_ERROR =
       new StringId(6600, "Error processing request {0}.");
+
+  public static final StringId AbstractDistributionConfig_MEMCACHED_BIND_ADDRESS_0_INVALID_MUST_BE_IN_1 =
+      new StringId(6601,
+          "The memcached-bind-address \"{0}\" is not a valid address for this machine.  These are the valid addresses for this machine: {1}");
+  public static final StringId GemFireCacheImpl_STARTING_GEMFIRE_MEMCACHED_SERVER_ON_BIND_ADDRESS_0_PORT_1_FOR_2_PROTOCOL =
+      new StringId(6602,
+          "Starting GemFireMemcachedServer on bind address {0} on port {1} for {2} protocol");
 
   public static final StringId PersistenceAdvisorImpl_RETRYING_GII = new StringId(6603,
       "GII failed from all sources, but members are still online. Retrying the GII.");
@@ -7672,17 +7695,20 @@ public class LocalizedStrings {
       new StringId(90005, "Initialization of region {0} completed");
 
 
+  // AMPOOL SPECIFIC CODE CHANGES START HERE
   public static final StringId MScan_THE_INPUT_REGION_NAME_FOR_THE_MSCAN_REQUEST_IS_NULL =
       new StringId(500000, "The input region name for the getAll request is null");
   public static final StringId MScan_0_CAUGHT_THE_FOLLOWING_EXCEPTION_ATTEMPTING_TO_GET_VALUE_FOR_KEY_1 =
       new StringId(500001,
           "{0}: Caught the following exception attempting to get value for key={1}");
+  // AMPOOL SPECIFIC CODE CHANGES START HERE
   public static final StringId RegionAttributesCreation_CUSTOM_ATTRIBUTES_NOT_THE_SAME =
       new StringId(500002, "Custom attributes are not the same");
 
   public static final StringId CreateRegionProcessor_CANNOT_CREATE_REGION_0_WITH_CUSTOM_ATTRIBUTES_EQUALS_1_BECAUSE_ANOTHER_CACHE_2_HAS_SAME_THE_REGION_WITH_CUSTOM_ATTRIBUTES_EQUALS_3 =
       new StringId(500003,
           "Cannot create region {0} with Custom Region Attributes={1} because another cache ({2}) has the same region with Custom Region Attributes={3}.");
+  // AMPOOL SPECIFIC CODE CHANGES END HERE
   public static final StringId ExecuteRegionFunction_THE_INPUT_0_FOR_THE_EXECUTE_FUNCTION_REQUEST_IS_OUT_OF_RANGE =
       new StringId(500004, "The input {0} for the execute function request is out of Range");
 
@@ -7691,6 +7717,7 @@ public class LocalizedStrings {
           "<Missing property {0} from resource com/gemstone/gemfire/internal/{1}>");
 
 
+  // AMPOOL SPECIFIC CODE CHANGES START HERE
 
   public static final StringId Ampool_SwaggerConfig_VENDOR_PRODUCT_LINE =
       new StringId(500006, "Ampool Developer REST API");
@@ -7708,4 +7735,8 @@ public class LocalizedStrings {
   public static final StringId CreateRegionProcessor_CANNOT_CREATE_REGION_0_WITH_REGIONMAP_FACTORY_EQUALS_1_BECAUSE_ANOTHER_CACHE_2_HAS_SAME_THE_REGION_WITH_REGIONMAP_FACTORY_EQUALS_3 =
       new StringId(500012,
           "Cannot create region {0} with regionmap-factory={1} because another cache ({2}) has the same region with regionmap-factory={3}.");
+  // AMPOOL SPECIFIC CODE CHANGES END HERE
+
+
+
 }

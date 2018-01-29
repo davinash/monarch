@@ -17,6 +17,7 @@ import static org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils.getStandardJa
 import static org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils.getTypeInfoFromTypeString;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -54,6 +55,7 @@ import org.apache.geode.internal.logging.LogService;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.exec.SerializationUtilities;
 import org.apache.hadoop.hive.ql.io.orc.OrcFile;
 import org.apache.hadoop.hive.ql.io.orc.RecordReader;
@@ -107,12 +109,19 @@ import org.iq80.snappy.Snappy;
  */
 public class OrcUtils {
   private static final Logger logger = LogService.getLogger();
+  private static final String VARCHAR_TYPE = getBase(TypeInfoFactory.varcharTypeInfo.getTypeName());
+  private static final String DECIMAL_TYPE = getBase(TypeInfoFactory.decimalTypeInfo.getTypeName());
+
+  private static String getBase(final String typeStr) {
+    final int index = typeStr.indexOf('(');
+    return index > 0 ? typeStr.substring(0, index) : typeStr;
+  }
 
   public static final Map<String, Function<Object, Object>> OrcReadFunctionMap =
       new HashMap<String, Function<Object, Object>>(20) {
         {
           put(TypeInfoFactory.stringTypeInfo.getTypeName(), Object::toString);
-          put(TypeInfoFactory.varcharTypeInfo.getTypeName(), Object::toString);
+          put(VARCHAR_TYPE, Object::toString);
           put(TypeInfoFactory.stringTypeInfo.getTypeName(), Object::toString);
           put(TypeInfoFactory.charTypeInfo.getTypeName(),
               e -> ((HiveCharWritable) e).getHiveChar().getValue().charAt(0));
@@ -127,8 +136,7 @@ public class OrcUtils {
           put(TypeInfoFactory.shortTypeInfo.getTypeName(), e -> ((ShortWritable) e).get());
           put(TypeInfoFactory.timestampTypeInfo.getTypeName(),
               e -> ((TimestampWritable) e).getTimestamp());
-          put(TypeInfoFactory.decimalTypeInfo.getTypeName(),
-              e -> ((HiveDecimalWritable) e).getHiveDecimal().bigDecimalValue());
+          put(DECIMAL_TYPE, e -> ((HiveDecimalWritable) e).getHiveDecimal().bigDecimalValue());
         }
       };
   public static final Map<String, TypeInfo> OrcTypeMap = new HashMap<String, TypeInfo>(20) {
@@ -155,7 +163,7 @@ public class OrcUtils {
   public static final Map<String, String> OrcTypeStringMap = new HashMap<String, String>(20) {
     {
       put(BasicTypes.STRING.toString(), TypeInfoFactory.stringTypeInfo.getTypeName());
-      put(BasicTypes.VARCHAR.toString(), TypeInfoFactory.varcharTypeInfo.getTypeName());
+      put(BasicTypes.VARCHAR.toString(), VARCHAR_TYPE);
       put(BasicTypes.CHARS.toString(), TypeInfoFactory.stringTypeInfo.getTypeName());
       put(BasicTypes.CHAR.toString(), TypeInfoFactory.charTypeInfo.getTypeName());
       put(BasicTypes.O_INT.toString(), TypeInfoFactory.intTypeInfo.getTypeName());
@@ -170,7 +178,7 @@ public class OrcUtils {
       put(BasicTypes.FLOAT.toString(), TypeInfoFactory.floatTypeInfo.getTypeName());
       put(BasicTypes.SHORT.toString(), TypeInfoFactory.shortTypeInfo.getTypeName());
       put(BasicTypes.TIMESTAMP.toString(), TypeInfoFactory.timestampTypeInfo.getTypeName());
-      put(BasicTypes.BIG_DECIMAL.name(), TypeInfoFactory.decimalTypeInfo.getTypeName());
+      put(BasicTypes.BIG_DECIMAL.name(), DECIMAL_TYPE);
     }
   };
 
@@ -257,7 +265,12 @@ public class OrcUtils {
         aRow.reset(null, bv.getRecord(i), enc, null);
         int j = 0;
         for (final Cell cell : aRow.getCells()) {
-          rowOI.setStructFieldData(oRow, fields.get(j++), cell.getColumnValue());
+          if (cell.getColumnType().equals(BasicTypes.BIG_DECIMAL)) {
+            rowOI.setStructFieldData(oRow, fields.get(j++),
+                HiveDecimal.create((BigDecimal) cell.getColumnValue()));
+          } else {
+            rowOI.setStructFieldData(oRow, fields.get(j++), cell.getColumnValue());
+          }
         }
         writer.addRow(oRow);
       }
@@ -498,6 +511,12 @@ public class OrcUtils {
     public int[] getFilterColumns() {
       return this.filterColumns;
     }
+
+    @Override
+    public String toString() {
+      return "OrcOptions{" + "options=" + options + ", filterColumns="
+          + Arrays.toString(filterColumns) + '}';
+    }
   }
 
   /**
@@ -540,7 +559,13 @@ public class OrcUtils {
     Object outValue = null;
     switch (oi.getCategory()) {
       case PRIMITIVE:
-        outValue = OrcReadFunctionMap.get(oi.getTypeName()).apply(value);
+        final Function<Object, Object> type = OrcReadFunctionMap.computeIfAbsent(oi.getTypeName(),
+            k -> OrcReadFunctionMap.get(getBase(k)));
+        if (type == null) {
+          logger.error("No converter found for ORC type: {}; returning null..", oi.getTypeName());
+          return null;
+        }
+        outValue = type.apply(value);
         break;
       case LIST:
         final ListObjectInspector loi = (ListObjectInspector) oi;

@@ -11,9 +11,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import io.ampool.monarch.table.exceptions.MCheckOperationFailException;
+import io.ampool.monarch.table.exceptions.RowKeyDoesNotExistException;
 import io.ampool.monarch.table.internal.MTableRow;
 import io.ampool.monarch.table.internal.MTableUtils;
 import org.apache.geode.cache.*;
+import org.apache.geode.internal.cache.MonarchCacheImpl;
+import org.apache.geode.internal.cache.control.HeapMemoryMonitor;
 import org.apache.geode.test.junit.categories.MonarchTest;
 
 import org.junit.*;
@@ -400,6 +404,20 @@ public class MTableCreationJUnitTest {
     return props;
   }
 
+  public static void raiseFakeNotification() {
+    ((MonarchCacheImpl) MCacheFactory.getAnyInstance()).getHeapEvictor().testAbortAfterLoopCount =
+        1;
+    HeapMemoryMonitor.setTestDisableMemoryUpdates(true);
+    System.setProperty("gemfire.memoryEventTolerance", "0");
+
+    MCacheFactory.getAnyInstance().getResourceManager().setEvictionHeapPercentage(85);
+    HeapMemoryMonitor hmm =
+        ((MonarchCacheImpl) MCacheFactory.getAnyInstance()).getResourceManager().getHeapMonitor();
+    hmm.setTestMaxMemoryBytes(100);
+
+    hmm.updateStateAndSendEvent(90);
+  }
+
   @Test
   public void test1111() {
     final int NUM_OF_COLUMNS = 10;
@@ -502,7 +520,85 @@ public class MTableCreationJUnitTest {
       }
       columnIndex++;
     }
+  }
 
+  @Test
+  public void testGEN1759() {
+    String tableName = "testGEN1759";
+    final int NUM_OF_COLUMNS = 10;
+    final String COLUMN_NAME_PREFIX = "COLUMN";
+    final int NUM_OF_ROWS = 2;
+    final String KEY_PREFIX = "KEY";
+    final String VALUE_PREFIX = "VALUE";
+
+    MCache amplServerCache = createCache();
+    raiseFakeNotification();
+
+    MTableDescriptor tableDescriptor;
+    tableDescriptor = new MTableDescriptor(MTableType.UNORDERED);
+    tableDescriptor.setRedundantCopies(1);
+    for (int colmnIndex = 0; colmnIndex < NUM_OF_COLUMNS; colmnIndex++) {
+      tableDescriptor = tableDescriptor.addColumn(Bytes.toBytes(COLUMN_NAME_PREFIX + colmnIndex));
+    }
+    if (amplServerCache.getAdmin().existsMTable(tableName)) {
+      amplServerCache.getAdmin().deleteMTable(tableName);
+    }
+    MTable table = amplServerCache.getAdmin().createMTable(tableName, tableDescriptor);
+
+    for (int rowIndex = 0; rowIndex < NUM_OF_ROWS; rowIndex++) {
+      Put record = new Put(Bytes.toBytes(KEY_PREFIX + rowIndex));
+      for (int columnIndex = 0; columnIndex < NUM_OF_COLUMNS; columnIndex++) {
+        record.addColumn(Bytes.toBytes(COLUMN_NAME_PREFIX + columnIndex),
+            Bytes.toBytes(VALUE_PREFIX + columnIndex));
+      }
+      table.put(record);
+    }
+
+    Delete delete = new Delete(Bytes.toBytes(KEY_PREFIX + 0));
+    try {
+      table.delete(delete);
+    } catch (Exception ex) {
+      Assert
+          .fail("Should not get exception, value should be fetched from the disk after eviction.");
+    }
+
+    Get get = new Get(Bytes.toBytes(KEY_PREFIX + 0));
+    Row row = table.get(get);
+    assertTrue(row.isEmpty());
+    assertTrue(row.getCells().isEmpty());
+
+    Delete checkAndDelete = new Delete(Bytes.toBytes(KEY_PREFIX + 1));
+    try {
+      boolean b = table.checkAndDelete(Bytes.toBytes(KEY_PREFIX + 1),
+          Bytes.toBytes(COLUMN_NAME_PREFIX + 2), Bytes.toBytes(VALUE_PREFIX + 1), checkAndDelete);
+    } catch (Exception ex) {
+      assertTrue(ex instanceof MCheckOperationFailException);
+    }
+
+    try {
+      boolean b = table.checkAndDelete(Bytes.toBytes(KEY_PREFIX + 1),
+          Bytes.toBytes(COLUMN_NAME_PREFIX + 2), Bytes.toBytes(VALUE_PREFIX + 2), checkAndDelete);
+      assertTrue(b);
+    } catch (Exception ex) {
+      Assert.fail("Should not have got any exception");
+    }
+
+    Get deletedRow = new Get(Bytes.toBytes(KEY_PREFIX + 1));
+    Row row2 = table.get(deletedRow);
+    assertTrue(row2.isEmpty());
+    assertTrue(row2.getCells().isEmpty());
+
+    Delete UknowncheckAndDelete = new Delete(Bytes.toBytes(KEY_PREFIX + 3));
+    try {
+      boolean b =
+          table.checkAndDelete(Bytes.toBytes(KEY_PREFIX + 3), Bytes.toBytes(COLUMN_NAME_PREFIX + 3),
+              Bytes.toBytes(VALUE_PREFIX + 3), UknowncheckAndDelete);
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      assertTrue(ex instanceof RowKeyDoesNotExistException);
+    }
+
+    amplServerCache.getAdmin().deleteMTable(tableName);
     amplServerCache.close();
   }
 

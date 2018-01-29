@@ -96,6 +96,14 @@ public abstract class Token {
     return o == INVALID || o == LOCAL_INVALID;
   }
 
+  public static final boolean isTombstone(Object o) {
+    return o == TOMBSTONE;
+  }
+
+  public static final boolean isLocalInvalid(Object o) {
+    return o == LOCAL_INVALID;
+  }
+
   public static final boolean isRemoved(Object o) {
     return o == DESTROYED || o == REMOVED_PHASE1 || o == REMOVED_PHASE2 || o == TOMBSTONE;
   }

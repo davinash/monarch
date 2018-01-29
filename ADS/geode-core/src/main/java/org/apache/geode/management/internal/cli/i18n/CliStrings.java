@@ -14,8 +14,6 @@
  */
 package org.apache.geode.management.internal.cli.i18n;
 
-import static org.apache.geode.distributed.ConfigurationProperties.*;
-
 import java.text.MessageFormat;
 
 import org.apache.geode.cache.PartitionAttributesFactory;
@@ -25,6 +23,8 @@ import org.apache.geode.distributed.internal.DistributionConfig;
 import org.apache.geode.distributed.internal.ClusterConfigurationService;
 import org.apache.geode.internal.cache.xmlcache.CacheXml;
 import org.apache.geode.management.internal.cli.shell.Gfsh;
+
+import static org.apache.geode.distributed.ConfigurationProperties.*;
 
 /**
  * - * Contains 'String' constants used as key to the Localized strings to be used in classes under
@@ -319,9 +319,9 @@ public class CliStrings {
   public static final String ALTER_REGION__ASYNCEVENTQUEUEID = "async-event-queue-id";
   public static final String ALTER_REGION__ASYNCEVENTQUEUEID__HELP =
       "IDs of the Async Event Queues that will be used for write-behind operations."; // TODO -
-                                                                                      // Abhishek Is
-                                                                                      // this
-                                                                                      // correct?
+  // Abhishek Is
+  // this
+  // correct?
   public static final String ALTER_REGION__GATEWAYSENDERID = "gateway-sender-id";
   public static final String ALTER_REGION__GATEWAYSENDERID__HELP =
       "IDs of the Gateway Senders to which data will be routed.";
@@ -657,6 +657,10 @@ public class CliStrings {
   public static final String CREATE_DISK_STORE__AUTO_COMPACT = "auto-compact";
   public static final String CREATE_DISK_STORE__AUTO_COMPACT__HELP =
       "Whether to automatically compact a file when it reaches the compaction-threshold.";
+  public static final String CREATE_DISK_STORE__ENABLE_DELTA_PERSISTENCE =
+      "enable-delta-persistence";
+  public static final String CREATE_DISK_STORE__ENABLE_DELTA_PERSISTENCE__HELP =
+      "Whether to enable delta persistence for the disk store.";
   public static final String CREATE_DISK_STORE__COMPACTION_THRESHOLD = "compaction-threshold";
   public static final String CREATE_DISK_STORE__COMPACTION_THRESHOLD__HELP =
       "Percentage of garbage allowed in the file before it is eligible for compaction.";
@@ -862,9 +866,9 @@ public class CliStrings {
   public static final String CREATE_REGION__ASYNCEVENTQUEUEID = "async-event-queue-id";
   public static final String CREATE_REGION__ASYNCEVENTQUEUEID__HELP =
       "IDs of the Async Event Queues that will be used for write-behind operations."; // TODO -
-                                                                                      // Abhishek Is
-                                                                                      // this
-                                                                                      // correct?
+  // Abhishek Is
+  // this
+  // correct?
   public static final String CREATE_REGION__GATEWAYSENDERID = "gateway-sender-id";
   public static final String CREATE_REGION__GATEWAYSENDERID__HELP =
       "IDs of the Gateway Senders to which data will be routed.";
@@ -962,13 +966,13 @@ public class CliStrings {
   public static final String CREATE_REGION__MSG__EXPIRATION_ACTION_0_IS_NOT_VALID =
       "Expiration action \"{0}\" is not valid.";
   public static final String CREATE_REGION__MSG__ERROR_ON_MEMBER_0 = "Error on member: {0}. "; // leave
-                                                                                               // space
-                                                                                               // in
-                                                                                               // the
-                                                                                               // end
-                                                                                               // for
-                                                                                               // further
-                                                                                               // message
+  // space
+  // in
+  // the
+  // end
+  // for
+  // further
+  // message
   public static final String CREATE_REGION__MSG__COULD_NOT_RETRIEVE_REGION_ATTRS_FOR_PATH_0_REASON_1 =
       "Could not retrieve region attributes for given path \"{0}\". Reason: {1}";
   public static final String CREATE_REGION__MSG__COULD_NOT_RETRIEVE_REGION_ATTRS_FOR_PATH_0_VERIFY_REGION_EXISTS =
@@ -2353,11 +2357,11 @@ public class CliStrings {
   public static final String START_LOCATOR__PROPERTIES = "properties-file";
   public static final String START_LOCATOR__PROPERTIES__HELP =
       "The gemfire.properties file for configuring the Locator's distributed system. The file's path can be absolute or relative to the gfsh working directory (--dir=)."; // TODO:GEODE-1466:
-                                                                                                                                                                           // update
-                                                                                                                                                                           // golden
-                                                                                                                                                                           // file
-                                                                                                                                                                           // to
-                                                                                                                                                                           // geode.properties
+  // update
+  // golden
+  // file
+  // to
+  // geode.properties
   public static final String START_LOCATOR__SECURITY_PROPERTIES = "security-properties-file";
   public static final String START_LOCATOR__SECURITY_PROPERTIES__HELP =
       "The gfsecurity.properties file for configuring the Locator's security configuration in the distributed system. The file's path can be absolute or relative to gfsh directory (--dir=).";
@@ -2514,7 +2518,6 @@ public class CliStrings {
   public static final String START_SERVER__EXT__CLASSPATH = "ext-classpath";
   public static final String START_SERVER__EXT__CLASSPATH__HELP =
       "Location of external classes required by the Server. This classpath is prepended to the Server's classpath. --tier-classpath will be overridden if this option is provided.";
-  // geode.properties
   public static final String START_SERVER__SECURITY_PROPERTIES = "security-properties-file";
   public static final String START_SERVER__SECURITY_PROPERTIES__HELP =
       "The gfsecurity.properties file for configuring the Server's security configuration in the distributed system. The file's path can be absolute or relative to gfsh directory.";

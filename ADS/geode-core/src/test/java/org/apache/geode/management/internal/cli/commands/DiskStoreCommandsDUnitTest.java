@@ -549,10 +549,12 @@ public class DiskStoreCommandsDUnitTest extends CliCommandTestBase {
     assertEquals(Result.Status.OK, cmdResult.getStatus());
     String stringResult = commandResultToString(cmdResult);
     assertEquals(3, countLinesInString(stringResult, false));
+    // AMPOOL SPECIFIC CODE CHANGES START HERE
     assertTrue(stringContainsLine(stringResult, ".*/" + region1
         + ": -lru=none -concurrencyLevel=16 -initialCapacity=16 -loadFactor=0.75 -offHeap=false -compressor=none -statisticsEnabled=false -customAttrributes=null -regionMapFactory="));
     assertTrue(stringContainsLine(stringResult, ".*/" + region2
         + ": -lru=none -concurrencyLevel=16 -initialCapacity=16 -loadFactor=0.75 -offHeap=false -compressor=org.apache.geode.compression.SnappyCompressor -statisticsEnabled=false -customAttrributes=null -regionMapFactory="));
+    // AMPOOL SPECIFIC CODE CHANGES END HERE
 
     cmdResult = executeCommand("describe offline-disk-store --name=" + diskStoreName1
         + " --disk-dirs=" + diskStoreDir.getAbsolutePath() + " --region=/" + region1);
@@ -806,6 +808,7 @@ public class DiskStoreCommandsDUnitTest extends CliCommandTestBase {
     commandStringBuilder.addOption(CliStrings.CREATE_DISK_STORE__GROUP, groupName);
     commandStringBuilder.addOption(CliStrings.CREATE_DISK_STORE__DIRECTORY_AND_SIZE,
         diskStoreDir.getAbsolutePath());
+    commandStringBuilder.addOption(CliStrings.CREATE_DISK_STORE__ENABLE_DELTA_PERSISTENCE, "true");
     CommandResult cmdResult = executeCommand(commandStringBuilder.toString());
     assertEquals(Result.Status.OK, cmdResult.getStatus());
 
@@ -819,6 +822,8 @@ public class DiskStoreCommandsDUnitTest extends CliCommandTestBase {
         try {
           xmlFromConfig = sharedConfig.getConfiguration(groupName).getCacheXmlContent();
           assertTrue(xmlFromConfig.contains(diskStoreName));
+          assertTrue(
+              xmlFromConfig.contains(CliStrings.CREATE_DISK_STORE__ENABLE_DELTA_PERSISTENCE));
         } catch (Exception e) {
           fail("Error occurred in cluster configuration service", e);
         }
@@ -905,7 +910,7 @@ public class DiskStoreCommandsDUnitTest extends CliCommandTestBase {
   /**
    * 1) Create a disk-store in a member, get the disk-dirs. 2) Close the member. 3) Execute the
    * command. 4) Restart the member. 5) Check if the disk-store is altered.
-   * 
+   *
    * @throws IOException
    * @throws ClassNotFoundException
    */
@@ -1193,6 +1198,7 @@ public class DiskStoreCommandsDUnitTest extends CliCommandTestBase {
         diskStore1Dir1.getAbsolutePath() + "#1452637463");
     commandStringBuilder.addOption(CliStrings.CREATE_DISK_STORE__DIRECTORY_AND_SIZE,
         diskStore1Dir2.getAbsolutePath());
+    commandStringBuilder.addOption(CliStrings.CREATE_DISK_STORE__ENABLE_DELTA_PERSISTENCE, "true");
     cmdResult = executeCommand(commandStringBuilder.toString());
     assertEquals(Result.Status.OK, cmdResult.getStatus());
     String stringResult = commandResultToString(cmdResult);
@@ -1228,6 +1234,7 @@ public class DiskStoreCommandsDUnitTest extends CliCommandTestBase {
     assertTrue(stringContainsLine(stringResult, ".*" + diskStore1Name + ".1 .*1452637463"));
     assertTrue(
         stringContainsLine(stringResult, ".*" + diskStore1Name + ".2 .*" + Integer.MAX_VALUE));
+    assertTrue(stringContainsLine(stringResult, "Delta Persistence.*Yes"));
 
     commandStringBuilder = new CommandStringBuilder(CliStrings.CREATE_DISK_STORE);
     commandStringBuilder.addOption(CliStrings.CREATE_DISK_STORE__NAME, diskStore2Name);
@@ -1249,6 +1256,8 @@ public class DiskStoreCommandsDUnitTest extends CliCommandTestBase {
     assertFalse(stringContainsLine(stringResult, vm2Name + ".*" + diskStore1Name + " .*"));
     assertFalse(stringContainsLine(stringResult, vm1Name + ".*" + diskStore2Name + " .*"));
     assertTrue(stringContainsLine(stringResult, vm2Name + ".*" + diskStore2Name + " .*"));
+
+
   }
 
   @Test

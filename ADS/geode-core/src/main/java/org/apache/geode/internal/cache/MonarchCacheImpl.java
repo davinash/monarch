@@ -16,6 +16,7 @@ package org.apache.geode.internal.cache;
 
 import io.ampool.classification.InterfaceAudience;
 import io.ampool.classification.InterfaceStability;
+import io.ampool.internal.RegionDataOrder;
 import io.ampool.internal.functions.DeleteWithFilterFunction;
 import io.ampool.monarch.table.Admin;
 import io.ampool.monarch.table.Bytes;
@@ -30,15 +31,9 @@ import io.ampool.monarch.table.exceptions.MTableExistsException;
 import io.ampool.monarch.table.ftable.FTable;
 import io.ampool.monarch.table.ftable.FTableDescriptor;
 import io.ampool.monarch.table.ftable.exceptions.TierStoreNotAvailableException;
+import io.ampool.monarch.table.ftable.internal.FTableImpl;
 import io.ampool.monarch.table.ftable.internal.ProxyFTableRegion;
-import io.ampool.monarch.table.internal.AdminImpl;
-import io.ampool.monarch.table.internal.BitMap;
-import io.ampool.monarch.table.internal.MTableKey;
-import io.ampool.monarch.table.internal.MTableRegionImpl;
-import io.ampool.monarch.table.internal.MTableUtils;
-import io.ampool.monarch.table.internal.ProxyMTableRegion;
-import io.ampool.monarch.table.internal.RowHeader;
-import io.ampool.monarch.table.internal.Table;
+import io.ampool.monarch.table.internal.*;
 import io.ampool.monarch.table.region.AmpoolTableRegionAttributes;
 import io.ampool.monarch.table.region.ScanCommand;
 import io.ampool.store.DefaultConstructorMissingException;
@@ -127,7 +122,7 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
   /**
    * Creates a new instance of GemFireCache and populates it according to the
    * <code>cache.xml</code>, if appropriate.
-   * 
+   *
    * @param typeRegistry : currently only unit tests set this parameter to a non-null value
    */
   private MonarchCacheImpl(boolean isClient, PoolFactory pf, DistributedSystem system,
@@ -222,16 +217,31 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
         if (r == null) {
           try {
             // TODO: Change this to create ServerTableRegionProxy.
-            r = createClientRegionFactory(ClientRegionShortcut.PROXY).create(tableName);
+            ClientRegionFactory<Object, Object> crf =
+                createClientRegionFactory(ClientRegionShortcut.PROXY);
+            AmpoolTableRegionAttributes ampoolTableRegionAttributes =
+                new AmpoolTableRegionAttributes();
+            if (tableDescriptor.getType() == TableType.UNORDERED) {
+              ampoolTableRegionAttributes.setRegionDataOrder(RegionDataOrder.ROW_TUPLE_UNORDERED);
+              crf.setCustomRegionAttributes(ampoolTableRegionAttributes);
+            } else if (tableDescriptor.getType() == TableType.ORDERED_VERSIONED) {
+              ampoolTableRegionAttributes
+                  .setRegionDataOrder(RegionDataOrder.ROW_TUPLE_ORDERED_VERSIONED);
+              crf.setCustomRegionAttributes(ampoolTableRegionAttributes);
+            } else if (tableDescriptor.getType() == TableType.IMMUTABLE) {
+              ampoolTableRegionAttributes.setRegionDataOrder(RegionDataOrder.IMMUTABLE);
+              crf.setCustomRegionAttributes(ampoolTableRegionAttributes);
+            }
+            r = crf.create(tableName);
           } catch (RegionExistsException ree) {
             r = getRegion(tableName);
           }
         }
         if (tableDescriptor instanceof MTableDescriptor) {
-          // return new ProxyMTableRegion(r, (MTableDescriptor) tableDescriptor, this);
-          return new ProxyMTableRegion(r, (MTableDescriptor) tableDescriptor, this);
+          // return new MTableImpl(r, (MTableDescriptor) tableDescriptor, this);
+          return new MTableImpl(r, (MTableDescriptor) tableDescriptor, this);
         } else if (tableDescriptor instanceof FTableDescriptor) {
-          return new ProxyFTableRegion(r, (FTableDescriptor) tableDescriptor, this);
+          return new FTableImpl(r, (FTableDescriptor) tableDescriptor, this);
         }
       }
     } catch (CacheClosedException cce) {
@@ -243,8 +253,8 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
   @Override
   public MTable getMTable(final String tableName) throws IllegalArgumentException {
     final Table table = getAnyTable(tableName);
-    if (table instanceof MTable || table instanceof ProxyMTableRegion) {
-      return (ProxyMTableRegion) table;
+    if (table instanceof MTable || table instanceof MTableImpl) {
+      return (MTableImpl) table;
     }
     return null;
   }
@@ -252,8 +262,8 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
   @Override
   public FTable getFTable(final String tableName) throws IllegalArgumentException {
     final Table table = getAnyTable(tableName);
-    if (table instanceof FTable || table instanceof ProxyFTableRegion) {
-      return (ProxyFTableRegion) table;
+    if (table instanceof FTable || table instanceof FTableImpl) {
+      return (FTableImpl) table;
     }
     return null;
   }
@@ -282,8 +292,11 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
 
   @Override
   public void close() {
+    StoreHandler.getInstance().stopWALMonitoring();
+    StoreHandler.getInstance().stopTierMonitoring();
     super.close();
     MonarchCacheImpl.instance = null;
+
   }
 
   public void closeAmpoolCache() {
@@ -346,16 +359,16 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
             future = (Future) this.reinitializingRegions.get(fullPath);
           }
           if (future == null) {
-            if (isAmpoolTable) {
+            if (isAmpoolTable && !isClient()) {
               if (AmpoolTableRegionAttributes.isAmpoolMTable(attrs.getCustomAttributes())) {
                 // create MTable
                 if (attrs.getScope().isDistributedAck())
                   rgn = new TableDistributedRegion(name, attrs, null, this, internalRegionArgs);
                 if (attrs.getScope().isDistributedNoAck())
-                  rgn = new MTableRegion(name, attrs, null, this, internalRegionArgs);
+                  rgn = new MTablePartitionedRegion(name, attrs, null, this, internalRegionArgs);
               } else if (AmpoolTableRegionAttributes.isAmpoolFTable(attrs.getCustomAttributes())) {
                 // create FTable
-                rgn = new FTableRegion(name, attrs, null, this, internalRegionArgs);
+                rgn = new FTablePartitionedRegion(name, attrs, null, this, internalRegionArgs);
               }
             } else {
               if (internalRegionArgs.getInternalMetaRegion() != null) {
@@ -601,6 +614,10 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
   }
 
 
+  public static boolean isMetaRegionCached() {
+    return MonarchCacheImpl.isMetaRegionCached;
+  }
+
   public static MonarchCacheImpl createClient(DistributedSystem system, PoolFactory pf,
       CacheConfig cacheConfig, boolean isMetaRgnCached) {
     isMetaRegionCached = isMetaRgnCached;
@@ -656,11 +673,22 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
     if (vmKind == DistributionManager.NORMAL_DM_TYPE
         || vmKind == DistributionManager.LONER_DM_TYPE && !isClient()) {
 
-      if (findDiskStore(MTableUtils.DEFAULT_DISK_STORE_NAME) == null) {
-        // Create the default disk store for all the tables
+      if (findDiskStore(MTableUtils.DEFAULT_MTABLE_DISK_STORE_NAME) == null) {
+        // Create the default disk store for all the MTables
         // This will be used only when use did not specify the disk store name.
         DiskStoreFactory diskStoreFactory = createDiskStoreFactory();
-        diskStoreFactory.create(MTableUtils.DEFAULT_DISK_STORE_NAME);
+        diskStoreFactory.create(MTableUtils.DEFAULT_MTABLE_DISK_STORE_NAME);
+      }
+
+      if (findDiskStore(MTableUtils.DEFAULT_FTABLE_DISK_STORE_NAME) == null) {
+        Boolean enableDeltaPersistence =
+            Boolean.valueOf(System.getProperty(MTableUtils.AMPL_DELTA_PERS_PROP_NAME, "true"));
+        // Create the default disk store for all the FTables
+        // This will be used only when use did not specify the disk store name.
+        DiskStoreFactory diskStoreFactory = createDiskStoreFactory();
+        // This is for GEN-2244
+        diskStoreFactory.setEnableDeltaPersistence(enableDeltaPersistence);
+        diskStoreFactory.create(MTableUtils.DEFAULT_FTABLE_DISK_STORE_NAME);
       }
 
       Region storeMetaRegion = getRegion(MTableUtils.AMPL_STORE_META_REGION_NAME);
@@ -812,6 +840,19 @@ public class MonarchCacheImpl extends GemFireCacheImpl implements MCache, MClien
         try {
           ClientRegionFactory<MTableKey, byte[]> crf =
               createClientRegionFactory(ClientRegionShortcut.PROXY);
+          AmpoolTableRegionAttributes ampoolTableRegionAttributes =
+              new AmpoolTableRegionAttributes();
+          if (tableDescriptor.getType() == TableType.UNORDERED) {
+            ampoolTableRegionAttributes.setRegionDataOrder(RegionDataOrder.ROW_TUPLE_UNORDERED);
+            crf.setCustomRegionAttributes(ampoolTableRegionAttributes);
+          } else if (tableDescriptor.getType() == TableType.ORDERED_VERSIONED) {
+            ampoolTableRegionAttributes
+                .setRegionDataOrder(RegionDataOrder.ROW_TUPLE_ORDERED_VERSIONED);
+            crf.setCustomRegionAttributes(ampoolTableRegionAttributes);
+          } else if (tableDescriptor.getType() == TableType.IMMUTABLE) {
+            ampoolTableRegionAttributes.setRegionDataOrder(RegionDataOrder.IMMUTABLE);
+            crf.setCustomRegionAttributes(ampoolTableRegionAttributes);
+          }
           tableRegion = crf.create(tableName);
         } catch (RegionExistsException ree) {
           tableRegion = getRegion(tableName);

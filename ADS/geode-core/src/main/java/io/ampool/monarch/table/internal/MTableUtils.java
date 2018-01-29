@@ -55,18 +55,7 @@ import io.ampool.monarch.types.BasicTypes;
 import io.ampool.store.StoreHandler;
 import io.ampool.tierstore.TierStore;
 import org.apache.geode.GemFireException;
-import org.apache.geode.cache.AttributesFactory;
-import org.apache.geode.cache.CacheLoader;
-import org.apache.geode.cache.DataPolicy;
-import org.apache.geode.cache.EvictionAction;
-import org.apache.geode.cache.EvictionAttributes;
-import org.apache.geode.cache.ExpirationAction;
-import org.apache.geode.cache.ExpirationAttributes;
-import org.apache.geode.cache.PartitionAttributesFactory;
-import org.apache.geode.cache.Region;
-import org.apache.geode.cache.RegionFactory;
-import org.apache.geode.cache.RegionShortcut;
-import org.apache.geode.cache.Scope;
+import org.apache.geode.cache.*;
 import org.apache.geode.cache.asyncqueue.AsyncEventQueue;
 import org.apache.geode.cache.asyncqueue.internal.AsyncEventQueueFactoryImpl;
 import org.apache.geode.cache.client.ClientRegionFactory;
@@ -82,17 +71,8 @@ import org.apache.geode.distributed.internal.DistributionManager;
 import org.apache.geode.distributed.internal.ServerLocation;
 import org.apache.geode.distributed.internal.membership.InternalDistributedMember;
 import org.apache.geode.internal.ClassPathLoader;
-import org.apache.geode.internal.cache.EntryEventImpl;
-import org.apache.geode.internal.cache.InternalRegionArguments;
-import org.apache.geode.internal.cache.MCountFunction;
-import org.apache.geode.internal.cache.MCreateFunctionArguments;
-import org.apache.geode.internal.cache.MGetMetadataFunction;
-import org.apache.geode.internal.cache.MTableCreationFunction;
-import org.apache.geode.internal.cache.MTableRangePartitionResolver;
-import org.apache.geode.internal.cache.MonarchCacheImpl;
-import org.apache.geode.internal.cache.TableIsEmptyFunction;
-import org.apache.geode.internal.cache.TableIsEmptyResultCollector;
-import org.apache.geode.internal.cache.VMCachedDeserializable;
+import org.apache.geode.internal.cache.*;
+import org.apache.geode.internal.lang.StringUtils;
 import org.apache.geode.internal.logging.LogService;
 import org.apache.geode.management.internal.cli.i18n.CliStrings;
 import org.apache.geode.security.AuthenticationFailedException;
@@ -154,13 +134,16 @@ import static io.ampool.monarch.table.internal.MTableStorageFormatter.BITMAP_STA
 public class MTableUtils {
 
   private static final Logger logger = LogService.getLogger();
-  public static final String DEFAULT_DISK_STORE_NAME = "AMPOOL_DEFAULT_DISK_STORE";
+  public static final String DEFAULT_MTABLE_DISK_STORE_NAME = "AMPOOL_DEFAULT_MTABLE_DISK_STORE";
+  public static final String DEFAULT_FTABLE_DISK_STORE_NAME = "AMPOOL_DEFAULT_FTABLE_DISK_STORE";
   public static final String KEY_COLUMN_NAME = "__ROW__KEY__COLUMN__";
   public static final byte[] KEY_COLUMN_NAME_BYTES = KEY_COLUMN_NAME.getBytes();
   public static final int ONE_MEGA_BYTE = 1_048_576;
 
   public static final String AMPL_META_REGION_NAME = ".AMPOOL.MONARCH.TABLE.META.";
   public static final String AMPL_STORE_META_REGION_NAME = ".AMPOOL.MONARCH.STORES.META.";
+
+  public static final String AMPL_DELTA_PERS_PROP_NAME = "ampool.ftableDeltaPersistence";
 
 
 
@@ -280,7 +263,7 @@ public class MTableUtils {
   /**
    * Creates a meta-region This region is used to store the meta information about the table. See
    * {@link MTableDescriptor} for meta information.
-   * 
+   *
    * @param cache the Geode cache
    * @param clientCachingProxy true if caching-proxy to be used for client; false otherwise
    */
@@ -365,7 +348,7 @@ public class MTableUtils {
 
   /**
    * Valid namespace characters are [a-zA-Z_0-9]
-   * 
+   *
    * @param tableName table name
    */
   public static void isTableNameLegal(final String tableName) {
@@ -462,7 +445,7 @@ public class MTableUtils {
 
   /**
    * Returns {@link InetAddress} instance for local host.
-   * 
+   *
    * @return returns InetAddress object for localhost
    */
   public static InetAddress getLocalHost() throws UnknownHostException {
@@ -555,7 +538,7 @@ public class MTableUtils {
 
   /**
    * This method uses JNDI to look up an address in DNS and return its name
-   * 
+   *
    * @return the host name associated with the address or null if lookup isn't possible or there is
    *         no host name for this address
    */
@@ -594,7 +577,7 @@ public class MTableUtils {
 
   /**
    * Get Buckedid for the given rowkey
-   * 
+   *
    * @return bucketid of the given rowkey
    */
   public static int getBucketId(byte[] row, Map<Integer, Pair<byte[], byte[]>> splitsMap) {
@@ -620,7 +603,7 @@ public class MTableUtils {
 
   /**
    * Get set of bucketIds given start and stop key
-   * 
+   *
    * @param startkey startKey
    * @param endKey endKey
    * @param tableDescriptor tableDescriptor
@@ -710,7 +693,7 @@ public class MTableUtils {
 
   /**
    * Get Start, End key for the given bucketid
-   * 
+   *
    * @return start, end key pair for the input bucketid
    */
   public static Pair<byte[], byte[]> getStartEndKeysOverKeySpace(MTableDescriptor tableDescriptor,
@@ -806,7 +789,7 @@ public class MTableUtils {
 
   /**
    * Get the internal table, either MTable or FTable
-   * 
+   *
    * @param tableName the table name
    * @return the internal table
    */
@@ -817,7 +800,7 @@ public class MTableUtils {
 
   /**
    * Provide bucket to server-location mapping.
-   * 
+   *
    * @param tableName the table name
    * @param maxBucketCount the number of buckets in the table
    * @return the list of splits
@@ -899,7 +882,7 @@ public class MTableUtils {
 
   /**
    * Provide bucket to server-location mapping.
-   * 
+   *
    * @param tableName the table name
    * @param maxBucketCount the number of buckets in the table
    * @return the list of splits
@@ -1128,6 +1111,64 @@ public class MTableUtils {
     return instance;
   }
 
+  private static DiskStoreAttributes getDiskStoreAttributes(final DiskStore diskStore) {
+    DiskStoreAttributes diskStoreAttributes = new DiskStoreAttributes();
+    diskStoreAttributes.autoCompact = diskStore.getAutoCompact();
+    diskStoreAttributes.compactionThreshold = diskStore.getCompactionThreshold();
+    diskStoreAttributes.allowForceCompaction = diskStore.getAllowForceCompaction();
+    diskStoreAttributes.maxOplogSizeInBytes = diskStore.getMaxOplogSize();
+    diskStoreAttributes.timeInterval = diskStore.getTimeInterval();
+    diskStoreAttributes.writeBufferSize = diskStore.getWriteBufferSize();
+    diskStoreAttributes.queueSize = diskStore.getQueueSize();
+    diskStoreAttributes.diskDirs = diskStore.getDiskDirs();
+    diskStoreAttributes.diskDirSizes = diskStore.getDiskDirSizes();
+    diskStoreAttributes.setDiskUsageWarningPercentage(diskStore.getDiskUsageWarningPercentage());
+    diskStoreAttributes.setDiskUsageCriticalPercentage(diskStore.getDiskUsageCriticalPercentage());
+    diskStoreAttributes.enableDeltaPersistence = diskStore.getEnableDeltaPersistence();
+    return diskStoreAttributes;
+  }
+
+  private static DiskStoreFactory getDiskStoreFactory(MonarchCacheImpl monarchCacheImpl,
+      final DiskStoreAttributes diskStoreAttributes) {
+
+    DiskStoreFactory diskStoreFactory = monarchCacheImpl.createDiskStoreFactory();
+    diskStoreFactory.setAutoCompact(diskStoreAttributes.getAutoCompact());
+    diskStoreFactory.setAllowForceCompaction(diskStoreAttributes.getAllowForceCompaction());
+    diskStoreFactory.setCompactionThreshold(diskStoreAttributes.getCompactionThreshold());
+    diskStoreFactory.setMaxOplogSize(diskStoreAttributes.getMaxOplogSizeInBytes());
+    diskStoreFactory.setTimeInterval(diskStoreAttributes.getTimeInterval());
+    diskStoreFactory.setWriteBufferSize(diskStoreAttributes.getWriteBufferSize());
+    diskStoreFactory.setQueueSize(diskStoreAttributes.getQueueSize());
+    diskStoreFactory.setDiskDirs(diskStoreAttributes.getDiskDirs());
+    diskStoreFactory.setDiskDirsAndSizes(diskStoreAttributes.getDiskDirs(),
+        diskStoreAttributes.getDiskDirSizes());
+    diskStoreFactory
+        .setDiskUsageWarningPercentage(diskStoreAttributes.getDiskUsageWarningPercentage());
+    diskStoreFactory
+        .setDiskUsageCriticalPercentage(diskStoreAttributes.getDiskUsageCriticalPercentage());
+    diskStoreFactory.setEnableDeltaPersistence(diskStoreAttributes.getEnableDeltaPersistence());
+    return diskStoreFactory;
+  }
+
+  private static void createDiskStore(MonarchCacheImpl monarchCacheImpl,
+      AbstractTableDescriptor tableDescriptor) {
+    String diskStoreName = tableDescriptor.getDiskStore();
+    if (StringUtils.compare(diskStoreName, DEFAULT_FTABLE_DISK_STORE_NAME)
+        || StringUtils.compare(diskStoreName, DEFAULT_MTABLE_DISK_STORE_NAME)) {
+      return;
+    }
+
+    DiskStore diskStore = monarchCacheImpl.findDiskStore(diskStoreName);
+    // disk store is already created we need to set the attributes in the table descrit
+    if (diskStore != null && tableDescriptor.getDiskStoreAttributes() == null) {
+      tableDescriptor.setDiskStoreAttributes(getDiskStoreAttributes(diskStore));
+    } else {
+      DiskStoreFactory diskStoreFactory =
+          getDiskStoreFactory(monarchCacheImpl, tableDescriptor.getDiskStoreAttributes());
+      diskStoreFactory.create(tableDescriptor.diskStoreName);
+    }
+  }
+
   public static Region createRegionInGeode(MonarchCacheImpl monarchCacheImpl,
       final String tableName, TableDescriptor tableDescriptor) {
     Region r = monarchCacheImpl.getRegion(tableName);
@@ -1160,6 +1201,7 @@ public class MTableUtils {
             } else {
               rf.setDiskSynchronous(false);
             }
+            createDiskStore(monarchCacheImpl, mTableDescriptor);
             rf.setDiskStoreName(mTableDescriptor.getDiskStore());
           } else {
             // GEN-799
@@ -1306,17 +1348,22 @@ public class MTableUtils {
         // There is no need to check if disk persistence is enabled
         // as every ftable default disk store
         // For ftable always policy is to overflow
-        rf = monarchCacheImpl.createRegionFactory(RegionShortcut.PARTITION_PERSISTENT_OVERFLOW);
-        // By default the Disk write will be async.
-        // FTable will have this option?
-        // Currently making it async
-        if (fTableDescriptor.getDiskWritePolicy() == MDiskWritePolicy.SYNCHRONOUS) {
-          rf.setDiskSynchronous(true);
+        if (fTableDescriptor.isDiskPersistenceEnabled()) {
+          rf = monarchCacheImpl.createRegionFactory(RegionShortcut.PARTITION_PERSISTENT_OVERFLOW);
+          // By default the Disk write will be async.
+          // FTable will have this option?
+          // Currently making it async
+          if (fTableDescriptor.getDiskWritePolicy() == MDiskWritePolicy.SYNCHRONOUS) {
+            rf.setDiskSynchronous(true);
+          } else {
+            rf.setDiskSynchronous(false);
+          }
+          createDiskStore(monarchCacheImpl, fTableDescriptor);
+          // this should return default disk store
+          rf.setDiskStoreName(fTableDescriptor.getRecoveryDiskStore());
         } else {
-          rf.setDiskSynchronous(false);
+          rf = monarchCacheImpl.createRegionFactory(RegionShortcut.PARTITION_OVERFLOW);
         }
-        // this should return default disk store
-        rf.setDiskStoreName(fTableDescriptor.getRecoveryDiskStore());
 
         PartitionAttributesFactory<IMKey, Object> paf = new PartitionAttributesFactory<>();
         paf.setRedundantCopies(fTableDescriptor.getRedundantCopies());
@@ -1409,7 +1456,7 @@ public class MTableUtils {
 
   /**
    * Utility API to convert given list of columns indexes to corresponding column names
-   * 
+   *
    * @return returns list of columns names corresponding to given column indexes
    */
   public static List<byte[]> getColumnNames(List<Integer> columns,
@@ -1422,7 +1469,7 @@ public class MTableUtils {
    * Get the column-index list to be retrieved during scan. In case user has provided the column
    * names convert these column names to the respective column-index using the table descriptor.
    * Once it is done the column-index list can be used for retrieving the respective columns.
-   * 
+   *
    * @return list of columns indexes corresponding to given column names
    */
   public static List<Integer> getColumnIds(List<byte[]> columnNames,
@@ -1472,8 +1519,7 @@ public class MTableUtils {
       final Set<Integer> buckets) {
     /** for getting bucket-locations via function execution.. **/
     Map<Integer, ServerLocation> primaryBucketMap = new HashMap<>(113);
-    ProxyMTableRegion mTable =
-        (ProxyMTableRegion) MClientCacheFactory.getAnyInstance().getTable(tableName);
+    MTableImpl mTable = (MTableImpl) MClientCacheFactory.getAnyInstance().getTable(tableName);
     MTableUtils.getLocationMap(mTable, null, primaryBucketMap, null, AmpoolOpType.ANY_OP);
     return primaryBucketMap;
   }
@@ -1484,7 +1530,7 @@ public class MTableUtils {
 
   /**
    * Sets the columnname or column ids whichever is not present in scan in case of selective scan.
-   * 
+   *
    * @return Updated scan object with both columnnames and columnids
    */
   public static Scan setColumnNameOrIds(Scan scan, TableDescriptor tableDescriptor) {
@@ -1504,7 +1550,7 @@ public class MTableUtils {
    * only the specified buckets are used to compute the count else all primary buckets, on the
    * server, are considered. In case predicates are specified, then the count is only the number of
    * entries matching the specified predicates.
-   * 
+   *
    * @param table the instance of table/region
    * @param bucketIds the bucket-ids to be used for counting
    * @param predicates the predicates to be executed to filter out unwanted entries
@@ -1632,7 +1678,7 @@ public class MTableUtils {
   /**
    * Helper routine to convert an integer key into a row key. Useful when your keys and partition
    * ranges are integer based.
-   * 
+   *
    * @param intKey the integer key.
    * @return the integer key in byte format.
    */
@@ -1643,7 +1689,7 @@ public class MTableUtils {
   /**
    * Helper routine to convert a long integer key into a row key. Useful when your keys and
    * partition ranges are long integer based.
-   * 
+   *
    * @param longKey the long integer key.
    * @return the long integer key in byte format.
    */
@@ -1653,12 +1699,12 @@ public class MTableUtils {
 
   /**
    * Returns true if the table is empty.
-   * 
+   *
    * @param table the mtable.
    * @return true if table is empty.
    */
 
-  public static boolean isTableEmpty(ProxyMTableRegion table) {
+  public static boolean isTableEmpty(MTableImpl table) {
     try {
       Region<?, ?> region = table.getTableRegion();
       Function function = new TableIsEmptyFunction();
@@ -1679,7 +1725,7 @@ public class MTableUtils {
    * Return the deep hash-code of the object. If the object is an the hash-code is derived from each
    * element in the array, recursively, so that it is always consistent. For primitive objects
    * (int/long) or map it is direct hash code.
-   * 
+   *
    * @param object the object of which hash-code is to be returned
    * @return the hash-code of the provided object
    */
@@ -1751,7 +1797,7 @@ public class MTableUtils {
   /**
    * Changes the old version value of specific column using the value specified for a column in the
    * new version. Data types for both the types must be same.
-   * 
+   *
    * @param oldValue old value in the region map that will be changed to add new version
    * @param mTableDescriptor table descriptor
    * @param put put object with new values

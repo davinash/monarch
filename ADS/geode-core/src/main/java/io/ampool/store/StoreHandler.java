@@ -126,22 +126,24 @@ public class StoreHandler {
 
   /**
    * Register a store in cache
-   * 
+   *
    * @param name Name of the new store.
    * @param store Instance of the store class
    */
   public void registerStore(String name, TierStore store) {
+    logger.info("Registering TierStore: name= {}, store= {}", name, store);
     tierStoreMap.put(name, store);
   }
 
   /**
    * Deregister a store from cache
-   * 
+   *
    * @param name name of the store to be removed.
    */
   public void deRegisterStore(String name) {
     final TierStore removedTS = tierStoreMap.remove(name);
     if (removedTS != null) {
+      logger.info("Destroying TierStore: name= {}, store= {}", name, removedTS);
       removedTS.destroy();
     }
   }
@@ -319,7 +321,7 @@ public class StoreHandler {
 
   /**
    * Get a store instance for the given store name from store handler
-   * 
+   *
    * @return TierStore instance
    */
   public TierStore getTierStore(String storeName) {
@@ -328,7 +330,7 @@ public class StoreHandler {
 
   /**
    * Get a store instance for the given table name and hierarchy index from store handler
-   * 
+   *
    * @return TierStore instance
    */
   public TierStore getTierStore(String tableName, int tierId) {

@@ -130,11 +130,13 @@ public class TierHelper {
         blockValue = (BlockValue) value;
       } else if (value instanceof VMCachedDeserializable) {
         // FIXME: Secondary should also receive BlockValue instead of VMCachedDeserializable
-        blockValue = (BlockValue) ((VMCachedDeserializable) value).getDeserializedForReading();
+        blockValue =
+            (BlockValue) ((VMCachedDeserializable) value).getDeserializedValue(region, entry);
       } else {
         logger.warn("Unknown value found for key= {}; value= {}", entry.getKey(), value);
         return 0;
       }
+
       // if (entry.testEvicted() || blockValue.isEvicted()) {
       // return 0;
       // }
@@ -148,11 +150,12 @@ public class TierHelper {
          * write to the WAL it cannot be undone. NOTE: If the entry cannot be written to the WAL
          * even after retries then it will be lost.
          */
+        final int size = entry.getEntrySize();
         if (region.evictDestroy(entry)) {
           entry.setEvicted();
           if (!blockValue.isEvicted()) {
             FTableBucketRegion br = (FTableBucketRegion) region;
-            br.incEvictions(blockValue.getCurrentIndex());
+            br.incEvictions(blockValue.getCurrentIndex() - 1);
             br.incActualCount(-1 * blockValue.getCurrentIndex());
             /** now write key-value to the WAL with fixed number of retries **/
             int i = 0;
@@ -170,7 +173,7 @@ public class TierHelper {
                   region.getName(), entry.getKey());
             }
           }
-          return entry.getEntrySize();
+          return size;
         } else {
           logger.info("Failed to evict entry; Region= {}, Key= {}", region.getName(),
               entry.getKey());

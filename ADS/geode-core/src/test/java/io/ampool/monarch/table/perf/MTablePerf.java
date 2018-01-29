@@ -14,7 +14,7 @@ import io.ampool.monarch.table.Scanner;
 import io.ampool.monarch.table.client.MClientCache;
 import io.ampool.monarch.table.client.MClientCacheFactory;
 import io.ampool.monarch.table.internal.ByteArrayKey;
-import io.ampool.monarch.table.internal.ProxyMTableRegion;
+import io.ampool.monarch.table.internal.MTableImpl;
 import io.ampool.monarch.table.internal.MTableUtils;
 import org.apache.geode.cache.Region;
 import org.apache.geode.cache.client.ClientRegionShortcut;
@@ -270,6 +270,56 @@ public class MTablePerf {
     return totalCount;
   }
 
+  private static void doBatchRegionPuts(List<byte[]> allKeys) throws IOException {
+    MClientCache clientCache1 = MClientCacheFactory.getAnyInstance();
+    Region<Object, Object> plane_geode_region = clientCache1
+        .createClientRegionFactory(ClientRegionShortcut.PROXY).create("PLANE_GEODE_REGION");
+
+
+    BufferedReader in = new BufferedReader(new FileReader(DATA_INPUT_FILE));
+    String str;
+
+
+    Map<ByteArrayKey, byte[]> multiplePuts = new HashMap<>();
+    int totalCount = 0;
+    long totalBytes = 0L;
+    long totalElapsedTime = 0L;
+    while ((str = in.readLine()) != null) {
+      ByteArrayKey rowKey = new ByteArrayKey(allKeys.get(totalCount));
+      byte[] v = Bytes.toBytes(str);
+
+      multiplePuts.put(rowKey, v);
+      totalCount++;
+      totalBytes += v.length + rowKey.getByteArray().length;
+
+      if (multiplePuts.size() == 1000) {
+        long time = System.nanoTime();
+        plane_geode_region.putAll(multiplePuts);
+        totalElapsedTime += (System.nanoTime() - time);
+        multiplePuts.clear();
+      }
+    }
+
+    if (multiplePuts.size() != 0) {
+      long time = System.nanoTime();
+      plane_geode_region.putAll(multiplePuts);
+      totalElapsedTime += (System.nanoTime() - time);
+      multiplePuts.clear();
+    }
+
+    long totalBactchPutTimeInSeconds = (totalElapsedTime / 1_000_000_000);
+    long bytesPerSeconds = (totalBytes / totalBactchPutTimeInSeconds);
+
+    System.out.println("-------------------    doBatchRegionPuts   --------------------- ");
+    System.out.println("TotalCount         = " + totalCount);
+    System.out.println("Time Taken (ms)    = " + (totalElapsedTime / 1_000_000));
+    System.out.println("TotalBytes         = " + totalBytes);
+    System.out.println("Bytes Per Seconds  = " + (bytesPerSeconds / (1024 * 1024)));
+
+    in.close();
+  }
+
+
   private static int doBatchPutsOrdered(MClientCache clientCache, List<byte[]> allKeys)
       throws IOException {
     BufferedReader in = new BufferedReader(new FileReader(DATA_INPUT_FILE));
@@ -305,8 +355,8 @@ public class MTablePerf {
         long time = System.nanoTime();
         table.put(listOfPuts);
         totalElapsedTime += (System.nanoTime() - time);
-        totalBytes += ((ProxyMTableRegion) table).getByteArraySizeBatchPut();
-        ((ProxyMTableRegion) table).resetByteArraySizeBatchPut();
+        totalBytes += ((MTableImpl) table).getByteArraySizeBatchPut();
+        ((MTableImpl) table).resetByteArraySizeBatchPut();
         listOfPuts.clear();
       }
     }
@@ -315,8 +365,8 @@ public class MTablePerf {
       long time = System.nanoTime();
       table.put(listOfPuts);
       totalElapsedTime += (System.nanoTime() - time);
-      totalBytes += ((ProxyMTableRegion) table).getByteArraySizeBatchPut();
-      ((ProxyMTableRegion) table).resetByteArraySizeBatchPut();
+      totalBytes += ((MTableImpl) table).getByteArraySizeBatchPut();
+      ((MTableImpl) table).resetByteArraySizeBatchPut();
     }
     long totalBactchPutTimeInSeconds = (totalElapsedTime / 1_000_000_000);
     long bytesPerSeconds = (totalBytes / totalBactchPutTimeInSeconds);
@@ -371,8 +421,8 @@ public class MTablePerf {
         long time = System.nanoTime();
         table.put(listOfPuts);
         totalElapsedTime += (System.nanoTime() - time);
-        totalBytes += ((ProxyMTableRegion) table).getByteArraySizeBatchPut();
-        ((ProxyMTableRegion) table).resetByteArraySizeBatchPut();
+        totalBytes += ((MTableImpl) table).getByteArraySizeBatchPut();
+        ((MTableImpl) table).resetByteArraySizeBatchPut();
         listOfPuts.clear();
       }
     }
@@ -381,8 +431,8 @@ public class MTablePerf {
       long time = System.nanoTime();
       table.put(listOfPuts);
       totalElapsedTime += (System.nanoTime() - time);
-      totalBytes += ((ProxyMTableRegion) table).getByteArraySizeBatchPut();
-      ((ProxyMTableRegion) table).resetByteArraySizeBatchPut();
+      totalBytes += ((MTableImpl) table).getByteArraySizeBatchPut();
+      ((MTableImpl) table).resetByteArraySizeBatchPut();
     }
     long totalBactchPutTimeInSeconds = (totalElapsedTime / 1_000_000_000);
     long bytesPerSeconds = (totalBytes / totalBactchPutTimeInSeconds);
@@ -416,7 +466,7 @@ public class MTablePerf {
      * MTableDescriptor tableDescriptor = new MTableDescriptor(); for (int i = 0; i < 10; i++) {
      * tableDescriptor.addColumn(Bytes.toBytes("COLUMN" + i)); }
      * tableDescriptor.setRedudantCopies(1); tableDescriptor.setMaxVersions(1);
-     * 
+     *
      * MAdmin admin = clientCache.getAdmin(); String tableName = "Performance"; MTable table =
      * admin.createTable(tableName, tableDescriptor);
      */
@@ -503,9 +553,9 @@ public class MTablePerf {
 
     /*
      * int rowBatchPuts = doBatchPuts(table, allKeys);
-     * 
+     *
      * //doScan(table);
-     * 
+     *
      */
 
     clientCache.close();

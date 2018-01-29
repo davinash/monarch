@@ -16,8 +16,9 @@ import io.ampool.monarch.table.client.MClientCacheFactory;
 import io.ampool.monarch.table.ftable.FTable;
 import io.ampool.monarch.table.ftable.FTableDescriptor;
 import io.ampool.monarch.table.ftable.Record;
+import io.ampool.monarch.table.ftable.internal.FTableImpl;
 import io.ampool.monarch.table.ftable.internal.ProxyFTableRegion;
-import io.ampool.monarch.table.internal.ProxyMTableRegion;
+import io.ampool.monarch.table.internal.MTableImpl;
 import io.ampool.monarch.types.BasicTypes;
 import org.apache.geode.internal.cache.BucketRegion;
 import org.apache.geode.internal.cache.LocalRegion;
@@ -138,7 +139,7 @@ public class AmpoolRegionMapFactoryDUnitTest extends MTableDUnitHelper {
 
     // check the region map and internal map
     RegionMap regionMap =
-        ((LocalRegion) ((ProxyMTableRegion) mTable_ordered).getTableRegion()).getRegionMap();
+        ((LocalRegion) ((MTableImpl) mTable_ordered).getTableRegion()).getRegionMap();
     assertNotNull(regionMap);
     if (isLRU) {
       assertTrue(regionMap instanceof RowTupleLRURegionMap);
@@ -146,7 +147,7 @@ public class AmpoolRegionMapFactoryDUnitTest extends MTableDUnitHelper {
       assertTrue(regionMap instanceof RowTupleRegionMap);
     }
     Set<BucketRegion> allLocalBucketRegions =
-        ((PartitionedRegion) ((ProxyMTableRegion) mTable_ordered).getTableRegion()).getDataStore()
+        ((PartitionedRegion) ((MTableImpl) mTable_ordered).getTableRegion()).getDataStore()
             .getAllLocalBucketRegions();
     allLocalBucketRegions.forEach((BR) -> {
       if (isLRU) {
@@ -168,12 +169,11 @@ public class AmpoolRegionMapFactoryDUnitTest extends MTableDUnitHelper {
     MCache mCache = MCacheFactory.getAnyInstance();
     FTable ftable = mCache.getFTable(tableName);
     // check the region map and internal map
-    RegionMap regionMap =
-        ((LocalRegion) ((ProxyFTableRegion) ftable).getTableRegion()).getRegionMap();
+    RegionMap regionMap = ((LocalRegion) ((FTableImpl) ftable).getTableRegion()).getRegionMap();
     assertNotNull(regionMap);
     assertTrue(regionMap instanceof RowTupleLRURegionMap);
     Set<BucketRegion> allLocalBucketRegions =
-        ((PartitionedRegion) ((ProxyFTableRegion) ftable).getTableRegion()).getDataStore()
+        ((PartitionedRegion) ((FTableImpl) ftable).getTableRegion()).getDataStore()
             .getAllLocalBucketRegions();
     allLocalBucketRegions.forEach((BR) -> {
       assertTrue(BR.entries instanceof RowTupleLRURegionMap);

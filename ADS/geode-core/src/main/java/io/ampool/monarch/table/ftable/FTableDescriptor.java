@@ -30,6 +30,7 @@ import io.ampool.monarch.table.exceptions.TableColumnAlreadyExists;
 import io.ampool.monarch.table.exceptions.TableInvalidConfiguration;
 import io.ampool.monarch.table.internal.AbstractTableDescriptor;
 import io.ampool.monarch.table.internal.ByteArrayKey;
+import io.ampool.monarch.table.internal.MTableUtils;
 import io.ampool.monarch.table.internal.TableType;
 import io.ampool.monarch.types.BasicTypes;
 import io.ampool.orc.OrcUtils;
@@ -122,7 +123,10 @@ public class FTableDescriptor extends AbstractTableDescriptor implements DataSer
    */
   public FTableDescriptor() {
     super(TableType.IMMUTABLE);
+    // Ref GEN-2139. By default it should be disabled.
+    // Ref GEN-2174. Enabled persistence, by default, again..
     isDiskPersistenceEnabled = true;
+    diskStoreName = MTableUtils.DEFAULT_FTABLE_DISK_STORE_NAME;
     diskWritePolicy = MDiskWritePolicy.ASYNCHRONOUS;
     evictionPolicy = MEvictionPolicy.OVERFLOW_TO_TIER;
     expirationAttributes = new MExpirationAttributes();
@@ -466,7 +470,13 @@ public class FTableDescriptor extends AbstractTableDescriptor implements DataSer
     return null;
   }
 
+  private int insertionTimeOffset = -1;
+
   public int getOffsetToStoreInsertionTS() {
+    return insertionTimeOffset < 0 ? calcInsertionTimeOffset() : insertionTimeOffset;
+  }
+
+  private int calcInsertionTimeOffset() {
     List<Integer> fixedLengthColumnIndices = this.tableSchema.getFixedLengthColumnIndices();
     int maxLength = 0;
     for (int i = 0; i < fixedLengthColumnIndices.size(); i++) {
@@ -479,6 +489,7 @@ public class FTableDescriptor extends AbstractTableDescriptor implements DataSer
         maxLength += columnDescriptorByIndex.getColumnType().lengthOfByteArray();
       }
     }
+    insertionTimeOffset = maxLength;
     return maxLength;
   }
 

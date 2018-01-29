@@ -238,7 +238,7 @@ public class InitialImageOperation {
 
   /**
    * Fetch an initial image from a single recipient
-   * 
+   *
    * @param recipientSet list of candidates to fetch from
    * @param targetReinitialized true if candidate should wait until initialized before responding
    * @param recoveredRVV recovered rvv
@@ -430,6 +430,9 @@ public class InitialImageOperation {
       m.targetReinitialized = targetReinitialized;
       m.setRecipient(recipient);
 
+      if (AmpoolTableRegionAttributes.isAmpoolFTable(this.region.getCustomAttributes())) {
+        this.entries.clear(null);
+      }
       if (this.region.concurrencyChecksEnabled) {
         if (allowDeltaGII && recoveredFromDisk) {
           if (!this.region.getDiskRegion().getRVVTrusted()) {
@@ -529,9 +532,11 @@ public class InitialImageOperation {
               }
             }
           }
+          // AMPOOL SPECIFIC CHANGES START
           if (AmpoolTableRegionAttributes.isAmpoolFTable(this.region.getCustomAttributes())) {
             StoreHandler.getInstance().moveStore(((BucketRegion) this.region), recipient);
           }
+          // AMPOOL SPECIFIC CHANGES END
           continue;
         } catch (InternalGemFireException ex) {
           Throwable cause = ex.getCause();
@@ -759,7 +764,7 @@ public class InitialImageOperation {
 
   /**
    * transfer interest/cq registrations from the image provider to this VM
-   * 
+   *
    * @return whether the operation succeeded in transferring anything
    */
   private boolean requestFilterInfo(InternalDistributedMember recipient) {
@@ -793,7 +798,7 @@ public class InitialImageOperation {
 
   /**
    * Called from separate thread when reply is processed.
-   * 
+   *
    * @param entries entries to add to the region
    * @return false if should abort (region was destroyed or cache was closed)
    */
@@ -904,11 +909,7 @@ public class InitialImageOperation {
                 // If the received entry and what we have in the cache
                 // actually are equal, keep don't put the received
                 // entry into the cache (this avoids writing a record to disk)
-
-                if (entriesEqual
-                    && !AmpoolTableRegionAttributes.isAmpoolFTable(region.getCustomAttributes())) {
-                  // if (entriesEqual && !(region.getAttributes()
-                  // .getRegionDataOrder() == RegionDataOrder.IMMUTABLE)) {
+                if (entriesEqual) {
                   continue;
                 }
                 if (entry.isSerialized() && !Token.isInvalidOrRemoved(tmpValue)) {
@@ -954,8 +955,10 @@ public class InitialImageOperation {
           if (tmpValue == null) {
             tmpValue = entry.isLocalInvalid() ? Token.LOCAL_INVALID : Token.INVALID;
           } else if (entry.isSerialized()) {
+            // AMPOOL SPECIFIC CHANGES STARTS HERE
             if (AmpoolTableRegionAttributes.isAmpoolTable(region.getCustomAttributes())) {
               tmpValue = EntryEventImpl.deserialize((byte[]) tmpValue);
+              // AMPOOL SPECIFIC CHANGES ENDS HERE
             } else {
               tmpValue = CachedDeserializableFactory.create((byte[]) tmpValue);
             }
@@ -1042,7 +1045,7 @@ public class InitialImageOperation {
 
   /**
    * Compare the received RVV with local RVV and return a set of keys for unfinished operations.
-   * 
+   *
    * @param remoteRVV RVV from provider
    * @param localRVV RVV recovered from disk
    * @return set for keys of unfinished operations.
@@ -1263,7 +1266,7 @@ public class InitialImageOperation {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.geode.distributed.internal.ReplyProcessor21#process(org.apache.geode.distributed.
      * internal.DistributionMessage)
@@ -1579,9 +1582,11 @@ public class InitialImageOperation {
     }
 
     public boolean goWithFullGII(DistributedRegion rgn, RegionVersionVector requesterRVV) {
+      // AMPOOL SPECIFIC CHANGES STARTS HERE
       if (AmpoolTableRegionAttributes.isAmpoolFTable(rgn.getCustomAttributes())) {
         return true;
       }
+      // AMPOOL SPECIFIC CHANGES END HERE
 
       if (getSender().getVersionObject().compareTo(Version.GFE_80) < 0) {
         // pre-8.0 could not handle a delta-GII
@@ -1644,6 +1649,11 @@ public class InitialImageOperation {
             logger.debug("checking version vector against region's ({})",
                 rgn.getVersionVector().fullToString());
           }
+          if (AmpoolTableRegionAttributes.isAmpoolFTable(rgn.getCustomAttributes())) {
+            logger.info(
+                "Detected IMMUTABLE table; skipping VersionVector.isNewerThanOrCanFillExceptionsFor for region= {}",
+                rgn);
+          } else
           // [bruce] I suppose it's possible to have this check return a list of
           // specific versions that the sender is missing. The current check
           // just stops when it finds the first inconsistency
@@ -1882,7 +1892,7 @@ public class InitialImageOperation {
      * chunk and an int indicating whether it is the last chunk (positive means last chunk, zero
      * otherwise). The return value of proc indicates whether to continue to the next chunk (true)
      * or abort (false).
-     * 
+     *
      * @param versionVector requester's region version vector
      * @param unfinishedKeys keys of unfinished operation (persistent region only)
      * @return true if finished all chunks, false if stopped early
@@ -2456,7 +2466,7 @@ public class InitialImageOperation {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.geode.internal.DataSerializableFixedID#getDSFID()
      */
     @Override
@@ -2945,7 +2955,7 @@ public class InitialImageOperation {
      * <p>
      * Defaults to invalid, not serialized, not local invalid. The "invalid" flag is not used. When
      * invalid, localInvalid is false and the values is null.
-     * 
+     *
      * @see EntryBits
      */
     private byte entryBits = 0;
@@ -3452,7 +3462,7 @@ public class InitialImageOperation {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.geode.internal.DataSerializableFixedID#getDSFID()
      */
     @Override
@@ -4010,7 +4020,7 @@ public class InitialImageOperation {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.geode.internal.DataSerializableFixedID#getDSFID()
      */
     @Override

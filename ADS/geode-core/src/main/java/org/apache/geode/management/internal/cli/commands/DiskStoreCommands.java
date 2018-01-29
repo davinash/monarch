@@ -260,7 +260,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
 
     for (final Object result : results) {
       if (result instanceof Set) { // ignore FunctionInvocationTargetExceptions and other
-                                   // Exceptions...
+        // Exceptions...
         distributedSystemMemberDiskStores.addAll((Set<DiskStoreDetails>) result);
       }
     }
@@ -329,7 +329,10 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
           help = CliStrings.CREATE_DISK_STORE__DISK_USAGE_WARNING_PCT__HELP) float diskUsageWarningPercentage,
       @CliOption(key = CliStrings.CREATE_DISK_STORE__DISK_USAGE_CRITICAL_PCT,
           unspecifiedDefaultValue = "99",
-          help = CliStrings.CREATE_DISK_STORE__DISK_USAGE_CRITICAL_PCT__HELP) float diskUsageCriticalPercentage) {
+          help = CliStrings.CREATE_DISK_STORE__DISK_USAGE_CRITICAL_PCT__HELP) float diskUsageCriticalPercentage,
+      @CliOption(key = CliStrings.CREATE_DISK_STORE__ENABLE_DELTA_PERSISTENCE,
+          specifiedDefaultValue = "false", unspecifiedDefaultValue = "false",
+          help = CliStrings.CREATE_DISK_STORE__ENABLE_DELTA_PERSISTENCE__HELP) boolean enableDeltaPersistence) {
 
     try {
       DiskStoreAttributes diskStoreAttributes = new DiskStoreAttributes();
@@ -340,6 +343,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
       diskStoreAttributes.queueSize = queueSize;
       diskStoreAttributes.timeInterval = timeInterval;
       diskStoreAttributes.writeBufferSize = writeBufferSize;
+      diskStoreAttributes.enableDeltaPersistence = enableDeltaPersistence;
 
       File[] directories = new File[directoriesAndSizes.length];
       int[] sizes = new int[directoriesAndSizes.length];
@@ -908,7 +912,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
   protected DiskStoreDetails getDiskStoreDescription(final String memberName,
       final String diskStoreName) {
     final DistributedMember member = getMember(getCache(), memberName); // may throw a
-                                                                        // MemberNotFoundException
+    // MemberNotFoundException
 
     final ResultCollector<?, ?> resultCollector =
         getMembersFunctionExecutor(Collections.singleton(member)).withArgs(diskStoreName)
@@ -957,6 +961,8 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
         toString(diskStoreDetails.isAllowForceCompaction(), "Yes", "No"));
     diskStoreSection.addData("Auto Compaction",
         toString(diskStoreDetails.isAutoCompact(), "Yes", "No"));
+    diskStoreSection.addData("Delta Persistence",
+        toString(diskStoreDetails.isEnableDeltaPersistence(), "Yes", "No"));
     diskStoreSection.addData("Compaction Threshold", diskStoreDetails.getCompactionThreshold());
     diskStoreSection.addData("Max Oplog Size", diskStoreDetails.getMaxOplogSize());
     diskStoreSection.addData("Queue Size", diskStoreDetails.getQueueSize());
@@ -1085,7 +1091,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
     final List<Object> distributedPersistentRecoveryDetails = new ArrayList<Object>(results.size());
     for (final Object result : results) {
       if (result instanceof Set) { // ignore FunctionInvocationTargetExceptions and other
-                                   // Exceptions...
+        // Exceptions...
         distributedPersistentRecoveryDetails.addAll((Set<Object>) result);
       }
     }
@@ -1239,7 +1245,7 @@ public class DiskStoreCommands extends AbstractCommandsSupport {
 
   @CliCommand(value = CliStrings.VALIDATE_DISK_STORE, help = CliStrings.VALIDATE_DISK_STORE__HELP)
   @CliMetaData(shellOnly = true, relatedTopic = {CliStrings.TOPIC_GEODE_DISKSTORE}) // offline
-                                                                                    // command
+  // command
   public Result validateDiskStore(
       @CliOption(key = CliStrings.VALIDATE_DISK_STORE__NAME, mandatory = true,
           help = CliStrings.VALIDATE_DISK_STORE__NAME__HELP) String diskStoreName,

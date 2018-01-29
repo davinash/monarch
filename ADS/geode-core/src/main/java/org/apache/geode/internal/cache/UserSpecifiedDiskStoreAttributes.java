@@ -40,7 +40,8 @@ public class UserSpecifiedDiskStoreAttributes extends DiskStoreAttributes {
   private boolean hasDiskDirSizes = false;
   private boolean hasDiskUsageWarningPercentage = false;
   private boolean hasDiskUsageCriticalPercentage = false;
-  private static final int HAS_COUNT = 11;
+  private boolean hasEnableDeltaPersistence = false;
+  private static final int HAS_COUNT = 12;
 
   public boolean hasAutoCompact() {
     return hasAutoCompact;
@@ -86,6 +87,10 @@ public class UserSpecifiedDiskStoreAttributes extends DiskStoreAttributes {
     return hasDiskUsageCriticalPercentage;
   }
 
+  public boolean hasEnableDeltaPersistence() {
+    return hasEnableDeltaPersistence;
+  }
+
   public void setHasAutoCompact(boolean hasAutoCompact) {
     this.hasAutoCompact = hasAutoCompact;
   }
@@ -128,6 +133,10 @@ public class UserSpecifiedDiskStoreAttributes extends DiskStoreAttributes {
 
   public void setHasDiskUsageCriticalPercentage(boolean hasDiskUsageCriticalPercentage) {
     this.hasDiskUsageCriticalPercentage = true;
+  }
+
+  public void setHasEnableDeltaPersistence(boolean hasEnableDeltaPersistence) {
+    this.hasEnableDeltaPersistence = hasEnableDeltaPersistence;
   }
 
   public void setAllHasFields(boolean b) {

@@ -38,7 +38,7 @@ import java.util.Properties;
 @InterfaceStability.Stable
 public class MCacheFactory extends CacheFactory {
 
-  public static synchronized MCache getAnyInstance() {
+  public static MCache getAnyInstance() {
     MonarchCacheImpl instance = MonarchCacheImpl.getInstance();
     if (instance == null) {
       throw new CacheClosedException(

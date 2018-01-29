@@ -187,6 +187,9 @@ public class StatsKey {
 
   public static final String DISK_SPACE = "diskSpace";
 
+  public static final String DELTA_READS = "deltareads";
+  public static final String DELTA_WRITES = "deltawrites";
+
 
   /* AMPOOL RELATED CHANGES START */
   /* Tier Related Stats */
@@ -257,7 +260,9 @@ public class StatsKey {
   public static final String PUT_LOCAL = "putLocalCompleted";
 
   public static final String BUCKET_COUNT = "bucketCount";
+  /* AMPOOL SPECIFIC CHANGES START HERE */
   public static final String SCAN_COUNT = "scanCount";
+  /* AMPOOL SPECIFIC CHANGES END HERE */
   public static final String TOTAL_BUCKET_SIZE = "dataStoreEntryCount";
   public static final String AVG_BUCKET_SIZE = "avgBucketSize";
   public static final String LOW_REDUNDANCYBUCKET_COUNT = "lowRedundancyBucketCount";

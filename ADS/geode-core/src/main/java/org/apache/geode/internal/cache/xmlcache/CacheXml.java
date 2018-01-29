@@ -66,28 +66,28 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
 
   /**
    * Namespace URI for {@link CacheXml} documents.
-   * 
+   *
    * @since GemFire 8.1
    */
   public static final String GEODE_NAMESPACE = "http://geode.apache.org/schema/cache";
 
   /**
    * Namespace prefix for {@link CacheXml} documents.
-   * 
+   *
    * @since GemFire 8.1
    */
   public static final String PREFIX = "cache";
 
   /**
    * Latest schema location for {@link #GEODE_NAMESPACE}.
-   * 
+   *
    * @since GemFire 8.1
    */
   public static final String LATEST_SCHEMA_LOCATION = CacheXml.SCHEMA_1_0_LOCATION;
 
   /**
    * Location of the latest DTD file for Gemfire
-   * 
+   *
    * @deprecated As of 8.1 use {@link #LATEST_SCHEMA_LOCATION}
    */
   @Deprecated
@@ -95,28 +95,28 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
 
   /**
    * Version string for GemFire 8.1
-   * 
+   *
    * @since GemFire 8.1
    */
   public static final String VERSION_8_1 = "8.1";
 
   /**
    * Version string for Geode 1.0
-   * 
+   *
    * @since Geode 1.0
    */
   public static final String VERSION_1_0 = "1.0";
 
   /**
    * The location of the GemFire 8.1 schema file.
-   * 
+   *
    * @since GemFire 8.1
    */
   protected static final String SCHEMA_8_1_LOCATION =
       "http://schema.pivotal.io/gemfire/cache/cache-8.1.xsd";
   /**
    * The location of the Geode 1.0 schema file.
-   * 
+   *
    * @since Geode 1.0
    */
   protected static final String SCHEMA_1_0_LOCATION =
@@ -587,6 +587,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   public static final String ROLL_OPLOG = "roll-oplogs";
   /** Name of disk region property specifying whether to automatically compact disk files **/
   public static final String AUTO_COMPACT = "auto-compact";
+  public static final String ENABLE_DELTA_PERSISTENCE = "enable-delta-persistence";
   public static final String ALLOW_FORCE_COMPACTION = "allow-force-compaction";
   public static final String COMPACTION_THRESHOLD = "compaction-threshold";
   /** Name of disk region property specifying the max oplog size in megabytes **/
@@ -746,7 +747,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   protected static final String COMPRESSOR = "compressor";
   /**
    * The name of the <code>off-heap</code> attribute
-   * 
+   *
    * @since Geode 1.0
    */
   protected static final String OFF_HEAP = "off-heap";
@@ -761,7 +762,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   /**
    * Given a public id, attempt to resolve it to a DTD. Returns an <code>InputSoure</code> for the
    * DTD.
-   * 
+   *
    * @throws IOException
    */
   public InputSource resolveEntity(String name, String publicId, String baseURI, String systemId)
@@ -818,7 +819,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
       // Instruct the XML parser to open a URI connection to the
       // system id.
       version = CacheXmlVersion.valueForVersion(VERSION_LATEST); // we won't know the version, so
-                                                                 // assume the latest
+      // assume the latest
       return resolveEntityByEntityResolvers(name, publicId, baseURI, systemId);
     }
     InputSource result;
@@ -856,7 +857,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
 
   /**
    * Resolve entity using discovered {@link EntityResolver2}s.
-   * 
+   *
    * @param publicId
    * @param systemId
    * @return {@link InputSource} for resolved entity if found, otherwise null.
@@ -900,7 +901,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   }
 
   /**
-   * 
+   *
    * @param attributes
    * @param name
    * @return String value for named attribute or null if attribute not defined.
@@ -911,7 +912,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   }
 
   /**
-   * 
+   *
    * @param attributes
    * @param name
    * @param defaultValue
@@ -928,7 +929,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   }
 
   /**
-   * 
+   *
    * @param attributes
    * @param name
    * @return Integer value for named attribute or null if attribute not defined.
@@ -939,7 +940,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   }
 
   /**
-   * 
+   *
    * @param attributes
    * @param name
    * @param defaultValue
@@ -957,7 +958,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   }
 
   /**
-   * 
+   *
    * @param attributes
    * @param name
    * @return Boolean value for named attribute or null if attribute not defined.
@@ -968,7 +969,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   }
 
   /**
-   * 
+   *
    * @param attributes
    * @param name
    * @param defaultValue
@@ -986,7 +987,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   }
 
   /**
-   * 
+   *
    * @param attributes
    * @param name
    * @param clazz
@@ -999,7 +1000,7 @@ public abstract class CacheXml implements EntityResolver2, ErrorHandler {
   }
 
   /**
-   * 
+   *
    * @param attributes
    * @param name
    * @param clazz

@@ -16,6 +16,7 @@ package io.ampool.monarch.table.facttable.junit;
 import static io.ampool.monarch.table.ftable.FTableDescriptor.BlockFormat.ORC_BYTES;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -41,6 +42,8 @@ import io.ampool.orc.OrcUtils;
 import io.ampool.store.StoreRecord;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import org.apache.geode.DataSerializer;
+import org.apache.geode.internal.HeapDataOutputStream;
 import org.apache.geode.test.junit.categories.FTableTest;
 import org.apache.orc.ColumnStatistics;
 import org.junit.Test;
@@ -89,6 +92,51 @@ public class BlockValueTest {
     }
     assertEquals(size, blockValueP.getCurrentIndex());
     assertEquals(size, blockValueS.getCurrentIndex());
+  }
+
+  @Test
+  public void testBlockValuePDelta() throws IOException {
+
+    int size = 4991;
+
+    BlockValue blockValueM = new BlockValue(size);
+    BlockValue blockValueD = new BlockValue(size);
+
+    for (int i = 1; i <= size; i++) {
+
+      byte[] value = new byte[i];
+
+
+
+      if (i == 1) {
+        blockValueM.checkAndAddRecord(value);
+        blockValueD.checkAndAddRecord(value);
+        blockValueM.resetPersistenceDelta();
+      } else {
+        blockValueM.checkAndAddRecord(value);
+      }
+
+      if (blockValueM.hasPersistenceDelta()) {
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(bos);
+        blockValueM.toPersistenceDelta(dos);
+        blockValueM.resetPersistenceDelta();
+
+        DataInputStream dis = new DataInputStream(new ByteArrayInputStream(bos.toByteArray()));
+
+        blockValueD.fromPersistenceDelta(dis);
+
+        assertEquals(i, blockValueM.getCurrentIndex());
+        assertEquals(blockValueM.getCurrentIndex(), blockValueD.getCurrentIndex());
+
+        assertArrayEquals(value, blockValueM.getRecord(i - 1));
+        assertArrayEquals(value, blockValueD.getRecord(i - 1));
+
+      }
+    }
+    assertEquals(size, blockValueM.getCurrentIndex());
+    assertEquals(size, blockValueD.getCurrentIndex());
   }
 
   private static Object getValue(final int rowId, final int columnId) {
@@ -229,6 +277,9 @@ public class BlockValueTest {
     assertEquals("Incorrect status for Block using filters.", expected, needed);
   }
 
+  private static final Schema SCHEMA_CS =
+      Schema.fromString("struct<f1:INT,f2:LONG,f3:STRING,__INSERTION_TIMESTAMP__:LONG>");
+
   @Test
   public void testMergeBlockValuesWithColumnStatistics() {
     final Object[] values1 = new Object[] {11, 1111L, "String_1", 0L};
@@ -239,8 +290,7 @@ public class BlockValueTest {
     final String[] expectedMax = new String[] {"22", "1111", "String_2", "0"};
 
     FTableDescriptor td = new FTableDescriptor();
-    td.setSchema(
-        Schema.fromString("struct<f1:INT,f2:LONG,f3:STRING,__INSERTION_TIMESTAMP__:LONG>"));
+    td.setSchema(SCHEMA_CS);
 
     final Record record1 = new Record();
     final Record record2 = new Record();
@@ -259,6 +309,54 @@ public class BlockValueTest {
 
     bv.checkAndAddRecord(temp, td);
     assertColumnStatistics(expectedMin, expectedMax, bv.getColumnStatistics());
+  }
+
+  @Test
+  public void testMergeBlockValuesUsingDelta() throws IOException, ClassNotFoundException {
+    final Object[] values1 = new Object[] {11, 1111L, "String_1", 0L};
+    final Object[] values2 = new Object[] {22, 222L, "String_2", 0L};
+    final String[] expected1 = new String[] {"11", "1111", "String_1", "0"};
+    final String[] expectedMin = new String[] {"11", "222", "String_1", "0"};
+    final String[] expectedMax = new String[] {"22", "1111", "String_2", "0"};
+
+    FTableDescriptor td = new FTableDescriptor();
+    td.setSchema(SCHEMA_CS);
+    td.setColumnStatisticsEnabled(true);
+
+    final Record record1 = new Record();
+    final Record record2 = new Record();
+    for (int i = 0; i < td.getNumOfColumns(); i++) {
+      record1.add(td.getColumnDescriptorByIndex(i).getColumnName(), values1[i]);
+      record2.add(td.getColumnDescriptorByIndex(i).getColumnName(), values2[i]);
+    }
+
+    final BlockValue temp = new BlockValue(1);
+    temp.checkAndAddRecord(td.getEncoding().serializeValue(td, record1), td);
+    temp.checkAndAddRecord(td.getEncoding().serializeValue(td, record1), td);
+    assertColumnStatistics(expected1, expected1, temp.getColumnStatistics());
+
+    final HeapDataOutputStream out = new HeapDataOutputStream(1024, null);
+    DataSerializer.writeObject(temp, out);
+
+    final BlockValue newBV = BlockValue.fromBytes(out.toByteArray());
+    assertColumnStatistics(expected1, expected1, newBV.getColumnStatistics());
+
+    temp.resetDelta();
+    temp.checkAndAddRecord(td.getEncoding().serializeValue(td, record2), td);
+    temp.checkAndAddRecord(td.getEncoding().serializeValue(td, record2), td);
+    assertColumnStatistics(expectedMin, expectedMax, temp.getColumnStatistics());
+    out.reset();
+    if (temp.hasDelta()) {
+      temp.toDelta(out);
+    }
+
+    final byte[] bytes = out.toByteArray();
+    out.close();
+    assertNotEquals("Expected delta of size must be > 0.", 0, bytes.length);
+
+    newBV.fromDelta(new DataInputStream(new ByteArrayInputStream(bytes)));
+    assertEquals("Incorrect number of records.", temp.size(), newBV.size());
+    assertColumnStatistics(expectedMin, expectedMax, newBV.getColumnStatistics());
   }
 
   private void assertColumnStatistics(final String[] expectedMin, final String[] expectedMax,

@@ -127,9 +127,7 @@ public class MTableAllDeleteDunit extends MTableDUnitConfigFramework {
   }
 
 
-  // TODO For now commenting out. To be fixed ASAP
-  @Ignore
-  // @Test
+  @Test
   public void testDeleteWithCoprocessor2() {
     String UPDATE_COPROCESSOR_CLASS = "io.ampool.monarch.table.MTableDeleteCoprocessor";
 

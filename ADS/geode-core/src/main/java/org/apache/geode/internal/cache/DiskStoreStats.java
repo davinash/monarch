@@ -78,6 +78,11 @@ public class DiskStoreStats {
   private static final int backupsInProgress;
   private static final int backupsCompleted;
 
+  private static final int deltaWritesId;
+  private static final int deltaReadsId;
+  private static final int deltaBytesWrittenId;
+  private static final int deltaBytesReadId;
+
   static {
     String statName = "DiskStoreStatistics";
     String statDescription = "Statistics about a Region's use of the disk";
@@ -110,6 +115,10 @@ public class DiskStoreStats {
         "The current number of backups in progress on this disk store";
     final String backupsCompletedDesc =
         "The number of backups of this disk store that have been taking while this VM was alive";
+    final String deltaWritesDesc = "The number of delta records written to the disk.";
+    final String deltaReadsDesc = "The number of delta records read from the disk.";
+    final String deltaBytesWrittenDesc = "The total number of bytes written for delta records";
+    final String deltaBytesReadDesc = "The total number of bytes read for delta records";
 
     StatisticsTypeFactory f = StatisticsTypeFactoryImpl.singleton();
 
@@ -186,7 +195,11 @@ public class DiskStoreStats {
                 "The current number of regions that have been recovered but have not yet been created.",
                 "regions"),
             f.createIntGauge("backupsInProgress", backupsInProgressDesc, "backups"),
-            f.createIntCounter("backupsCompleted", backupsCompletedDesc, "backups"),});
+            f.createIntCounter("backupsCompleted", backupsCompletedDesc, "backups"),
+            f.createLongCounter("deltawrites", deltaWritesDesc, "ops"),
+            f.createLongCounter("deltareads", deltaReadsDesc, "ops"),
+            f.createLongCounter("deltaBytesWritten", deltaBytesWrittenDesc, "ops"),
+            f.createLongCounter("deltaBytesRead", deltaBytesReadDesc, "ops")});
 
     // Initialize id fields
     writesId = type.nameToId("writes");
@@ -234,6 +247,12 @@ public class DiskStoreStats {
     uncreatedRecoveredRegionsId = type.nameToId("uncreatedRecoveredRegions");
     backupsInProgress = type.nameToId("backupsInProgress");
     backupsCompleted = type.nameToId("backupsCompleted");
+
+    deltaWritesId = type.nameToId("deltawrites");
+    deltaReadsId = type.nameToId("deltareads");
+
+    deltaBytesWrittenId = type.nameToId("deltaBytesWritten");
+    deltaBytesReadId = type.nameToId("deltaBytesRead");
   }
 
   ////////////////////// Instance Fields //////////////////////
@@ -317,6 +336,34 @@ public class DiskStoreStats {
    */
   public long getQueueSize() {
     return this.stats.getInt(queueSizeId);
+  }
+
+  /**
+   * Returns the total number of delta records that have been written to disk.
+   */
+  public long getDeltaWrites() {
+    return this.stats.getLong(deltaWritesId);
+  }
+
+  /**
+   * Returns the total number of delta records that have been read from disk.
+   */
+  public long getDeltaReads() {
+    return this.stats.getLong(deltaReadsId);
+  }
+
+  /**
+   * Returns the total number of bytes that have been written to disk in delta records
+   */
+  public long getDeltaBytesWritten() {
+    return this.stats.getLong(deltaBytesWrittenId);
+  }
+
+  /**
+   * Returns the total number of bytes that have been read from delta records on disk
+   */
+  public long getDeltaBytesRead() {
+    return this.stats.getLong(deltaBytesReadId);
   }
 
   public void setQueueSize(int value) {
@@ -545,5 +592,21 @@ public class DiskStoreStats {
 
   public Statistics getStats() {
     return stats;
+  }
+
+  public void incDeltaWrites() {
+    this.stats.incLong(deltaWritesId, 1);
+  }
+
+  public void incDeltaReads() {
+    this.stats.incLong(deltaReadsId, 1);
+  }
+
+  public void incDeltaBytesWritten(long bytesWritten, boolean async) {
+    this.stats.incLong(deltaBytesWrittenId, bytesWritten);
+  }
+
+  public void incDeltaBytesRead(long bytesRead, boolean async) {
+    this.stats.incLong(deltaBytesReadId, bytesRead);
   }
 }

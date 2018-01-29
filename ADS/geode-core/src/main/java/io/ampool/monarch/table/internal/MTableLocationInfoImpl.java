@@ -38,9 +38,9 @@ import java.util.Set;
 public class MTableLocationInfoImpl implements MTableLocationInfo {
 
   private final String tableName;
-  private final ProxyMTableRegion table;
+  private final MTableImpl table;
 
-  public MTableLocationInfoImpl(String tableName, ProxyMTableRegion mTable) {
+  public MTableLocationInfoImpl(String tableName, MTableImpl mTable) {
     this.tableName = tableName;
     this.table = mTable;
   }

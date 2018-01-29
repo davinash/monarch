@@ -34,11 +34,7 @@ import io.ampool.monarch.table.Row;
 import io.ampool.monarch.table.Scan;
 import io.ampool.monarch.table.client.MClientCache;
 import io.ampool.monarch.table.client.MClientCacheFactory;
-import io.ampool.monarch.table.internal.MKeyBase;
-import io.ampool.monarch.table.internal.ProxyMTableRegion;
-import io.ampool.monarch.table.internal.MultiVersionValue;
-import io.ampool.monarch.table.internal.SingleVersionRow;
-import io.ampool.monarch.table.internal.ThinRow;
+import io.ampool.monarch.table.internal.*;
 import io.ampool.monarch.types.BasicTypes;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -172,8 +168,7 @@ public class MTableCoprocessorSCDType2PutObserverDUnitTest extends MTableDUnitHe
   }
 
   private void verifyValueOnServer(final String tableName, final Object expectedEndDate) {
-    ProxyMTableRegion mTable =
-        (ProxyMTableRegion) MCacheFactory.getAnyInstance().getMTable(tableName);
+    MTableImpl mTable = (MTableImpl) MCacheFactory.getAnyInstance().getMTable(tableName);
     MTableDescriptor tableDescriptor = mTable.getTableDescriptor();
     Region<Object, Object> region = mTable.getInternalRegion();
     ThinRow row = ThinRow.create(tableDescriptor, ThinRow.RowFormat.M_FULL_ROW);

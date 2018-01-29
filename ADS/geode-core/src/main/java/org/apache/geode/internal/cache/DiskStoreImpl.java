@@ -129,6 +129,9 @@ public class DiskStoreImpl implements DiskStore {
   boolean FORCE_KRF_RECOVERY =
       getBoolean(DistributionConfig.GEMFIRE_PREFIX + "disk.FORCE_KRF_RECOVERY", false);
 
+  private boolean enableDeltaPersistence = false;
+
+
   public static boolean getBoolean(String sysProp, boolean def) {
     return Boolean.valueOf(System.getProperty(sysProp, Boolean.valueOf(def).toString()));
   }
@@ -263,7 +266,7 @@ public class DiskStoreImpl implements DiskStore {
   private final AtomicReference<DiskAccessException> diskException =
       new AtomicReference<DiskAccessException>();
 
-  PersistentOplogSet persistentOplogs = new PersistentOplogSet(this);
+  PersistentOplogSet persistentOplogs = null;
   OverflowOplogSet overflowOplogs = new OverflowOplogSet(this);
 
   // private boolean isThreadWaitingForSpace = false;
@@ -305,10 +308,10 @@ public class DiskStoreImpl implements DiskStore {
 
   /**
    * The unique id for this disk store.
-   * 
+   *
    * Either set during recovery of an existing disk store when the IFREC_DISKSTORE_ID record is read
    * or when a new init file is created.
-   * 
+   *
    */
   private DiskStoreID diskStoreID;
 
@@ -374,6 +377,10 @@ public class DiskStoreImpl implements DiskStore {
     this.diskDirSizes = props.getDiskDirSizes();
     this.warningPercent = props.getDiskUsageWarningPercentage();
     this.criticalPercent = props.getDiskUsageCriticalPercentage();
+    this.enableDeltaPersistence = props.getEnableDeltaPersistence();
+
+    this.persistentOplogs =
+        enableDeltaPersistence ? new DeltaPersistentOplogSet(this) : new PersistentOplogSet(this);
 
     this.cache = (GemFireCacheImpl) cache;
     StatisticsFactory factory = cache.getDistributedSystem();
@@ -397,7 +404,7 @@ public class DiskStoreImpl implements DiskStore {
     // } else {
     if (this.maxAsyncItems > 0) {
       this.asyncQueue = new ForceableLinkedBlockingQueue<Object>(this.maxAsyncItems); // fix for bug
-                                                                                      // 41310
+      // 41310
     } else {
       this.asyncQueue = new ForceableLinkedBlockingQueue<Object>();
     }
@@ -641,7 +648,7 @@ public class DiskStoreImpl implements DiskStore {
   /**
    * Stores a key/value pair from a region entry on disk. Updates all of the necessary
    * {@linkplain DiskRegionStats statistics}and invokes {@link Oplog#create}or {@link Oplog#modify}.
-   * 
+   *
    * @param entry The entry which is going to be written to disk
    * @throws RegionClearedException If a clear operation completed before the put operation
    *         completed successfully, resulting in the put operation to abort.
@@ -755,7 +762,7 @@ public class DiskStoreImpl implements DiskStore {
   /**
    * Returns the value of the key/value pair with the given diskId. Updates all of the necessary
    * {@linkplain DiskRegionStats statistics}
-   * 
+   *
    */
   final Object get(DiskRegion dr, DiskId id) {
     acquireReadLock(dr);
@@ -813,7 +820,7 @@ public class DiskStoreImpl implements DiskStore {
   /**
    * This method was added to fix bug 40192. It is like getBytesAndBits except it will return
    * Token.REMOVE_PHASE1 if the htreeReference has changed (which means a clear was done).
-   * 
+   *
    * @return an instance of BytesAndBits or Token.REMOVED_PHASE1
    */
   final Object getRaw(DiskRegionView dr, DiskId id) {
@@ -837,7 +844,7 @@ public class DiskStoreImpl implements DiskStore {
   /**
    * Given a BytesAndBits object convert it to the relevant Object (deserialize if necessary) and
    * return the object
-   * 
+   *
    * @param bb
    * @return the converted object
    */
@@ -860,7 +867,7 @@ public class DiskStoreImpl implements DiskStore {
 
   /**
    * Given a BytesAndBits object get the serialized blob
-   * 
+   *
    * @param bb
    * @return the converted object
    */
@@ -888,7 +895,7 @@ public class DiskStoreImpl implements DiskStore {
    * Gets the Object from the OpLog . It can be invoked from OpLog , if by the time a get operation
    * reaches the OpLog, the entry gets compacted or if we allow concurrent put & get operations. It
    * will also minimize the synch lock on DiskId
-   * 
+   *
    * @param id DiskId object for the entry
    * @return value of the entry or CLEAR_BB if it is detected that the entry was removed by a
    *         concurrent region clear.
@@ -974,12 +981,12 @@ public class DiskStoreImpl implements DiskStore {
 
   /**
    * Asif: THIS SHOULD ONLY BE USED FOR TESTING PURPOSES AS IT IS NOT THREAD SAFE
-   * 
+   *
    * Returns the object stored on disk with the given id. This method is used for testing purposes
    * only. As such, it bypasses the buffer and goes directly to the disk. This is not a thread safe
    * function , in the sense, it is possible that by the time the OpLog is queried , data might move
    * HTree with the oplog being destroyed
-   * 
+   *
    * @return null if entry has nothing stored on disk (id == INVALID_ID)
    * @throws IllegalArgumentException If <code>id</code> is less than zero, no action is taken.
    */
@@ -1014,9 +1021,9 @@ public class DiskStoreImpl implements DiskStore {
 
   /**
    * Removes the key/value pair with the given id on disk.
-   * 
+   *
    * @param async true if called by the async flusher thread
-   * 
+   *
    * @throws RegionClearedException If a clear operation completed before the put operation
    *         completed successfully, resulting in the put operation to abort.
    * @throws IllegalArgumentException If <code>id</code> is {@linkplain #INVALID_ID invalid}or is
@@ -1087,12 +1094,12 @@ public class DiskStoreImpl implements DiskStore {
   /**
    * This function is having a default visiblity as it is used in the OplogJUnitTest for a bug
    * verification of Bug # 35012
-   * 
+   *
    * All callers must have {@link #releaseWriteLock(DiskRegion)} in a matching finally block.
-   * 
+   *
    * Note that this is no longer implemented by getting a write lock but instead locks the same lock
    * that acquireReadLock does.
-   * 
+   *
    * @since GemFire 5.1
    */
   private void acquireWriteLock(DiskRegion dr) {
@@ -1101,10 +1108,10 @@ public class DiskStoreImpl implements DiskStore {
   }
 
   /**
-   * 
+   *
    * This function is having a default visiblity as it is used in the OplogJUnitTest for a bug
    * verification of Bug # 35012
-   * 
+   *
    * @since GemFire 5.1
    */
 
@@ -1117,7 +1124,7 @@ public class DiskStoreImpl implements DiskStore {
    * All callers must have {@link #releaseReadLock(DiskRegion)} in a matching finally block. Note
    * that this is no longer implemented by getting a read lock but instead locks the same lock that
    * acquireWriteLock does.
-   * 
+   *
    * @since GemFire 5.1
    */
   void acquireReadLock(DiskRegion dr) {
@@ -1188,7 +1195,7 @@ public class DiskStoreImpl implements DiskStore {
 
   /**
    * Get serialized form of data off the disk
-   * 
+   *
    * @param id
    * @since GemFire 5.7
    */
@@ -1283,7 +1290,7 @@ public class DiskStoreImpl implements DiskStore {
     if (this.stoppingFlusher) {
       if (isClosed()) {
         throw (new Stopper()).generateCancelledException(null); // fix for bug
-                                                                // 41141
+        // 41141
       } else {
         throw new DiskAccessException(
             "The disk store is still open, but flusher is stopped, probably no space left on device",
@@ -1362,7 +1369,7 @@ public class DiskStoreImpl implements DiskStore {
    * To fix bug 41770 clear the list in a way that will not break a concurrent iterator that is not
    * synced on drainSync. Only clear from it entries on the given region. Currently we do this by
    * clearing the isPendingAsync bit on each entry in this list.
-   * 
+   *
    * @param rvv
    */
   void clearDrainList(LocalRegion r, RegionVersionVector rvv) {
@@ -1524,7 +1531,7 @@ public class DiskStoreImpl implements DiskStore {
   private void incForceFlush() {
     synchronized (this.asyncMonitor) {
       this.forceFlushCount.incrementAndGet(); // moved inside sync to fix bug
-                                              // 41654
+      // 41654
       this.asyncMonitor.notifyAll();
     }
   }
@@ -2015,7 +2022,7 @@ public class DiskStoreImpl implements DiskStore {
 
   /**
    * get the directory which has the info file
-   * 
+   *
    * @return directory holder which has the info file
    */
   DirectoryHolder getInfoFileDir() {
@@ -2033,14 +2040,14 @@ public class DiskStoreImpl implements DiskStore {
   /** For Testing * */
   /**
    * returns the size of the biggest directory available to the region
-   * 
+   *
    */
   public long getMaxDirSize() {
     return maxDirSize;
   }
 
   /**
-   * 
+   *
    * @return boolean indicating whether the disk region compaction is on or not
    */
   boolean isCompactionEnabled() {
@@ -2065,7 +2072,7 @@ public class DiskStoreImpl implements DiskStore {
 
   /**
    * All the oplogs except the current one are destroyed.
-   * 
+   *
    * @param rvv if not null, clear the region using a version vector Clearing with a version vector
    *        only removes entries less than the version vector, which allows for a consistent clear
    *        across members.
@@ -2115,7 +2122,7 @@ public class DiskStoreImpl implements DiskStore {
 
   /**
    * Removes anything found in the async queue for the given region
-   * 
+   *
    * @param rvv
    */
   private void clearAsyncQueue(LocalRegion region, boolean needsWriteLock,
@@ -2151,7 +2158,7 @@ public class DiskStoreImpl implements DiskStore {
 
   /**
    * It invokes appropriate methods of super & current class to clear the Oplogs.
-   * 
+   *
    * @param rvv if not null, clear the region using the version vector
    */
   void clear(LocalRegion region, DiskRegion dr, RegionVersionVector rvv) {
@@ -2381,7 +2388,7 @@ public class DiskStoreImpl implements DiskStore {
       if (region != null) {
         // OVERFLOW ONLY
         clearAsyncQueue(region, true, null); // no need to try to write these to
-                                             // disk any longer
+        // disk any longer
         dr.freeAllEntriesOnDisk(region);
         region.closeEntries();
         this.overflowMap.remove(dr);
@@ -2508,7 +2515,7 @@ public class DiskStoreImpl implements DiskStore {
   /**
    * stops the compactor outside the write lock. Once stopped then it proceeds to destroy the
    * current & old oplogs
-   * 
+   *
    * @param dr
    */
   void beginDestroyRegion(LocalRegion region, DiskRegion dr) {
@@ -2608,7 +2615,7 @@ public class DiskStoreImpl implements DiskStore {
 
   /**
    * Destroy all the oplogs
-   * 
+   *
    */
   private void destroyAllOplogs() {
     persistentOplogs.destroyAllOplogs();
@@ -2657,7 +2664,7 @@ public class DiskStoreImpl implements DiskStore {
 
   /**
    * gets the available oplogs to be compacted from the LinkedHashMap
-   * 
+   *
    * @return Oplog[] returns the array of oplogs to be compacted if present else returns null
    */
   CompactableOplog[] getOplogToBeCompacted() {
@@ -2714,7 +2721,7 @@ public class DiskStoreImpl implements DiskStore {
   /**
    * Filters and returns the current set of oplogs that aren't already in the baseline for
    * incremental backup
-   * 
+   *
    * @param baselineInspector the inspector for the previous backup.
    * @param baselineCopyMap this will be populated with baseline oplogs Files that will be used in
    *        the restore script.
@@ -2786,15 +2793,15 @@ public class DiskStoreImpl implements DiskStore {
   // hook that notifies them every time an oplog is created.
   /**
    * Used by tests to confirm stat size.
-   * 
+   *
    */
   final AtomicLong undeletedOplogSize = new AtomicLong();
 
   /**
    * Compacts oplogs
-   * 
+   *
    * @since GemFire 5.1
-   * 
+   *
    */
   class OplogCompactor implements Runnable {
     /** boolean for the thread to continue compaction* */
@@ -3434,6 +3441,11 @@ public class DiskStoreImpl implements DiskStore {
     return this.autoCompact;
   }
 
+  @Override
+  public boolean getEnableDeltaPersistence() {
+    return this.enableDeltaPersistence;
+  }
+
   public boolean getAllowForceCompaction() {
     return this.allowForceCompaction;
   }
@@ -3630,7 +3642,7 @@ public class DiskStoreImpl implements DiskStore {
 
   /**
    * Destroy a region which has not been created.
-   * 
+   *
    * @param regName the name of the region to destroy
    */
   public void destroyRegion(String regName) {
@@ -3978,7 +3990,7 @@ public class DiskStoreImpl implements DiskStore {
   private void validate() {
     assert isValidating();
     this.RECOVER_VALUES = false; // save memory @todo should Oplog make sure
-                                 // value is deserializable?
+    // value is deserializable?
     this.liveEntryCount = 0;
     this.deadRecordCount = 0;
     for (DiskRegionView drv : getKnown()) {
@@ -4103,7 +4115,7 @@ public class DiskStoreImpl implements DiskStore {
    * Start the backup process. This is the second step of the backup process. In this method, we
    * define the data we're backing up by copying the init file and rolling to the next file. After
    * this method returns operations can proceed as normal, except that we don't remove oplogs.
-   * 
+   *
    * @param targetDir
    * @param baselineInspector
    * @param restoreScript
@@ -4193,7 +4205,7 @@ public class DiskStoreImpl implements DiskStore {
   /**
    * Copy the oplogs to the backup directory. This is the final step of the backup process. The
    * oplogs we copy are defined in the startBackup method.
-   * 
+   *
    * @param backupManager
    * @throws IOException
    */
@@ -4304,7 +4316,7 @@ public class DiskStoreImpl implements DiskStore {
     props.setProperty(CACHE_XML_FILE, "");
     DistributedSystem ds = DistributedSystem.connect(props);
     offlineDS = ds;
-    Cache c = CacheFactory.create(ds);
+    Cache c = org.apache.geode.cache.CacheFactory.create(ds);
     offlineCache = c;
     org.apache.geode.cache.DiskStoreFactory dsf = c.createDiskStoreFactory();
     dsf.setDiskDirs(dsDirs);
@@ -4320,7 +4332,7 @@ public class DiskStoreImpl implements DiskStore {
 
   /**
    * Use this method to destroy a region in an offline disk store.
-   * 
+   *
    * @param dsName the name of the disk store
    * @param dsDirs the directories that that the disk store wrote files to
    * @param regName the name of the region to destroy
@@ -4480,11 +4492,11 @@ public class DiskStoreImpl implements DiskStore {
   }
 
   /**
-   * 
+   *
    * @return true if KRF files are used on this disk store's oplogs
    */
   boolean couldHaveKrf() {
-    return !isOffline();
+    return !isOffline() && !enableDeltaPersistence;
   }
 
   @Override
@@ -4755,7 +4767,7 @@ public class DiskStoreImpl implements DiskStore {
   /**
    * Update the on disk GC version for the given member, only if the disk has actually recorded all
    * of the updates including that member.
-   * 
+   *
    * @param diskRVV the RVV for what has been persisted
    * @param inMemoryRVV the RVV of what is in memory
    * @param member The member we're trying to update

@@ -28,7 +28,7 @@ public class WALRecordHeader {
 
   /**
    * Gets the record's block key from header.
-   * 
+   *
    * @return Block key
    */
   public BlockKey getBlockKey() {
@@ -37,21 +37,10 @@ public class WALRecordHeader {
 
   /**
    * Get the byte array corresponding to the record header
-   * 
+   *
    * @return byte[] representation of record header.
    */
   public byte[] getBytes() {
-    byte[] bytes = new byte[SIZE];
-    System.arraycopy(blockKey.getBytes(), 0, bytes, 0, SIZE);
-    return bytes;
+    return blockKey.getBytes();
   }
-
-  public static WALRecordHeader getWALRecordHeader(byte[] headerBytes) {
-    if (headerBytes.length != SIZE) {
-      return null;
-    }
-    BlockKey blockKey = new BlockKey(headerBytes);
-    return new WALRecordHeader(blockKey);
-  }
-
 }

@@ -17,11 +17,14 @@ import io.ampool.tierstore.TierStore;
 import org.apache.geode.distributed.internal.DistributionManager;
 import org.apache.geode.distributed.internal.membership.InternalDistributedMember;
 import org.apache.geode.internal.cache.BucketRegion;
+import org.apache.geode.internal.logging.LogService;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Used for moving the store data from one node to other in case of bucket movememt
  */
 public class StoreDataMover {
+  private static final Logger logger = LogService.getLogger();
 
   private final InternalDistributedMember recipient;
   private final int tier;
@@ -36,6 +39,10 @@ public class StoreDataMover {
     this.partitionId = partitionId;
     this.recipient = recipient;
     this.tier = tier;
+    logger.info(
+        "StoreDataMover: Moving data to tierId= {} using tierStore= {} for table= {}, "
+            + "partitionId= {} from {}",
+        tier, store.getName(), region.getDisplayName(), partitionId, recipient);
   }
 
   public void start() {
