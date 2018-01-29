@@ -34,8 +34,8 @@ import org.junit.experimental.categories.Category;
 public class RegionDataOrderTest {
   @Test
   public void testLastOrder() throws Exception {
-    assertEquals(RegionDataOrder.ORDERS.length, RegionDataOrder.ROW_TUPLE_UNORDERED.getId() + 1);
-    assertEquals(RegionDataOrder.ROW_TUPLE_UNORDERED,
+    assertEquals(RegionDataOrder.ORDERS.length, RegionDataOrder.IMMUTABLE.getId() + 1);
+    assertEquals(RegionDataOrder.IMMUTABLE,
         RegionDataOrder.ORDERS[RegionDataOrder.ORDERS.length - 1]);
   }
 
